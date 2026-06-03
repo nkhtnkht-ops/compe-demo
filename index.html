@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>コンペ予約 追客ツール（泉佐野）— 体験デモ</title>
+<style>
+  :root{--blue:#1f6fc4;--ink:#1f2937;--line:#e5e7eb;--muted:#6b7280;}
+  *{box-sizing:border-box;font-family:"Noto Sans JP","Hiragino Sans","Yu Gothic",sans-serif;-webkit-tap-highlight-color:transparent;}
+  body{margin:0;background:#dfe3e8;color:var(--ink);}
+  .demo-note{background:#fff7e6;border-bottom:1px solid #f0d28a;color:#6b5400;font-size:12px;padding:6px 12px;text-align:center;}
+  .app{max-width:1120px;margin:0 auto;background:#fff;min-height:100vh;display:flex;flex-direction:column;}
+  /* header */
+  .appbar{background:var(--blue);color:#fff;display:flex;align-items:center;gap:12px;padding:0 14px;height:58px;flex-wrap:wrap;}
+  .appbar .ttl{font-weight:700;font-size:17px;}
+  .appbar .nav{background:rgba(255,255,255,.18);color:#fff;border:0;border-radius:6px;font-size:13px;padding:7px 12px;cursor:pointer;}
+  .appbar .sp{flex:1;}
+  .btn{border:0;border-radius:6px;color:#fff;font-weight:700;font-size:13px;padding:8px 13px;cursor:pointer;}
+  .b-gray{background:#6b7280;} .b-orange{background:#b35900;} .b-green{background:#1a7f37;} .b-blue{background:var(--blue);}
+  .btn:active{transform:translateY(1px);} .btn:disabled{opacity:.4;cursor:default;}
+  /* body */
+  .body{display:flex;flex:1;min-height:0;}
+  .side{width:320px;border-right:1px solid var(--line);display:flex;flex-direction:column;}
+  .search{margin:10px;border:1px solid var(--line);border-radius:6px;padding:8px 10px;color:#9aa1aa;display:flex;justify-content:space-between;font-size:13px;}
+  .newrow{padding:8px 14px;color:var(--blue);font-weight:600;border-bottom:1px solid var(--line);font-size:14px;}
+  .list{overflow:auto;}
+  .gi{padding:11px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;cursor:pointer;}
+  .gi:hover{background:#f7f9fb;}
+  .gi.sel{background:#eef4fb;border-left:4px solid var(--blue);}
+  .gi .nm{font-weight:600;}
+  .gi .sub{font-size:12px;color:var(--muted);margin-top:2px;}
+  .gi .due{font-size:11px;color:#b35900;margin-top:2px;}
+  .gi .chev{color:#b9c0c8;}
+  .empty{padding:30px;text-align:center;color:#9aa1aa;}
+  /* detail */
+  .detail{flex:1;padding:14px 22px;overflow:auto;}
+  .dh{display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:14px;}
+  .dh .name{font-size:18px;font-weight:700;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;}
+  .fld .k{font-size:12px;color:#374151;font-weight:600;margin-bottom:3px;}
+  .fld .v{background:#f3f4f6;border-radius:4px;padding:8px 10px;font-size:14px;min-height:34px;}
+  .v.green{color:#1a7f37;font-weight:700;background:#eafaf0;}
+  .v.gray{color:#6b7280;}
+  .hint{color:#9aa1aa;text-align:center;margin-top:60px;}
+  /* import */
+  .imp{padding:16px 20px;}
+  .imp .ta{width:100%;height:200px;border:1px solid var(--line);border-radius:6px;padding:12px;font-size:13px;font-family:monospace;}
+  .imp .row{margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;}
+  .imp .msg{margin-top:14px;font-size:14px;min-height:22px;}
+  /* toast */
+  #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#111827;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;opacity:0;transition:.25s;pointer-events:none;z-index:9;}
+  #toast.show{opacity:.95;}
+  .hidden{display:none!important;}
+  @media(max-width:760px){.body{flex-direction:column}.side{width:auto;max-height:40vh}.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="demo-note">体験デモ（クリックできます）｜ ダミーデータです・実在の顧客情報は含みません ｜ 実アプリは社内M365内で稼働</div>
+<div class="app">
+  <div class="appbar">
+    <span class="ttl">コンペ予約 追客台帳（泉佐野）</span>
+    <button class="nav" id="toImport">＋ CSV取込</button>
+    <button class="nav hidden" id="toMain">← 一覧へ戻る</button>
+    <span class="sp"></span>
+    <span id="actions">
+      <button class="btn b-gray" onclick="mark('不要')">不要</button>
+      <button class="btn b-orange" onclick="mark('不在')">不在</button>
+      <button class="btn b-green" onclick="mark('〇')">✓ 連絡完了</button>
+    </span>
+  </div>
+
+  <!-- MAIN -->
+  <div class="body" id="screenMain">
+    <div class="side">
+      <div class="search"><span>検索</span><span>🔍</span></div>
+      <div class="newrow">＋ 新規</div>
+      <div class="list" id="list"></div>
+    </div>
+    <div class="detail" id="detail"></div>
+  </div>
+
+  <!-- IMPORT -->
+  <div class="imp hidden" id="screenImport">
+    <textarea class="ta" id="ta" placeholder="予約受付一覧CSVをExcel等で開き、全選択(Ctrl+A)→コピー(Ctrl+C)して、ここに貼り付け(Ctrl+V)してください"></textarea>
+    <div class="row">
+      <button class="btn b-gray" onclick="pasteSample()">サンプルを貼り付け（デモ）</button>
+      <button class="btn b-blue" onclick="extract()">① 抽出して確認</button>
+      <button class="btn b-green" id="regBtn" onclick="register()" disabled>② 台帳へ登録</button>
+    </div>
+    <div class="msg" id="impMsg"></div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+// ---- ダミーデータ（実在しない例）----
+let rows = [
+  {n:"山田 太郎",  play:"2026/06/09",wd:"火",course:"犬鳴",time:"10:07",g:3,p:12,route:"電話",  recv:"2026/04/08", d:["2026/04/09","2026/04/10","2026/05/05","2026/05/22"], s:["〇","不要","不要",""], due:3, tel:"072-xxx-xxxx", mob:"090-xxxx-xxxx"},
+  {n:"佐藤 花子",  play:"2026/06/15",wd:"月",course:"稲倉",time:"08:52",g:3,p:10,route:"AGWeb", recv:"2026/02/18", d:["2026/02/19","2026/04/16","2026/05/11","2026/05/28"], s:["〇","〇","〇",""], due:3, tel:"06-xxxx-xxxx", mob:"080-xxxx-xxxx"},
+  {n:"鈴木 一郎",  play:"2026/06/16",wd:"火",course:"大阪湾",time:"07:45",g:3,p:12,route:"AGWeb", recv:"2026/05/25", d:["2026/05/26","2026/04/17","2026/05/12","2026/05/29"], s:["","不要","",""], due:0, tel:"072-xxx-xxxx", mob:"090-xxxx-xxxx"},
+  {n:"田中 美咲",  play:"2026/06/20",wd:"土",course:"犬鳴",time:"10:07",g:5,p:20,route:"AGWeb", recv:"2026/03/05", d:["2026/03/06","2026/04/21","2026/05/16","2026/06/02"], s:["〇","〇","〇",""], due:3, tel:"072-xxx-xxxx", mob:"090-xxxx-xxxx"},
+  {n:"高橋 健",    play:"2026/06/21",wd:"日",course:"稲倉",time:"12:37",g:6,p:24,route:"GORA",  recv:"2026/04/17", d:["2026/04/18","2026/04/22","2026/05/17","2026/06/03"], s:["〇","不要","",""], due:3, tel:"072-xxx-xxxx", mob:"090-xxxx-xxxx"},
+  {n:"伊藤 直美",  play:"2026/07/03",wd:"金",course:"稲倉",time:"08:22",g:3,p:12,route:"RECRUIT",recv:"2026/05/13", d:["2026/05/14","2026/05/04","2026/05/29","2026/06/15"], s:["〇","〇","〇",""], due:0, tel:"072-xxx-xxxx", mob:"090-xxxx-xxxx"}
+];
+const dueLabel=["①受付翌日","②60日前","③35日前","④18日前"];
+let selIdx = 0;
+
+function render(){
+  const list=document.getElementById('list');
+  list.innerHTML='';
+  if(rows.length===0){ list.innerHTML='<div class="empty">今日やることはありません 🎉</div>'; }
+  rows.forEach((r,i)=>{
+    const div=document.createElement('div');
+    div.className='gi'+(i===selIdx?' sel':'');
+    const dl = r.due>=0 ? `要対応：${dueLabel[r.due]}（${r.d[r.due]}）` : '';
+    div.innerHTML=`<div><div class="nm">${r.n}</div><div class="sub">${r.play}・${r.wd}・${r.course}・${r.g}組</div><div class="due">${dl}</div></div><span class="chev">›</span>`;
+    div.onclick=()=>{selIdx=i;render();};
+    list.appendChild(div);
+  });
+  renderDetail();
+}
+function renderDetail(){
+  const d=document.getElementById('detail');
+  if(rows.length===0||selIdx>=rows.length){ d.innerHTML='<div class="hint">左の一覧から予約を選んでください</div>'; return;}
+  const r=rows[selIdx];
+  const sv=(i)=> r.s[i] ? `<div class="v ${r.s[i]==='〇'?'green':'gray'}">${r.s[i]}</div>` : `<div class="v">${r.d[i]}</div>`;
+  d.innerHTML=`
+   <div class="dh"><span class="name">${r.n}</span><span style="color:#9aa1aa">✏ 🗑</span></div>
+   <div class="grid">
+    <div class="fld"><div class="k">プレー日</div><div class="v">${r.play}（${r.wd}）</div></div>
+    <div class="fld"><div class="k">コース名</div><div class="v">${r.course}</div></div>
+    <div class="fld"><div class="k">時間</div><div class="v">${r.time}</div></div>
+    <div class="fld"><div class="k">組数 / 人数</div><div class="v">${r.g}組 / ${r.p}人</div></div>
+    <div class="fld"><div class="k">経路</div><div class="v">${r.route}</div></div>
+    <div class="fld"><div class="k">受付日</div><div class="v">${r.recv}</div></div>
+    <div class="fld"><div class="k">連絡先 / 携帯</div><div class="v">${r.tel} / ${r.mob}</div></div>
+    <div class="fld"><div class="k">要対応の接点</div><div class="v ${r.due>=0?'':'gray'}">${r.due>=0?dueLabel[r.due]+'（'+r.d[r.due]+'）':'なし'}</div></div>
+    <div class="fld"><div class="k">①受付翌日</div>${sv(0)}</div>
+    <div class="fld"><div class="k">②60日前</div>${sv(1)}</div>
+    <div class="fld"><div class="k">③35日前</div>${sv(2)}</div>
+    <div class="fld"><div class="k">④18日前</div>${sv(3)}</div>
+   </div>
+   <p style="color:#9aa1aa;font-size:12px;margin-top:16px">↑「✓連絡完了／不在／不要」を押すと、要対応の接点が記録され、対応完了ならこの予約は今日やることから消えます（実アプリと同じ動き）。</p>`;
+}
+function mark(val){
+  if(document.getElementById('screenImport').classList.contains('hidden')===false){return;}
+  if(rows.length===0||selIdx>=rows.length){toast('予約を選んでください');return;}
+  const r=rows[selIdx];
+  if(r.due<0){toast('この予約に要対応の接点はありません');return;}
+  r.s[r.due]=val;
+  toast(`${dueLabel[r.due]} を「${val}」で記録しました`);
+  // 完了/不要なら今日やることから外す（デモ簡略：行を除去）
+  rows.splice(selIdx,1);
+  if(selIdx>=rows.length) selIdx=Math.max(0,rows.length-1);
+  render();
+}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1800);}
+
+// screen toggle
+document.getElementById('toImport').onclick=()=>{
+  document.getElementById('screenMain').classList.add('hidden');
+  document.getElementById('screenImport').classList.remove('hidden');
+  document.getElementById('toImport').classList.add('hidden');
+  document.getElementById('toMain').classList.remove('hidden');
+  document.getElementById('actions').classList.add('hidden');
+};
+document.getElementById('toMain').onclick=()=>{
+  document.getElementById('screenImport').classList.add('hidden');
+  document.getElementById('screenMain').classList.remove('hidden');
+  document.getElementById('toMain').classList.add('hidden');
+  document.getElementById('toImport').classList.remove('hidden');
+  document.getElementById('actions').classList.remove('hidden');
+};
+
+// import demo
+const sample=`ゴルフ場名,データ種別,プレー日,コース,スタート時間,代表者名(漢字),代表者名(カナ),組数,人数,連絡先電話番号,携帯電話番号,FAX番号,予約チャネル,予約受付日時,受付者,受付者ロール
+泉佐野カントリークラブ,一般予約,2026-08-04 00:00,稲倉,07:15:00,新規 太郎,ｼﾝｷ ﾀﾛｳ,3組,9人,'072xxxxxxx,'090xxxxxxx,',AGWeb,2026-06-01 09:20,エージー ウェブ,管理者
+泉佐野カントリークラブ,一般予約,2026-09-12 00:00,犬鳴,08:30:00,体験 五郎,ﾀｲｹﾝ ｺﾞﾛｳ,5組,20人,'072xxxxxxx,'090xxxxxxx,',電話,2026-06-02 10:05,受付,一般
+泉佐野カントリークラブ,一般予約,2026-07-05 00:00,稲倉,10:30:00,個人 一人,ｺｼﾞﾝ,1組,4人,'072xxxxxxx,'072xxxxxxx,',AGWeb,2026-06-01 08:11,エージー ウェブ,管理者
+泉佐野カントリークラブ,一般予約,2026-05-30 00:00,犬鳴,07:30:00,過去 三郎,ｶｺ,3組,12人,'072xxxxxxx,'090xxxxxxx,',AGWeb,2026-05-20 10:00,エージー ウェブ,管理者
+泉佐野カントリークラブ,一般予約,2026-10-01 00:00,大阪湾,07:52:00,抽出 花子,ﾁｭｳｼｭﾂ,4組,16人,'072xxxxxxx,'090xxxxxxx,',GORA,2026-06-03 08:11,GORA ユーザ,管理者`;
+function pasteSample(){document.getElementById('ta').value=sample;document.getElementById('impMsg').textContent='サンプルを貼り付けました。「① 抽出して確認」を押してください';}
+let extractCount=0;
+function extract(){
+  const t=document.getElementById('ta').value.trim();
+  if(!t){document.getElementById('impMsg').textContent='CSVを貼り付けてください';return;}
+  const lines=t.split(/\n/).filter(l=>l.trim()&&l.indexOf('プレー日')<0);
+  let pick=0;
+  lines.forEach(l=>{const c=l.split(',');const g=parseInt((c[7]||'').replace(/[^0-9]/g,''))||0;const m=(c[2]||'').match(/(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);const pd=m?new Date(+m[1],+m[2]-1,+m[3]):null;const today=new Date('2026-06-03');if(g>=3&&pd&&pd>=today)pick++;});
+  extractCount=pick;
+  document.getElementById('impMsg').innerHTML=`抽出 <b>${pick}</b> 件 ／ 新規 <b>${pick}</b> 件（3組以上・未来のプレー日のみ。3組未満や過去日は自動除外）。『② 台帳へ登録』を押してください`;
+  document.getElementById('regBtn').disabled = pick===0;
+}
+function register(){
+  document.getElementById('impMsg').innerHTML=`<span style="color:#1a7f37;font-weight:700">${extractCount} 件を台帳に登録しました。『今日やること』に反映されます（実アプリでは即反映）</span>`;
+  document.getElementById('ta').value='';
+  document.getElementById('regBtn').disabled=true;
+  toast(`${extractCount} 件を登録しました`);
+}
+render();
+</script>
+</body>
+</html>
