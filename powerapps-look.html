@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Power Apps 再現イメージ — コンペ予約 追客（泉佐野）</title>
+<style>
+  /* ▼ Power Apps の見た目に意図的に寄せた指定 ▼
+     ・フォント = Segoe UI / Yu Gothic UI（Power AppsはNoto Sans JPは使えない）
+     ・影 = ほぼ無し（プリセットの薄い影のみ）
+     ・角丸・余白 = やや実務寄りでカクっと
+     ・入力欄 = 枠線つきのボックス（Power Apps標準コントロール風） */
+  :root{
+    --blue:#0f6cbd;        /* Power Apps系の青 */
+    --ink:#242424;
+    --line:#d1d1d1;
+    --muted:#616161;
+    --field:#f5f5f5;
+    --gray:#5b5b5b;--orange:#9a5700;--green:#107c41;
+  }
+  *{box-sizing:border-box;font-family:"Segoe UI","Yu Gothic UI","Hiragino Sans",sans-serif;}
+  body{margin:0;background:#e6e6e6;color:var(--ink);}
+  .note{max-width:1180px;margin:16px auto 4px;padding:11px 14px;background:#fff4ce;border:1px solid #e9d27a;border-radius:4px;font-size:13px;color:#6b5400;line-height:1.6;}
+  .note b{color:#5a4500;}
+  .frame{max-width:1180px;margin:12px auto 26px;background:#fff;border:1px solid #c8c8c8;border-radius:4px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.10);}
+  .scrtitle{font-size:12px;font-weight:600;color:#444;padding:7px 14px;background:#f0f0f0;border-bottom:1px solid var(--line);}
+  /* header（Power Appsのコンテナ＋ラベル＋ボタン風） */
+  .appbar{background:var(--blue);color:#fff;display:flex;align-items:center;gap:10px;padding:0 14px;height:56px;}
+  .appbar .ttl{font-weight:600;font-size:17px;letter-spacing:.2px;}
+  .appbar .sp{flex:1;}
+  .btn{border:1px solid rgba(0,0,0,.08);border-radius:4px;color:#fff;font-weight:600;font-size:13px;padding:8px 13px;cursor:pointer;line-height:1;}
+  .b-blue{background:var(--blue);} .b-gray{background:var(--gray);} .b-orange{background:var(--orange);} .b-green{background:var(--green);}
+  .b-ghost{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.5);}
+  /* toolbar下段 */
+  .toolbar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#fafafa;border-bottom:1px solid var(--line);font-size:13px;}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:4px;overflow:hidden;}
+  .seg button{border:0;background:#fff;padding:6px 12px;font-size:13px;cursor:pointer;color:#333;}
+  .seg button.on{background:var(--blue);color:#fff;font-weight:600;}
+  .toolbar .lbl{color:var(--muted);}
+  /* body */
+  .body{display:flex;min-height:540px;}
+  .side{width:300px;border-right:1px solid var(--line);background:#fff;}
+  .search{margin:10px;border:1px solid var(--line);border-radius:4px;padding:7px 9px;color:#8a8a8a;display:flex;justify-content:space-between;font-size:13px;background:var(--field);}
+  .newrow{padding:8px 14px;color:var(--blue);font-weight:600;border-bottom:1px solid var(--line);font-size:13px;}
+  .gi{padding:9px 12px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;cursor:pointer;}
+  .gi:hover{background:#f3f7fb;}
+  .gi.sel{background:#eaf3fb;border-left:3px solid var(--blue);}
+  .gi .nm{font-weight:600;font-size:14px;}
+  .gi .sub{font-size:11.5px;color:var(--muted);margin-top:2px;}
+  .gi .memo{font-size:11px;color:#8a8a8a;margin-top:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:210px;}
+  .gi .chev{color:#bdbdbd;}
+  .chip{display:inline-block;font-size:11px;font-weight:600;border-radius:3px;padding:2px 7px;color:#fff;margin-top:3px;}
+  .chip.g{background:var(--green);} .chip.o{background:var(--orange);} .chip.x{background:#9e9e9e;}
+  /* detail */
+  .detail{flex:1;padding:14px 22px;background:#fff;}
+  .dh{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:14px;}
+  .dh .name{font-size:18px;font-weight:700;}
+  .dh .acts{display:flex;gap:7px;}
+  .mini{border:1px solid var(--line);background:var(--field);border-radius:4px;font-size:12px;padding:6px 10px;cursor:pointer;color:#333;font-weight:600;}
+  .mini.del{color:#a4262c;border-color:#e6b3b6;background:#fdf3f4;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;}
+  .fld .k{font-size:11.5px;color:#444;font-weight:600;margin-bottom:3px;}
+  .fld .v{background:var(--field);border:1px solid var(--line);border-radius:4px;padding:7px 9px;font-size:13.5px;min-height:33px;}
+  .fld .v.bold{font-weight:700;}
+  .copyrow{display:flex;gap:6px;align-items:center;}
+  .copyrow .v{flex:1;}
+  .cpbtn{border:1px solid var(--line);background:#fff;border-radius:4px;font-size:11.5px;padding:6px 9px;cursor:pointer;color:var(--blue);font-weight:600;white-space:nowrap;}
+  /* status select row */
+  .selrow{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-top:6px;}
+  .selbox .k{font-size:11px;color:#555;font-weight:600;margin-bottom:3px;}
+  .ddl{border:1px solid var(--line);border-radius:4px;background:#fff;padding:6px 8px;font-size:12.5px;display:flex;justify-content:space-between;align-items:center;color:#333;}
+  .ddl .cv{color:#bdbdbd;font-size:10px;}
+  .card{border:1px solid var(--line);border-radius:4px;padding:12px;margin-top:14px;background:#fcfcfc;}
+  .card .ct{font-size:12px;font-weight:700;color:#444;margin-bottom:8px;}
+  .card .line{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+  .memoarea{width:100%;border:1px solid var(--line);border-radius:4px;padding:8px;font-size:13px;min-height:54px;color:#8a8a8a;background:#fff;margin-top:6px;}
+  /* import */
+  .imp{padding:16px 20px;background:#fff;}
+  .imp .ta{width:100%;height:200px;border:1px solid var(--line);border-radius:4px;padding:11px;color:#8a8a8a;font-size:13px;background:var(--field);}
+  .imp .row{margin-top:12px;display:flex;gap:10px;}
+  .imp .msg{margin-top:12px;font-size:13px;color:#242424;}
+  @media(max-width:780px){.body{flex-direction:column}.side{width:auto}.grid,.selrow{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="note">
+  これは <b>「Power Appsで作った場合の“見え方”再現イメージ」</b> です。色・レイアウト・機能配置は実機どおりに、
+  <b>フォント（Segoe UI/游ゴシック）・影・余白・入力欄の質感を Power Apps の制約に合わせて</b>あります。<br>
+  ＝ <b>実機そのものではなく、約85%再現の見た目イメージ</b>。デモ版（100%）と見比べて判断材料にしてください。
+</div>
+
+<!-- ① メイン画面 -->
+<div class="frame">
+  <div class="scrtitle">① メイン画面：今日やること（Power Apps 再現イメージ）</div>
+  <div class="appbar">
+    <span class="ttl">予約チェック管理</span>
+    <button class="btn b-ghost">＋ CSV取込</button>
+    <button class="btn b-ghost">↩ 元に戻す</button>
+    <button class="btn b-ghost">🔄 更新</button>
+    <button class="btn b-ghost">⚙ 設定</button>
+    <span class="sp"></span>
+    <button class="btn b-gray">不要</button>
+    <button class="btn b-orange">不在</button>
+    <button class="btn b-green">✓ 連絡完了</button>
+  </div>
+  <div class="toolbar">
+    <span class="lbl">表示：</span>
+    <span class="seg"><button class="on">今日やること</button><button>全件</button></span>
+    <span class="lbl" style="margin-left:10px;">並び：</span>
+    <span class="seg"><button class="on">プレー日順</button><button>受付日順</button></span>
+  </div>
+  <div class="body">
+    <div class="side">
+      <div class="search"><span>検索</span><span>🔍</span></div>
+      <div class="newrow">＋ 新規</div>
+      <div class="gi sel">
+        <div><div class="nm">小西雅明</div><div class="sub">2026/06/09 ・火 ・犬鳴</div>
+        <div class="memo">前回不在、夕方かけ直し</div></div><span class="chev">›</span>
+      </div>
+      <div class="gi"><div><div class="nm">北野正雄</div><div class="sub">2026/06/15 ・月 ・三田</div>
+        <span class="chip o">②不在</span></div><span class="chev">›</span></div>
+      <div class="gi"><div><div class="nm">笠松理恵</div><div class="sub">2026/06/20 ・土 ・犬鳴</div></div><span class="chev">›</span></div>
+      <div class="gi"><div><div class="nm">西村隆則</div><div class="sub">2026/06/20 ・土 ・三田</div></div><span class="chev">›</span></div>
+      <div class="gi"><div><div class="nm">福田龍作</div><div class="sub">2026/06/21 ・日 ・犬鳴</div></div><span class="chev">›</span></div>
+      <div class="gi"><div><div class="nm">北川公一</div><div class="sub">2026/06/21 ・日 ・三田</div></div><span class="chev">›</span></div>
+      <div class="gi"><div><div class="nm">金鎮煕</div><div class="sub">2026/07/03 ・金 ・犬鳴</div></div><span class="chev">›</span></div>
+    </div>
+    <div class="detail">
+      <div class="dh">
+        <span class="name">小西雅明</span>
+        <div class="acts">
+          <button class="mini">氏名コピー</button>
+          <button class="mini">✏ 編集</button>
+          <button class="mini del">削除</button>
+        </div>
+      </div>
+      <div class="grid">
+        <div class="fld"><div class="k">プレー日</div><div class="v">2026/06/09（火）</div></div>
+        <div class="fld"><div class="k">コース名</div><div class="v">犬鳴</div></div>
+        <div class="fld"><div class="k">時間</div><div class="v">10:07</div></div>
+        <div class="fld"><div class="k">組数 / 人数</div><div class="v">3組 / 12名</div></div>
+        <div class="fld"><div class="k">連絡先電話番号</div>
+          <div class="copyrow"><div class="v">0724438097</div><button class="cpbtn">コピー</button></div></div>
+        <div class="fld"><div class="k">携帯電話番号</div>
+          <div class="copyrow"><div class="v bold">09016757571</div><button class="cpbtn">コピー</button></div></div>
+        <div class="fld"><div class="k">予約経路</div><div class="v">電話</div></div>
+        <div class="fld"><div class="k">受付日</div><div class="v">2026/04/08</div></div>
+      </div>
+
+      <div style="margin-top:14px;">
+        <div class="fld"><div class="k">連絡状態（①受付翌日／②60日前／③35日前／④18日前）</div></div>
+        <div class="selrow">
+          <div class="selbox"><div class="k">①受付翌日</div><div class="ddl">〇 完了 <span class="cv">▼</span></div></div>
+          <div class="selbox"><div class="k">②60日前</div><div class="ddl">不在 <span class="cv">▼</span></div></div>
+          <div class="selbox"><div class="k">③35日前</div><div class="ddl">未対応 <span class="cv">▼</span></div></div>
+          <div class="selbox"><div class="k">④18日前</div><div class="ddl">未対応 <span class="cv">▼</span></div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ct">組数確定 / キャンセル / 組合せ入力</div>
+        <div class="line">
+          <span class="ddl" style="min-width:150px;">組数確定：〇 <span class="cv">▼</span></span>
+          <span class="ddl" style="min-width:150px;">キャンセル：‐ <span class="cv">▼</span></span>
+          <span class="ddl" style="min-width:170px;">組合せ入力：済（追跡終了） <span class="cv">▼</span></span>
+        </div>
+      </div>
+
+      <div style="margin-top:14px;">
+        <div class="fld"><div class="k">メモ</div></div>
+        <div class="memoarea">前回不在、夕方かけ直し</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ② CSV取込 -->
+<div class="frame">
+  <div class="scrtitle">② CSV取込（貼り付け→抽出→登録 / 新規取込・既存移行タブ）</div>
+  <div class="imp">
+    <div class="line" style="display:flex;gap:8px;margin-bottom:10px;">
+      <button class="btn b-blue">新規取込</button>
+      <button class="mini">既存移行</button>
+      <span class="sp" style="flex:1"></span>
+      <button class="mini">← 一覧へ戻る</button>
+    </div>
+    <div class="ta">予約受付一覧CSVをExcel等で開き、全選択(Ctrl+A)→コピー(Ctrl+C)して、ここに貼り付け(Ctrl+V)してください</div>
+    <div class="row">
+      <button class="btn b-blue">① 抽出して確認</button>
+      <button class="btn b-blue">② 台帳へ登録</button>
+    </div>
+    <div class="msg">抽出 3 件 ／ 新規 3 件（登録済みスキップ 0 件）。『②台帳へ登録』を押してください</div>
+  </div>
+</div>
+
+</body>
+</html>
