@@ -18,7 +18,7 @@
   .toggle{background:#fff;color:var(--blue);border:0;border-radius:20px;font-weight:700;font-size:13px;padding:7px 14px;cursor:pointer;}
   .refresh{background:#ffd54a;color:#5b4500;border:0;border-radius:20px;font-weight:700;font-size:13px;padding:7px 14px;cursor:pointer;}
   .body{display:flex;flex:1;min-height:0;}
-  .side{flex:1.25;border-right:1px solid var(--line);display:flex;flex-direction:column;min-width:0;}
+  .side{flex:1;border-right:1px solid var(--line);display:flex;flex-direction:column;min-width:0;}
   .sbar{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--line);font-size:12px;color:var(--muted);}
   .list{overflow:auto;}
   .gi{padding:10px 12px;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:center;cursor:pointer;}
@@ -36,7 +36,7 @@
   .pill{font-size:12px;font-weight:700;padding:4px 8px;border-radius:6px;}
   .pill.green{background:#eafaf0;color:#1a7f37;} .pill.red{background:#fdecea;color:#b91c1c;}
   .empty{padding:30px;text-align:center;color:#9aa1aa;}
-  .detail{flex:1;padding:14px 20px;overflow:auto;min-width:0;}
+  .detail{flex:1.9;padding:14px 20px;overflow:auto;min-width:0;}
   .dh{display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:12px;}
   .dh .name{font-size:18px;font-weight:700;}
   .delbtn{border:1px solid #d1453b;background:#fff;color:#c0392b;border-radius:6px;font-size:12px;font-weight:700;padding:5px 7px;cursor:pointer;}
@@ -45,7 +45,7 @@
   .fld .k{font-size:12px;color:#374151;font-weight:600;margin-bottom:3px;}
   .fld .v{background:#f3f4f6;border-radius:4px;padding:7px 10px;font-size:14px;min-height:32px;}
   .v.green{color:#1a7f37;font-weight:700;background:#eafaf0;} .v.gray{color:#6b7280;} .v.red{color:#b91c1c;font-weight:700;background:#fdecea;}
-  .editcell{display:flex;justify-content:space-between;align-items:center;gap:6px;background:#f3f4f6;border-radius:4px;padding:6px 8px;}
+  .editcell{display:flex;justify-content:space-between;align-items:center;gap:6px;background:#f3f4f6;border-radius:4px;padding:6px 8px;flex-wrap:wrap;}
   .hint{color:#9aa1aa;text-align:center;margin-top:60px;}
   #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#111827;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;opacity:0;transition:.25s;pointer-events:none;z-index:9;}
   #toast.show{opacity:.95;}
