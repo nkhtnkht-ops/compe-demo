@@ -179,7 +179,7 @@ function renderDetail(){
   const gi=selIdx,r=rows[gi],a=actRound(r);
   let head; if(a<0)head='<div class="v green">対応完了（要対応なし）</div>'; else if(r.s[a]==="不在")head='<div class="v red">繰越（前回不在）：'+lbl[a]+'</div>'; else head='<div class="v" style="color:#b35900;font-weight:700">要対応：'+lbl[a]+'（'+r.d[a]+'）</div>';
   d.innerHTML=`
-   <div class="dh"><span class="name">${r.n}</span><span style="color:#9aa1aa">✏ 🗑</span></div>
+   <div class="dh"><span style="display:flex;align-items:center;gap:10px"><span class="name">${r.n}</span><button class="sb" onclick="copyText('${r.n}')">コピー</button></span><span style="color:#9aa1aa">✏ 🗑</span></div>
    <div class="grid">
     <div class="fld"><div class="k">プレー日</div><div class="v">${r.play}（${r.wd}）</div></div>
     <div class="fld"><div class="k">コース名</div><div class="v">${r.course}</div></div>
