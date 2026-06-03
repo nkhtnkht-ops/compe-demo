@@ -91,12 +91,12 @@ const TODAY=new Date(2026,5,3);
 const lbl=["①受付翌日","②60日前","③35日前","④18日前"];
 function pd(s){const m=s&&s.match(/(\d{4})\/(\d{1,2})\/(\d{1,2})/);return m?new Date(+m[1],+m[2]-1,+m[3]):null;}
 let rows=[
- {n:"山田 太郎",play:"2026/07/20",wd:"月",course:"稲倉",time:"07:37",g:3,p:12,route:"GORA",recv:"2026/06/02",d:["2026/06/03","2026/05/21","2026/06/15","2026/07/02"],s:["","","",""],kk:"",tel:"072-xxx-xxxx",mob:"090-xxxx-xxxx"},
- {n:"佐藤 花子",play:"2026/06/15",wd:"月",course:"犬鳴",time:"08:52",g:3,p:10,route:"AGWeb",recv:"2026/04/16",d:["2026/04/17","2026/04/16","2026/06/03","2026/05/28"],s:["〇","不要","",""],kk:"",tel:"06-xxxx-xxxx",mob:"080-xxxx-xxxx"},
- {n:"鈴木 一郎",play:"2026/08/01",wd:"土",course:"大阪湾",time:"09:07",g:4,p:16,route:"AGWeb",recv:"2026/05/30",d:["2026/05/31","2026/06/02","2026/06/27","2026/07/14"],s:["不在","","",""],kk:"",tel:"072-xxx-xxxx",mob:"090-xxxx-xxxx"},
- {n:"田中 美咲",play:"2026/06/21",wd:"日",course:"犬鳴",time:"10:07",g:5,p:20,route:"電話",recv:"2026/03/05",d:["2026/03/06","2026/04/22","2026/05/17","2026/06/03"],s:["〇","不要","〇",""],kk:"",tel:"072-xxx-xxxx",mob:"090-xxxx-xxxx"},
- {n:"高橋 健",play:"2026/06/25",wd:"木",course:"稲倉",time:"12:37",g:6,p:24,route:"GORA",recv:"2026/04/10",d:["2026/04/11","2026/04/26","2026/05/21","2026/06/07"],s:["〇","〇","〇","〇"],kk:"〇",kumi:"済",tel:"072-xxx-xxxx",mob:"090-xxxx-xxxx"},
- {n:"伊藤 直美",play:"2026/07/03",wd:"金",course:"稲倉",time:"08:22",g:3,p:12,route:"RECRUIT",recv:"2026/05/13",d:["2026/05/14","2026/05/04","2026/05/29","2026/06/15"],s:["〇","不要","〇","〇"],kk:"",tel:"072-xxx-xxxx",mob:"090-xxxx-xxxx"}
+ {n:"山田 太郎",play:"2026/07/20",wd:"月",course:"稲倉",time:"07:37",g:3,p:12,route:"GORA",recv:"2026/06/02",d:["2026/06/03","2026/05/21","2026/06/15","2026/07/02"],s:["","","",""],kk:"",tel:"0724xxxxxx",mob:"09012345678"},
+ {n:"佐藤 花子",play:"2026/06/15",wd:"月",course:"犬鳴",time:"08:52",g:3,p:10,route:"AGWeb",recv:"2026/04/16",d:["2026/04/17","2026/04/16","2026/06/03","2026/05/28"],s:["〇","不要","",""],kk:"",tel:"06xxxxxxxx",mob:"08012345678"},
+ {n:"鈴木 一郎",play:"2026/08/01",wd:"土",course:"大阪湾",time:"09:07",g:4,p:16,route:"AGWeb",recv:"2026/05/30",d:["2026/05/31","2026/06/02","2026/06/27","2026/07/14"],s:["不在","","",""],kk:"",tel:"0724xxxxxx",mob:"09012345678"},
+ {n:"田中 美咲",play:"2026/06/21",wd:"日",course:"犬鳴",time:"10:07",g:5,p:20,route:"電話",recv:"2026/03/05",d:["2026/03/06","2026/04/22","2026/05/17","2026/06/03"],s:["〇","不要","〇",""],kk:"",tel:"0724xxxxxx",mob:"09012345678"},
+ {n:"高橋 健",play:"2026/06/25",wd:"木",course:"稲倉",time:"12:37",g:6,p:24,route:"GORA",recv:"2026/04/10",d:["2026/04/11","2026/04/26","2026/05/21","2026/06/07"],s:["〇","〇","〇","〇"],kk:"〇",kumi:"済",tel:"0724xxxxxx",mob:"09012345678"},
+ {n:"伊藤 直美",play:"2026/07/03",wd:"金",course:"稲倉",time:"08:22",g:3,p:12,route:"RECRUIT",recv:"2026/05/13",d:["2026/05/14","2026/05/04","2026/05/29","2026/06/15"],s:["〇","不要","〇","〇"],kk:"",tel:"0724xxxxxx",mob:"09012345678"}
 ];
 let showAll=false, selIdx=0, undoStack=[];
 function actRound(r){ if((r.kumi||"")==="済"||r.kk==="キャンセル")return -1; for(const i of [0,2,3]){const dt=pd(r.d[i]); if(dt&&dt<=TODAY&&(r.s[i]===""||r.s[i]==="不在"))return i;} return -1; }
@@ -185,8 +185,8 @@ function renderDetail(){
     <div class="fld"><div class="k">コース名</div><div class="v">${r.course}</div></div>
     <div class="fld"><div class="k">組数 / 人数</div><div class="v">${r.g}組 / ${r.p}人</div></div>
     <div class="fld"><div class="k">経路</div><div class="v">${r.route}</div></div>
-    <div class="fld"><div class="k">連絡先電話番号</div><div class="editcell"><span>${r.tel}</span><button class="sb" onclick="copyText('${r.tel}')">📋 コピー</button></div></div>
-    <div class="fld"><div class="k">携帯電話番号（SMS用）</div><div class="editcell"><span style="font-weight:700">${r.mob}</span><button class="sb done" onclick="copyText('${r.mob}')">📋 携帯をコピー</button></div></div>
+    <div class="fld"><div class="k">連絡先電話番号</div><div class="editcell"><span>${r.tel}</span><button class="sb" onclick="copyText('${r.tel}')">コピー</button></div></div>
+    <div class="fld"><div class="k">携帯電話番号（SMS用）</div><div class="editcell"><span style="font-weight:700">${r.mob}</span><button class="sb done" onclick="copyText('${r.mob}')">コピー</button></div></div>
     <div class="fld"><div class="k">いまの対応状況</div>${head}</div>
    </div>
    <div style="font-size:12px;font-weight:700;color:#374151;margin:14px 0 6px">確定・キャンセル・組合せ</div>
