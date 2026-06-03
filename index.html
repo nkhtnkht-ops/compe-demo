@@ -147,7 +147,7 @@ function render(){
   vis.forEach(r=>{
     const gi=rows.indexOf(r), a=actRound(r);
     let due,cls;
-    if(a<0){ if(r.kk==="キャンセル"){due="✕ キャンセル";} else if((r.kumi||"")==="済"){due="✓ 完了（組合せ入力済）";} else {due="✓ 連絡完了・組合せ入力待ち";} cls="done";}
+    if(a<0){ if(r.kk==="キャンセル"){due="✕ キャンセル";cls="carry";} else if((r.kumi||"")==="済"){due="✓ 完了（組合せ入力済）";cls="done";} else {due="✓ 連絡完了・組合せ入力待ち";cls="done";} }
     else if(r.s[a]==="不在"){due="⟳ 繰越（前回不在）："+lbl[a];cls="carry";}
     else {due="要対応："+lbl[a]+"（"+r.d[a]+"）";cls="act";}
     let ctrl;
