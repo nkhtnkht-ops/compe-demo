@@ -212,6 +212,8 @@ function renderDetail(){
     <div class="fld"><div class="k">③35日前</div>${editCell(gi,2)}</div>
     <div class="fld"><div class="k">④18日前</div>${editCell(gi,3)}</div>
    </div>
+   <div style="font-size:12px;font-weight:700;color:#374151;margin:14px 0 6px">メモ（連絡内容・申し送り）</div>
+   <textarea onchange="rows[${gi}].memo=this.value" placeholder="例）6/3 田中様へ連絡、組数は3組で確定見込み。次回6/15に再確認。" style="width:100%;height:84px;border:1px solid var(--line);border-radius:6px;padding:10px;font-size:13px;font-family:inherit">${(r.memo||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')}</textarea>
    <p style="color:#9aa1aa;font-size:12px;margin-top:14px">戻し方は2通り：①上部 <b>↩ 元に戻す</b> で直前操作を取消／②この詳細で各接点を選び直し（<b>全件</b>表示にすれば完了済みの予約も探して修正できます）。「不在」は〇/不要にするまで繰越で残ります。</p>`;
 }
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1900);}
