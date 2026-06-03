@@ -19,7 +19,10 @@
   .refresh{background:#ffd54a;color:#5b4500;border:0;border-radius:20px;font-weight:700;font-size:13px;padding:7px 14px;cursor:pointer;}
   .body{display:flex;flex:1;min-height:0;}
   .side{flex:1;border-right:1px solid var(--line);display:flex;flex-direction:column;min-width:0;}
-  .sbar{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--line);font-size:12px;color:var(--muted);}
+  .sbar{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--line);font-size:12px;color:var(--muted);gap:6px;flex-wrap:wrap;}
+  .sortgrp{display:flex;align-items:center;gap:4px;}
+  .sortb{border:1px solid var(--line);background:#fff;color:#374151;border-radius:14px;font-size:11px;font-weight:700;padding:4px 9px;cursor:pointer;}
+  .sortb.on{background:var(--blue);color:#fff;border-color:var(--blue);}
   .list{overflow:auto;}
   .gi{padding:10px 12px;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:center;cursor:pointer;}
   .gi:hover{background:#f9fbfd;} .gi.sel{background:#eef4fb;}
@@ -46,6 +49,11 @@
   .fld .v{background:#f3f4f6;border-radius:4px;padding:7px 10px;font-size:14px;min-height:32px;}
   .v.green{color:#1a7f37;font-weight:700;background:#eafaf0;} .v.gray{color:#6b7280;} .v.red{color:#b91c1c;font-weight:700;background:#fdecea;}
   .editcell{display:flex;justify-content:space-between;align-items:center;gap:6px;background:#f3f4f6;border-radius:4px;padding:6px 8px;flex-wrap:wrap;}
+  .onecard{background:#f3f4f6;border-radius:6px;padding:4px 12px;}
+  .orow{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 0;}
+  .orow+.orow{border-top:1px solid #e5e7eb;}
+  .orow .ok{font-size:13px;color:#374151;font-weight:600;}
+  .orow .note{color:#9ca3af;font-weight:400;font-size:11px;}
   .hint{color:#9aa1aa;text-align:center;margin-top:60px;}
   #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#111827;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;opacity:0;transition:.25s;pointer-events:none;z-index:9;}
   #toast.show{opacity:.95;}
@@ -71,7 +79,12 @@
 
   <div class="body" id="screenMain">
     <div class="side">
-      <div class="sbar"><span id="countLbl"></span><span>連絡したら右で選択（〇/不在/不要）</span></div>
+      <div class="sbar"><span id="countLbl"></span>
+        <span class="sortgrp">並び：
+          <button class="sortb on" id="sortPlay" onclick="setSort('play')">プレー日順</button>
+          <button class="sortb" id="sortRecv" onclick="setSort('recv')">受付日順</button>
+        </span>
+      </div>
       <div class="list" id="list"></div>
     </div>
     <div class="detail" id="detail"></div>
@@ -101,7 +114,7 @@ let rows=[
  {n:"高橋 健",play:"2026/06/25",wd:"木",course:"稲倉",time:"12:37",g:6,p:24,route:"GORA",recv:"2026/04/10",d:["2026/04/11","2026/04/26","2026/05/21","2026/06/07"],s:["〇","〇","〇","〇"],kk:"〇",kumi:"済",tel:"0724xxxxxx",mob:"09012345678"},
  {n:"伊藤 直美",play:"2026/07/03",wd:"金",course:"稲倉",time:"08:22",g:3,p:12,route:"RECRUIT",recv:"2026/05/13",d:["2026/05/14","2026/05/04","2026/05/29","2026/06/15"],s:["〇","不要","〇","〇"],kk:"",tel:"0724xxxxxx",mob:"09012345678"}
 ];
-let showAll=false, selIdx=0, undoStack=[];
+let showAll=false, selIdx=0, undoStack=[], sortKey='play';
 function actRound(r){ if((r.kumi||"")==="済"||r.kk==="キャンセル")return -1; for(const i of [0,2,3]){const dt=pd(r.d[i]); if(dt&&dt<=TODAY&&(r.s[i]===""||r.s[i]==="不在"))return i;} return -1; }
 function isToday(r){return actRound(r)>=0;}
 function inTodayView(r){return isToday(r)||r._touch;}
@@ -139,10 +152,12 @@ function undoLast(){
 }
 function refreshList(){ rows.forEach(r=>r._touch=false); undoStack=[]; document.getElementById('undoBtn').disabled=true; toast('一覧を整理しました（解決済みを除外）'); render(); }
 function toggleMode(){showAll=!showAll;render();}
+function setSort(k){sortKey=k;document.getElementById('sortPlay').classList.toggle('on',k==='play');document.getElementById('sortRecv').classList.toggle('on',k==='recv');render();}
 function delRow(gi){const r=rows[gi];if(!r)return;if(confirm(r.n+' を削除しますか？\n（この操作は元に戻せません）')){rows.splice(gi,1);if(selIdx>=rows.length)selIdx=Math.max(0,rows.length-1);toast('削除しました：'+r.n);render();}}
 
 function render(){
   const vis=visibleRows();
+  vis.sort((a,b)=>{const ka=pd(sortKey==='recv'?a.recv:a.play),kb=pd(sortKey==='recv'?b.recv:b.play);return (ka?ka.getTime():0)-(kb?kb.getTime():0);});
   document.getElementById('countLbl').textContent=(showAll?"全件":"今日やること")+"："+vis.length+"件";
   document.getElementById('modeBtn').textContent="表示："+(showAll?"全件":"今日やること")+" ▾";
   document.getElementById('refBtn').classList.toggle('hidden',showAll);
@@ -195,20 +210,22 @@ function renderDetail(){
     <div class="fld"><div class="k">いまの対応状況</div>${head}</div>
    </div>
    <div style="font-size:12px;font-weight:700;color:#374151;margin:14px 0 6px">確定・キャンセル・組合せ</div>
-   <div class="grid">
-    <div class="fld"><div class="k">組数確定／キャンセル<span style="color:#9ca3af;font-weight:400">（組数確定〇は情報のみ・追跡は継続／キャンセルは終了）</span></div>
-     <div class="editcell"><span>${r.kk==='〇'?'<span class="pill green">確定〇</span>':r.kk==='キャンセル'?'<span class="pill red">キャンセル</span>':'<span style="color:#374151">未</span>'}</span>
+   <div class="onecard">
+    <div class="orow">
+     <div class="ok">組数確定／キャンセル <span class="note">（確定〇は情報のみ・追跡継続／キャンセルは終了）</span></div>
      <span class="sel-wrap">
       <button class="sb ${(r.kk||'')===''?'on-fuyo':''}" onclick="setF(${gi},'kk','','組数確定')">未</button>
       <button class="sb done ${r.kk==='〇'?'on-done':''}" onclick="setF(${gi},'kk','〇','組数確定')">確定〇</button>
       <button class="sb zai ${r.kk==='キャンセル'?'on-zai':''}" onclick="setF(${gi},'kk','キャンセル','キャンセル')">キャンセル</button>
-     </span></div></div>
-    <div class="fld"><div class="k">組合せ入力<span style="color:#9ca3af;font-weight:400">（入力済で追跡終了＝今日やることから外れる）</span></div>
-     <div class="editcell"><span>${(r.kumi||'')==='済'?'<span class="pill green">入力済</span>':'<span style="color:#374151">未</span>'}</span>
+     </span>
+    </div>
+    <div class="orow">
+     <div class="ok">組合せ入力 <span class="note">（入力済で追跡終了）</span></div>
      <span class="sel-wrap">
       <button class="sb ${(r.kumi||'')===''?'on-fuyo':''}" onclick="setF(${gi},'kumi','','組合せ入力')">未</button>
       <button class="sb done ${(r.kumi||'')==='済'?'on-done':''}" onclick="setF(${gi},'kumi','済','組合せ入力')">入力済</button>
-     </span></div></div>
+     </span>
+    </div>
    </div>
    <div style="font-size:12px;font-weight:700;color:#374151;margin:14px 0 6px">フォロー状況（ここで直接変更・修正できます）</div>
    <div class="grid">
