@@ -95,11 +95,11 @@ let rows=[
  {n:"佐藤 花子",play:"2026/06/15",wd:"月",course:"犬鳴",time:"08:52",g:3,p:10,route:"AGWeb",recv:"2026/04/16",d:["2026/04/17","2026/04/16","2026/06/03","2026/05/28"],s:["〇","不要","",""],kk:"",tel:"06-xxxx-xxxx",mob:"080-xxxx-xxxx"},
  {n:"鈴木 一郎",play:"2026/08/01",wd:"土",course:"大阪湾",time:"09:07",g:4,p:16,route:"AGWeb",recv:"2026/05/30",d:["2026/05/31","2026/06/02","2026/06/27","2026/07/14"],s:["不在","","",""],kk:"",tel:"072-xxx-xxxx",mob:"090-xxxx-xxxx"},
  {n:"田中 美咲",play:"2026/06/21",wd:"日",course:"犬鳴",time:"10:07",g:5,p:20,route:"電話",recv:"2026/03/05",d:["2026/03/06","2026/04/22","2026/05/17","2026/06/03"],s:["〇","不要","〇",""],kk:"",tel:"072-xxx-xxxx",mob:"090-xxxx-xxxx"},
- {n:"高橋 健",play:"2026/06/25",wd:"木",course:"稲倉",time:"12:37",g:6,p:24,route:"GORA",recv:"2026/04/10",d:["2026/04/11","2026/04/26","2026/05/21","2026/06/07"],s:["〇","〇","〇","〇"],kk:"〇",tel:"072-xxx-xxxx",mob:"090-xxxx-xxxx"},
+ {n:"高橋 健",play:"2026/06/25",wd:"木",course:"稲倉",time:"12:37",g:6,p:24,route:"GORA",recv:"2026/04/10",d:["2026/04/11","2026/04/26","2026/05/21","2026/06/07"],s:["〇","〇","〇","〇"],kk:"〇",kumi:"済",tel:"072-xxx-xxxx",mob:"090-xxxx-xxxx"},
  {n:"伊藤 直美",play:"2026/07/03",wd:"金",course:"稲倉",time:"08:22",g:3,p:12,route:"RECRUIT",recv:"2026/05/13",d:["2026/05/14","2026/05/04","2026/05/29","2026/06/15"],s:["〇","不要","〇","〇"],kk:"",tel:"072-xxx-xxxx",mob:"090-xxxx-xxxx"}
 ];
 let showAll=false, selIdx=0, undoStack=[];
-function actRound(r){ if(r.kk==="〇"||r.kk==="キャンセル")return -1; for(const i of [0,2,3]){const dt=pd(r.d[i]); if(dt&&dt<=TODAY&&(r.s[i]===""||r.s[i]==="不在"))return i;} return -1; }
+function actRound(r){ if((r.kumi||"")==="済"||r.kk==="キャンセル")return -1; for(const i of [0,2,3]){const dt=pd(r.d[i]); if(dt&&dt<=TODAY&&(r.s[i]===""||r.s[i]==="不在"))return i;} return -1; }
 function isToday(r){return actRound(r)>=0;}
 function inTodayView(r){return isToday(r)||r._touch;}
 function visibleRows(){return showAll?rows:rows.filter(inTodayView);}
@@ -107,7 +107,7 @@ function visibleRows(){return showAll?rows:rows.filter(inTodayView);}
 function setS(gi,i,val,quiet){
   const r=rows[gi];
   if(r.s[i]===val)return;
-  undoStack.push({gi,i,prev:r.s[i]});
+  undoStack.push({gi,t:'s',i,prev:r.s[i]});
   r.s[i]=val; r._touch=true; selIdx=gi;
   document.getElementById('undoBtn').disabled=false;
   if(!quiet){
@@ -117,11 +117,21 @@ function setS(gi,i,val,quiet){
   }
   render();
 }
+function setF(gi,key,val,jp){
+  const r=rows[gi]; if((r[key]||"")===val)return;
+  undoStack.push({gi,t:'f',key,prev:r[key]||""});
+  r[key]=val; r._touch=true; selIdx=gi;
+  document.getElementById('undoBtn').disabled=false;
+  toast(jp+'＝'+(val===''?'未':val)+'（更新するまで一覧に残ります）');
+  render();
+}
 function undoLast(){
   if(undoStack.length===0){toast('戻す操作がありません');return;}
-  const u=undoStack.pop(); rows[u.gi].s[u.i]=u.prev; rows[u.gi]._touch=true; selIdx=u.gi;
+  const u=undoStack.pop();
+  if(u.t==='f'){rows[u.gi][u.key]=u.prev;} else {rows[u.gi].s[u.i]=u.prev;}
+  rows[u.gi]._touch=true; selIdx=u.gi;
   document.getElementById('undoBtn').disabled=undoStack.length===0;
-  toast('元に戻しました：'+rows[u.gi].n+' '+lbl[u.i]);
+  toast('元に戻しました：'+rows[u.gi].n);
   render();
 }
 function refreshList(){ rows.forEach(r=>r._touch=false); undoStack=[]; document.getElementById('undoBtn').disabled=true; toast('一覧を整理しました（解決済みを除外）'); render(); }
@@ -137,7 +147,7 @@ function render(){
   vis.forEach(r=>{
     const gi=rows.indexOf(r), a=actRound(r);
     let due,cls;
-    if(a<0){due="✓ 対応完了";cls="done";}
+    if(a<0){ if(r.kk==="キャンセル"){due="✕ キャンセル";} else if((r.kumi||"")==="済"){due="✓ 完了（組合せ入力済）";} else {due="✓ 連絡完了・組合せ入力待ち";} cls="done";}
     else if(r.s[a]==="不在"){due="⟳ 繰越（前回不在）："+lbl[a];cls="carry";}
     else {due="要対応："+lbl[a]+"（"+r.d[a]+"）";cls="act";}
     let ctrl;
@@ -177,6 +187,22 @@ function renderDetail(){
     <div class="fld"><div class="k">経路</div><div class="v">${r.route}</div></div>
     <div class="fld"><div class="k">連絡先 / 携帯</div><div class="v">${r.tel} / ${r.mob}</div></div>
     <div class="fld"><div class="k">いまの対応状況</div>${head}</div>
+   </div>
+   <div style="font-size:12px;font-weight:700;color:#374151;margin:14px 0 6px">確定・キャンセル・組合せ</div>
+   <div class="grid">
+    <div class="fld"><div class="k">組数確定／キャンセル<span style="color:#9ca3af;font-weight:400">（組数確定〇は情報のみ・追跡は継続／キャンセルは終了）</span></div>
+     <div class="editcell"><span>${r.kk==='〇'?'<span class="pill green">確定〇</span>':r.kk==='キャンセル'?'<span class="pill red">キャンセル</span>':'<span style="color:#374151">未</span>'}</span>
+     <span class="sel-wrap">
+      <button class="sb ${(r.kk||'')===''?'on-fuyo':''}" onclick="setF(${gi},'kk','','組数確定')">未</button>
+      <button class="sb done ${r.kk==='〇'?'on-done':''}" onclick="setF(${gi},'kk','〇','組数確定')">確定〇</button>
+      <button class="sb zai ${r.kk==='キャンセル'?'on-zai':''}" onclick="setF(${gi},'kk','キャンセル','キャンセル')">キャンセル</button>
+     </span></div></div>
+    <div class="fld"><div class="k">組合せ入力<span style="color:#9ca3af;font-weight:400">（入力済で追跡終了＝今日やることから外れる）</span></div>
+     <div class="editcell"><span>${(r.kumi||'')==='済'?'<span class="pill green">入力済</span>':'<span style="color:#374151">未</span>'}</span>
+     <span class="sel-wrap">
+      <button class="sb ${(r.kumi||'')===''?'on-fuyo':''}" onclick="setF(${gi},'kumi','','組合せ入力')">未</button>
+      <button class="sb done ${(r.kumi||'')==='済'?'on-done':''}" onclick="setF(${gi},'kumi','済','組合せ入力')">入力済</button>
+     </span></div></div>
    </div>
    <div style="font-size:12px;font-weight:700;color:#374151;margin:14px 0 6px">フォロー状況（ここで直接変更・修正できます）</div>
    <div class="grid">
