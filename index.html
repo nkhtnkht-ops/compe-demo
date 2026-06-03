@@ -10,29 +10,27 @@
   body{margin:0;background:#dfe3e8;color:var(--ink);}
   .demo-note{background:#fff7e6;border-bottom:1px solid #f0d28a;color:#6b5400;font-size:12px;padding:6px 12px;text-align:center;}
   .app{max-width:1120px;margin:0 auto;background:#fff;min-height:100vh;display:flex;flex-direction:column;}
-  /* header */
-  .appbar{background:var(--blue);color:#fff;display:flex;align-items:center;gap:12px;padding:0 14px;height:58px;flex-wrap:wrap;}
-  .appbar .ttl{font-weight:700;font-size:17px;}
-  .appbar .nav{background:rgba(255,255,255,.18);color:#fff;border:0;border-radius:6px;font-size:13px;padding:7px 12px;cursor:pointer;}
+  .appbar{background:var(--blue);color:#fff;display:flex;align-items:center;gap:10px;padding:8px 14px;flex-wrap:wrap;}
+  .appbar .ttl{font-weight:700;font-size:16px;}
+  .appbar .nav{background:rgba(255,255,255,.18);color:#fff;border:0;border-radius:6px;font-size:13px;padding:7px 11px;cursor:pointer;}
   .appbar .sp{flex:1;}
-  .btn{border:0;border-radius:6px;color:#fff;font-weight:700;font-size:13px;padding:8px 13px;cursor:pointer;}
+  .btn{border:0;border-radius:6px;color:#fff;font-weight:700;font-size:13px;padding:8px 12px;cursor:pointer;}
   .b-gray{background:#6b7280;} .b-orange{background:#b35900;} .b-green{background:#1a7f37;} .b-blue{background:var(--blue);}
   .btn:active{transform:translateY(1px);} .btn:disabled{opacity:.4;cursor:default;}
-  /* body */
+  .toggle{background:#fff;color:var(--blue);border:0;border-radius:20px;font-weight:700;font-size:13px;padding:7px 14px;cursor:pointer;}
   .body{display:flex;flex:1;min-height:0;}
-  .side{width:320px;border-right:1px solid var(--line);display:flex;flex-direction:column;}
-  .search{margin:10px;border:1px solid var(--line);border-radius:6px;padding:8px 10px;color:#9aa1aa;display:flex;justify-content:space-between;font-size:13px;}
-  .newrow{padding:8px 14px;color:var(--blue);font-weight:600;border-bottom:1px solid var(--line);font-size:14px;}
+  .side{width:340px;border-right:1px solid var(--line);display:flex;flex-direction:column;}
+  .sbar{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--line);font-size:12px;color:var(--muted);}
+  .search{margin:10px;border:1px solid var(--line);border-radius:6px;padding:8px 10px;color:#9aa1aa;font-size:13px;}
   .list{overflow:auto;}
   .gi{padding:11px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;cursor:pointer;}
-  .gi:hover{background:#f7f9fb;}
-  .gi.sel{background:#eef4fb;border-left:4px solid var(--blue);}
+  .gi:hover{background:#f7f9fb;} .gi.sel{background:#eef4fb;border-left:4px solid var(--blue);}
   .gi .nm{font-weight:600;}
   .gi .sub{font-size:12px;color:var(--muted);margin-top:2px;}
-  .gi .due{font-size:11px;color:#b35900;margin-top:2px;}
-  .gi .chev{color:#b9c0c8;}
+  .gi .due{font-size:11px;margin-top:3px;}
+  .due.act{color:#b35900;font-weight:700;} .due.carry{color:#b91c1c;font-weight:700;} .due.done{color:#1a7f37;}
+  .chev{color:#b9c0c8;}
   .empty{padding:30px;text-align:center;color:#9aa1aa;}
-  /* detail */
   .detail{flex:1;padding:14px 22px;overflow:auto;}
   .dh{display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:14px;}
   .dh .name{font-size:18px;font-weight:700;}
@@ -40,25 +38,24 @@
   .fld .k{font-size:12px;color:#374151;font-weight:600;margin-bottom:3px;}
   .fld .v{background:#f3f4f6;border-radius:4px;padding:8px 10px;font-size:14px;min-height:34px;}
   .v.green{color:#1a7f37;font-weight:700;background:#eafaf0;}
-  .v.gray{color:#6b7280;}
+  .v.gray{color:#6b7280;} .v.red{color:#b91c1c;font-weight:700;background:#fdecea;}
   .hint{color:#9aa1aa;text-align:center;margin-top:60px;}
-  /* import */
   .imp{padding:16px 20px;}
-  .imp .ta{width:100%;height:200px;border:1px solid var(--line);border-radius:6px;padding:12px;font-size:13px;font-family:monospace;}
+  .imp .ta{width:100%;height:190px;border:1px solid var(--line);border-radius:6px;padding:12px;font-size:13px;font-family:monospace;}
   .imp .row{margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;}
   .imp .msg{margin-top:14px;font-size:14px;min-height:22px;}
-  /* toast */
   #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#111827;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;opacity:0;transition:.25s;pointer-events:none;z-index:9;}
   #toast.show{opacity:.95;}
   .hidden{display:none!important;}
-  @media(max-width:760px){.body{flex-direction:column}.side{width:auto;max-height:40vh}.grid{grid-template-columns:1fr}}
+  @media(max-width:760px){.body{flex-direction:column}.side{width:auto;max-height:42vh}.grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-<div class="demo-note">体験デモ（クリックできます）｜ ダミーデータです・実在の顧客情報は含みません ｜ 実アプリは社内M365内で稼働</div>
+<div class="demo-note">体験デモ（クリックできます）｜ ダミーデータ・実在の顧客情報なし ｜ 基準日=2026/06/03 として動作 ｜ 実アプリは社内M365内で稼働</div>
 <div class="app">
   <div class="appbar">
     <span class="ttl">コンペ予約 追客台帳（泉佐野）</span>
+    <button class="toggle" id="modeBtn" onclick="toggleMode()">表示：今日やること ▾</button>
     <button class="nav" id="toImport">＋ CSV取込</button>
     <button class="nav hidden" id="toMain">← 一覧へ戻る</button>
     <span class="sp"></span>
@@ -69,17 +66,15 @@
     </span>
   </div>
 
-  <!-- MAIN -->
   <div class="body" id="screenMain">
     <div class="side">
-      <div class="search"><span>検索</span><span>🔍</span></div>
-      <div class="newrow">＋ 新規</div>
+      <div class="sbar"><span id="countLbl"></span><span>並び：プレー日</span></div>
+      <div class="search">🔍 検索（氏名）</div>
       <div class="list" id="list"></div>
     </div>
     <div class="detail" id="detail"></div>
   </div>
 
-  <!-- IMPORT -->
   <div class="imp hidden" id="screenImport">
     <textarea class="ta" id="ta" placeholder="予約受付一覧CSVをExcel等で開き、全選択(Ctrl+A)→コピー(Ctrl+C)して、ここに貼り付け(Ctrl+V)してください"></textarea>
     <div class="row">
@@ -93,37 +88,59 @@
 <div id="toast"></div>
 
 <script>
-// ---- ダミーデータ（実在しない例）----
-let rows = [
-  {n:"山田 太郎",  play:"2026/06/09",wd:"火",course:"犬鳴",time:"10:07",g:3,p:12,route:"電話",  recv:"2026/04/08", d:["2026/04/09","2026/04/10","2026/05/05","2026/05/22"], s:["〇","不要","不要",""], due:3, tel:"072-xxx-xxxx", mob:"090-xxxx-xxxx"},
-  {n:"佐藤 花子",  play:"2026/06/15",wd:"月",course:"稲倉",time:"08:52",g:3,p:10,route:"AGWeb", recv:"2026/02/18", d:["2026/02/19","2026/04/16","2026/05/11","2026/05/28"], s:["〇","〇","〇",""], due:3, tel:"06-xxxx-xxxx", mob:"080-xxxx-xxxx"},
-  {n:"鈴木 一郎",  play:"2026/06/16",wd:"火",course:"大阪湾",time:"07:45",g:3,p:12,route:"AGWeb", recv:"2026/05/25", d:["2026/05/26","2026/04/17","2026/05/12","2026/05/29"], s:["","不要","",""], due:0, tel:"072-xxx-xxxx", mob:"090-xxxx-xxxx"},
-  {n:"田中 美咲",  play:"2026/06/20",wd:"土",course:"犬鳴",time:"10:07",g:5,p:20,route:"AGWeb", recv:"2026/03/05", d:["2026/03/06","2026/04/21","2026/05/16","2026/06/02"], s:["〇","〇","〇",""], due:3, tel:"072-xxx-xxxx", mob:"090-xxxx-xxxx"},
-  {n:"高橋 健",    play:"2026/06/21",wd:"日",course:"稲倉",time:"12:37",g:6,p:24,route:"GORA",  recv:"2026/04/17", d:["2026/04/18","2026/04/22","2026/05/17","2026/06/03"], s:["〇","不要","",""], due:3, tel:"072-xxx-xxxx", mob:"090-xxxx-xxxx"},
-  {n:"伊藤 直美",  play:"2026/07/03",wd:"金",course:"稲倉",time:"08:22",g:3,p:12,route:"RECRUIT",recv:"2026/05/13", d:["2026/05/14","2026/05/04","2026/05/29","2026/06/15"], s:["〇","〇","〇",""], due:0, tel:"072-xxx-xxxx", mob:"090-xxxx-xxxx"}
+const TODAY=new Date(2026,5,3); // 2026/06/03
+const lbl=["①受付翌日","②60日前","③35日前","④18日前"];
+function pd(s){const m=s&&s.match(/(\d{4})\/(\d{1,2})\/(\d{1,2})/);return m?new Date(+m[1],+m[2]-1,+m[3]):null;}
+// ダミーデータ（実在しません）。d=①②③④予定日, s=①②③④状態, kk=組数確定
+let rows=[
+ {n:"山田 太郎",play:"2026/07/20",wd:"月",course:"稲倉",time:"07:37",g:3,p:12,route:"GORA",recv:"2026/06/02",d:["2026/06/03","2026/05/21","2026/06/15","2026/07/02"],s:["","","",""],kk:"",tel:"072-xxx-xxxx",mob:"090-xxxx-xxxx"},
+ {n:"佐藤 花子",play:"2026/06/15",wd:"月",course:"犬鳴",time:"08:52",g:3,p:10,route:"AGWeb",recv:"2026/04/16",d:["2026/04/17","2026/04/16","2026/06/03","2026/05/28"],s:["〇","不要","",""],kk:"",tel:"06-xxxx-xxxx",mob:"080-xxxx-xxxx"},
+ {n:"鈴木 一郎",play:"2026/08/01",wd:"土",course:"大阪湾",time:"09:07",g:4,p:16,route:"AGWeb",recv:"2026/05/30",d:["2026/05/31","2026/06/02","2026/06/27","2026/07/14"],s:["不在","","",""],kk:"",tel:"072-xxx-xxxx",mob:"090-xxxx-xxxx"},
+ {n:"田中 美咲",play:"2026/06/21",wd:"日",course:"犬鳴",time:"10:07",g:5,p:20,route:"電話",recv:"2026/03/05",d:["2026/03/06","2026/04/22","2026/05/17","2026/06/03"],s:["〇","不要","〇",""],kk:"",tel:"072-xxx-xxxx",mob:"090-xxxx-xxxx"},
+ {n:"高橋 健",play:"2026/06/25",wd:"木",course:"稲倉",time:"12:37",g:6,p:24,route:"GORA",recv:"2026/04/10",d:["2026/04/11","2026/04/26","2026/05/21","2026/06/07"],s:["〇","〇","〇","〇"],kk:"〇",tel:"072-xxx-xxxx",mob:"090-xxxx-xxxx"},
+ {n:"伊藤 直美",play:"2026/07/03",wd:"金",course:"稲倉",time:"08:22",g:3,p:12,route:"RECRUIT",recv:"2026/05/13",d:["2026/05/14","2026/05/04","2026/05/29","2026/06/15"],s:["〇","不要","〇","〇"],kk:"",tel:"072-xxx-xxxx",mob:"090-xxxx-xxxx"}
 ];
-const dueLabel=["①受付翌日","②60日前","③35日前","④18日前"];
-let selIdx = 0;
+let showAll=false, selIdx=0;
+
+// 要対応の接点（①③④のみ・期限到来・未対応or不在繰越）。組数確定〇/キャンセルは対象外
+function actRound(r){
+  if(r.kk==="〇"||r.kk==="キャンセル")return -1;
+  for(const i of [0,2,3]){ const dt=pd(r.d[i]); if(dt&&dt<=TODAY&&(r.s[i]===""||r.s[i]==="不在"))return i; }
+  return -1;
+}
+function isToday(r){return actRound(r)>=0;}
+function visibleRows(){return showAll?rows:rows.filter(isToday);}
 
 function render(){
-  const list=document.getElementById('list');
-  list.innerHTML='';
-  if(rows.length===0){ list.innerHTML='<div class="empty">今日やることはありません 🎉</div>'; }
-  rows.forEach((r,i)=>{
+  const vis=visibleRows();
+  document.getElementById('countLbl').textContent = (showAll?"全件":"今日やること")+"："+vis.length+"件";
+  document.getElementById('modeBtn').textContent = "表示："+(showAll?"全件":"今日やること")+" ▾";
+  const list=document.getElementById('list'); list.innerHTML='';
+  if(vis.length===0){list.innerHTML='<div class="empty">'+(showAll?'データがありません':'今日やることはありません 🎉')+'</div>';}
+  vis.forEach((r)=>{
+    const gi=rows.indexOf(r);
+    const a=actRound(r);
+    let due,cls;
+    if(a<0){due="✓ 対応完了";cls="done";}
+    else if(r.s[a]==="不在"){due="⟳ 繰越（前回不在）："+lbl[a]+"（"+r.d[a]+"）";cls="carry";}
+    else {due="要対応："+lbl[a]+"（"+r.d[a]+"）";cls="act";}
     const div=document.createElement('div');
-    div.className='gi'+(i===selIdx?' sel':'');
-    const dl = r.due>=0 ? `要対応：${dueLabel[r.due]}（${r.d[r.due]}）` : '';
-    div.innerHTML=`<div><div class="nm">${r.n}</div><div class="sub">${r.play}・${r.wd}・${r.course}・${r.g}組</div><div class="due">${dl}</div></div><span class="chev">›</span>`;
-    div.onclick=()=>{selIdx=i;render();};
+    div.className='gi'+(gi===selIdx?' sel':'');
+    div.innerHTML=`<div><div class="nm">${r.n}</div><div class="sub">${r.play}・${r.wd}・${r.course}・${r.g}組</div><div class="due ${cls}">${due}</div></div><span class="chev">›</span>`;
+    div.onclick=()=>{selIdx=gi;render();};
     list.appendChild(div);
   });
   renderDetail();
 }
 function renderDetail(){
   const d=document.getElementById('detail');
-  if(rows.length===0||selIdx>=rows.length){ d.innerHTML='<div class="hint">左の一覧から予約を選んでください</div>'; return;}
-  const r=rows[selIdx];
-  const sv=(i)=> r.s[i] ? `<div class="v ${r.s[i]==='〇'?'green':'gray'}">${r.s[i]}</div>` : `<div class="v">${r.d[i]}</div>`;
+  const vis=visibleRows();
+  if(vis.length===0||!rows[selIdx]||(!showAll&&!isToday(rows[selIdx]))){
+    if(vis.length>0){selIdx=rows.indexOf(vis[0]);} else {d.innerHTML='<div class="hint">表示できる予約がありません</div>';return;}
+  }
+  const r=rows[selIdx], a=actRound(r);
+  const cell=(i)=>{ if(r.s[i]==="〇")return '<div class="v green">〇</div>'; if(r.s[i]==="不在")return '<div class="v red">不在（繰越）</div>'; if(r.s[i]==="不要")return '<div class="v gray">不要</div>'; return '<div class="v">'+r.d[i]+'</div>'; };
+  let head; if(a<0)head='<div class="v green">対応完了（要対応なし）</div>'; else if(r.s[a]==="不在")head='<div class="v red">繰越（前回不在）：'+lbl[a]+'（'+r.d[a]+'）</div>'; else head='<div class="v" style="color:#b35900;font-weight:700">要対応：'+lbl[a]+'（'+r.d[a]+'）</div>';
   d.innerHTML=`
    <div class="dh"><span class="name">${r.n}</span><span style="color:#9aa1aa">✏ 🗑</span></div>
    <div class="grid">
@@ -133,69 +150,58 @@ function renderDetail(){
     <div class="fld"><div class="k">組数 / 人数</div><div class="v">${r.g}組 / ${r.p}人</div></div>
     <div class="fld"><div class="k">経路</div><div class="v">${r.route}</div></div>
     <div class="fld"><div class="k">受付日</div><div class="v">${r.recv}</div></div>
-    <div class="fld"><div class="k">連絡先 / 携帯</div><div class="v">${r.tel} / ${r.mob}</div></div>
-    <div class="fld"><div class="k">要対応の接点</div><div class="v ${r.due>=0?'':'gray'}">${r.due>=0?dueLabel[r.due]+'（'+r.d[r.due]+'）':'なし'}</div></div>
-    <div class="fld"><div class="k">①受付翌日</div>${sv(0)}</div>
-    <div class="fld"><div class="k">②60日前</div>${sv(1)}</div>
-    <div class="fld"><div class="k">③35日前</div>${sv(2)}</div>
-    <div class="fld"><div class="k">④18日前</div>${sv(3)}</div>
+    <div class="fld" style="grid-column:1/3"><div class="k">いまの対応状況</div>${head}</div>
+    <div class="fld"><div class="k">①受付翌日</div>${cell(0)}</div>
+    <div class="fld"><div class="k">②60日前</div>${cell(1)}</div>
+    <div class="fld"><div class="k">③35日前</div>${cell(2)}</div>
+    <div class="fld"><div class="k">④18日前</div>${cell(3)}</div>
    </div>
-   <p style="color:#9aa1aa;font-size:12px;margin-top:16px">↑「✓連絡完了／不在／不要」を押すと、要対応の接点が記録され、対応完了ならこの予約は今日やることから消えます（実アプリと同じ動き）。</p>`;
+   <p style="color:#9aa1aa;font-size:12px;margin-top:16px">「✓連絡完了／不要」で接点が解決して今日やることから外れます。「不在」は<b>解決するまで繰越として今日やることに残り続けます</b>（取りこぼし防止）。上の「表示」ボタンで今日やること↔全件を切替できます。</p>`;
 }
 function mark(val){
-  if(document.getElementById('screenImport').classList.contains('hidden')===false){return;}
-  if(rows.length===0||selIdx>=rows.length){toast('予約を選んでください');return;}
-  const r=rows[selIdx];
-  if(r.due<0){toast('この予約に要対応の接点はありません');return;}
-  r.s[r.due]=val;
-  toast(`${dueLabel[r.due]} を「${val}」で記録しました`);
-  // 完了/不要なら今日やることから外す（デモ簡略：行を除去）
-  rows.splice(selIdx,1);
-  if(selIdx>=rows.length) selIdx=Math.max(0,rows.length-1);
+  if(!document.getElementById('screenImport').classList.contains('hidden'))return;
+  const r=rows[selIdx]; if(!r){toast('予約を選んでください');return;}
+  const a=actRound(r);
+  if(a<0){toast('この予約は要対応の接点がありません');return;}
+  r.s[a]=val;
+  if(val==='不在')toast(lbl[a]+'を「不在」で記録（繰越として残ります）');
+  else toast(lbl[a]+'を「'+val+'」で記録しました');
   render();
 }
-function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1800);}
+function toggleMode(){showAll=!showAll;render();}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1900);}
 
-// screen toggle
-document.getElementById('toImport').onclick=()=>{
-  document.getElementById('screenMain').classList.add('hidden');
-  document.getElementById('screenImport').classList.remove('hidden');
-  document.getElementById('toImport').classList.add('hidden');
-  document.getElementById('toMain').classList.remove('hidden');
-  document.getElementById('actions').classList.add('hidden');
-};
-document.getElementById('toMain').onclick=()=>{
-  document.getElementById('screenImport').classList.add('hidden');
-  document.getElementById('screenMain').classList.remove('hidden');
-  document.getElementById('toMain').classList.add('hidden');
-  document.getElementById('toImport').classList.remove('hidden');
-  document.getElementById('actions').classList.remove('hidden');
-};
-
-// import demo
+document.getElementById('toImport').onclick=()=>{flip(true)};
+document.getElementById('toMain').onclick=()=>{flip(false)};
+function flip(imp){
+  document.getElementById('screenMain').classList.toggle('hidden',imp);
+  document.getElementById('screenImport').classList.toggle('hidden',!imp);
+  document.getElementById('toImport').classList.toggle('hidden',imp);
+  document.getElementById('toMain').classList.toggle('hidden',!imp);
+  document.getElementById('actions').classList.toggle('hidden',imp);
+  document.getElementById('modeBtn').classList.toggle('hidden',imp);
+}
 const sample=`ゴルフ場名,データ種別,プレー日,コース,スタート時間,代表者名(漢字),代表者名(カナ),組数,人数,連絡先電話番号,携帯電話番号,FAX番号,予約チャネル,予約受付日時,受付者,受付者ロール
-泉佐野カントリークラブ,一般予約,2026-08-04 00:00,稲倉,07:15:00,新規 太郎,ｼﾝｷ ﾀﾛｳ,3組,9人,'072xxxxxxx,'090xxxxxxx,',AGWeb,2026-06-01 09:20,エージー ウェブ,管理者
-泉佐野カントリークラブ,一般予約,2026-09-12 00:00,犬鳴,08:30:00,体験 五郎,ﾀｲｹﾝ ｺﾞﾛｳ,5組,20人,'072xxxxxxx,'090xxxxxxx,',電話,2026-06-02 10:05,受付,一般
-泉佐野カントリークラブ,一般予約,2026-07-05 00:00,稲倉,10:30:00,個人 一人,ｺｼﾞﾝ,1組,4人,'072xxxxxxx,'072xxxxxxx,',AGWeb,2026-06-01 08:11,エージー ウェブ,管理者
-泉佐野カントリークラブ,一般予約,2026-05-30 00:00,犬鳴,07:30:00,過去 三郎,ｶｺ,3組,12人,'072xxxxxxx,'090xxxxxxx,',AGWeb,2026-05-20 10:00,エージー ウェブ,管理者
-泉佐野カントリークラブ,一般予約,2026-10-01 00:00,大阪湾,07:52:00,抽出 花子,ﾁｭｳｼｭﾂ,4組,16人,'072xxxxxxx,'090xxxxxxx,',GORA,2026-06-03 08:11,GORA ユーザ,管理者`;
+泉佐野カントリークラブ,一般予約,2026-08-04 00:00,稲倉,07:15:00,新規 太郎,ｼﾝｷ,3組,9人,'072xxxxxxx,'090xxxxxxx,',AGWeb,2026-06-01 09:20,受付,管理者
+泉佐野カントリークラブ,一般予約,2026-09-12 00:00,犬鳴,08:30:00,体験 五郎,ﾀｲｹﾝ,5組,20人,'072xxxxxxx,'090xxxxxxx,',電話,2026-06-02 10:05,受付,一般
+泉佐野カントリークラブ,一般予約,2026-07-05 00:00,稲倉,10:30:00,個人 一人,ｺｼﾞﾝ,1組,4人,'072xxxxxxx,'072xxxxxxx,',AGWeb,2026-06-01 08:11,受付,管理者
+泉佐野カントリークラブ,一般予約,2026-05-30 00:00,犬鳴,07:30:00,過去 三郎,ｶｺ,3組,12人,'072xxxxxxx,'090xxxxxxx,',AGWeb,2026-05-20 10:00,受付,管理者
+泉佐野カントリークラブ,一般予約,2026-10-01 00:00,大阪湾,07:52:00,抽出 花子,ﾁｭｳｼｭﾂ,4組,16人,'072xxxxxxx,'090xxxxxxx,',GORA,2026-06-03 08:11,受付,管理者`;
 function pasteSample(){document.getElementById('ta').value=sample;document.getElementById('impMsg').textContent='サンプルを貼り付けました。「① 抽出して確認」を押してください';}
-let extractCount=0;
+let ecount=0;
 function extract(){
   const t=document.getElementById('ta').value.trim();
   if(!t){document.getElementById('impMsg').textContent='CSVを貼り付けてください';return;}
   const lines=t.split(/\n/).filter(l=>l.trim()&&l.indexOf('プレー日')<0);
   let pick=0;
-  lines.forEach(l=>{const c=l.split(',');const g=parseInt((c[7]||'').replace(/[^0-9]/g,''))||0;const m=(c[2]||'').match(/(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);const pd=m?new Date(+m[1],+m[2]-1,+m[3]):null;const today=new Date('2026-06-03');if(g>=3&&pd&&pd>=today)pick++;});
-  extractCount=pick;
+  lines.forEach(l=>{const c=l.split(',');const g=parseInt((c[7]||'').replace(/[^0-9]/g,''))||0;const m=(c[2]||'').match(/(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);const dt=m?new Date(+m[1],+m[2]-1,+m[3]):null;if(g>=3&&dt&&dt>=TODAY)pick++;});
+  ecount=pick;
   document.getElementById('impMsg').innerHTML=`抽出 <b>${pick}</b> 件 ／ 新規 <b>${pick}</b> 件（3組以上・未来のプレー日のみ。3組未満や過去日は自動除外）。『② 台帳へ登録』を押してください`;
-  document.getElementById('regBtn').disabled = pick===0;
+  document.getElementById('regBtn').disabled=pick===0;
 }
 function register(){
-  document.getElementById('impMsg').innerHTML=`<span style="color:#1a7f37;font-weight:700">${extractCount} 件を台帳に登録しました。『今日やること』に反映されます（実アプリでは即反映）</span>`;
-  document.getElementById('ta').value='';
-  document.getElementById('regBtn').disabled=true;
-  toast(`${extractCount} 件を登録しました`);
+  document.getElementById('impMsg').innerHTML=`<span style="color:#1a7f37;font-weight:700">${ecount} 件を台帳に登録しました。『今日やること』に反映されます</span>`;
+  document.getElementById('ta').value=''; document.getElementById('regBtn').disabled=true; toast(ecount+' 件を登録しました');
 }
 render();
 </script>
