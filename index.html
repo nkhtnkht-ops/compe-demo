@@ -57,6 +57,9 @@
   .hint{color:#9aa1aa;text-align:center;margin-top:60px;}
   #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#111827;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;opacity:0;transition:.25s;pointer-events:none;z-index:9;}
   #toast.show{opacity:.95;}
+  .tabb{border:1px solid var(--line);background:#fff;color:#374151;border-radius:8px;font-size:13px;font-weight:700;padding:8px 14px;cursor:pointer;}
+  .tabb.on{background:var(--blue);color:#fff;border-color:var(--blue);}
+  .numin{width:64px;border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:13px;text-align:right;}
   .imp{padding:16px 20px;} .imp .ta{width:100%;height:190px;border:1px solid var(--line);border-radius:6px;padding:12px;font-size:13px;font-family:monospace;}
   .imp .row{margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;} .imp .msg{margin-top:14px;font-size:14px;min-height:22px;}
   .btn{border:0;border-radius:6px;color:#fff;font-weight:700;font-size:13px;padding:8px 12px;cursor:pointer;} .b-gray{background:#6b7280;}.b-blue{background:var(--blue);}.b-green{background:#1a7f37;} .btn:disabled{opacity:.4;}
@@ -72,8 +75,9 @@
     <button class="toggle" id="modeBtn" onclick="toggleMode()"></button>
     <button class="refresh" id="refBtn" onclick="refreshList()">🔄 更新（整理）</button>
     <button class="nav" id="undoBtn" onclick="undoLast()" disabled>↩ 元に戻す</button>
-    <button class="nav" id="toImport" onclick="flip(true)">＋ CSV取込</button>
-    <button class="nav hidden" id="toMain" onclick="flip(false)">← 一覧へ戻る</button>
+    <button class="nav" id="toImport" onclick="showScreen('import')">＋ CSV取込</button>
+    <button class="nav" id="toSettings" onclick="showScreen('settings')">⚙ 設定</button>
+    <button class="nav hidden" id="toMain" onclick="showScreen('main')">← 一覧へ戻る</button>
     <span class="sp"></span>
   </div>
 
@@ -91,13 +95,39 @@
   </div>
 
   <div class="imp hidden" id="screenImport">
-    <textarea class="ta" id="ta" placeholder="予約受付一覧CSVをExcel等で開き、全選択(Ctrl+A)→コピー(Ctrl+C)して、ここに貼り付け(Ctrl+V)してください"></textarea>
+    <div class="row" style="margin-bottom:10px">
+      <button class="tabb on" id="tabNew" onclick="setImpMode('new')">新規取込（日次CSV）</button>
+      <button class="tabb" id="tabMig" onclick="setImpMode('mig')">既存台帳の移行（初期）</button>
+    </div>
+    <div id="impHint" style="font-size:12px;color:#6b7280;margin-bottom:8px"></div>
+    <textarea class="ta" id="ta"></textarea>
     <div class="row">
       <button class="btn b-gray" onclick="pasteSample()">サンプルを貼り付け（デモ）</button>
-      <button class="btn b-blue" onclick="extract()">① 抽出して確認</button>
-      <button class="btn b-green" id="regBtn" onclick="register()" disabled>② 台帳へ登録</button>
+      <button class="btn b-blue" id="bExtract" onclick="extract()">① 抽出して確認</button>
+      <button class="btn b-green" id="bReg" onclick="register()" disabled>② 台帳へ登録</button>
+      <button class="btn b-blue hidden" id="bMig" onclick="migrate()">既存データを移行</button>
     </div>
     <div class="msg" id="impMsg"></div>
+  </div>
+
+  <div class="imp hidden" id="screenSettings">
+    <div style="font-size:15px;font-weight:700;margin-bottom:10px">⚙ 設定（事業所ごと）</div>
+    <div class="onecard" style="max-width:680px">
+      <div class="orow"><div class="ok">接続先リスト（事業所）</div>
+        <input id="setList" value="予約チェック管理（泉佐野）" style="border:1px solid var(--line);border-radius:6px;padding:7px 10px;font-size:13px;width:260px"></div>
+      <div class="orow"><div class="ok">コース名<span class="note">（事業所ごとに設定）</span></div>
+        <input id="setCourse" value="犬鳴 / 稲倉 / 大阪湾" style="border:1px solid var(--line);border-radius:6px;padding:7px 10px;font-size:13px;width:260px"></div>
+    </div>
+    <div style="font-size:13px;font-weight:700;margin:16px 0 6px">コンタクトのタイミング（日数）<span class="note" style="font-weight:400;color:#9ca3af">　事業所ごとに変更できます</span></div>
+    <div class="onecard" style="max-width:680px">
+      <div class="orow"><div class="ok">① 受付日から</div><span class="sel-wrap"><input type="number" id="so1" value="1" class="numin"> 日後</span></div>
+      <div class="orow"><div class="ok">② プレー日の</div><span class="sel-wrap"><input type="number" id="so2" value="60" class="numin"> 日前</span></div>
+      <div class="orow"><div class="ok">③ プレー日の</div><span class="sel-wrap"><input type="number" id="so3" value="35" class="numin"> 日前</span></div>
+      <div class="orow"><div class="ok">④ プレー日の</div><span class="sel-wrap"><input type="number" id="so4" value="18" class="numin"> 日前</span></div>
+    </div>
+    <div class="row" style="margin-top:14px"><button class="btn b-green" onclick="saveSettings()">設定を保存</button></div>
+    <div class="msg" id="setMsg"></div>
+    <p style="color:#9aa1aa;font-size:12px;margin-top:10px">日数を変えて保存すると、①〜④の予定日が再計算され、今日やることの判定にも反映されます（このデモでも実際に動きます）。本アプリでは事業所ごとのリストにこの設定を保存します。</p>
   </div>
 </div>
 <div id="toast"></div>
@@ -105,7 +135,11 @@
 <script>
 const TODAY=new Date(2026,5,3);
 const lbl=["①受付翌日","②60日前","③35日前","④18日前"];
-function pd(s){const m=s&&s.match(/(\d{4})\/(\d{1,2})\/(\d{1,2})/);return m?new Date(+m[1],+m[2]-1,+m[3]):null;}
+function pd(s){const m=s&&s.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);return m?new Date(+m[1],+m[2]-1,+m[3]):null;}
+function fmt(d){return d?d.getFullYear()+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getDate()).padStart(2,'0'):'';}
+function addDays(d,n){if(!d)return null;const x=new Date(d);x.setDate(x.getDate()+n);return x;}
+let o1=1,o2=60,o3=35,o4=18; // ①受付+o1日 / ②③④はプレー日のo2,o3,o4日前（事業所ごとに設定変更）
+function recompute(){rows.forEach(r=>{const rc=pd(r.recv),pl=pd(r.play);r.d=[fmt(addDays(rc,o1)),fmt(addDays(pl,-o2)),fmt(addDays(pl,-o3)),fmt(addDays(pl,-o4))];});}
 let rows=[
  {n:"山田 太郎",play:"2026/07/20",wd:"月",course:"稲倉",time:"07:37",g:3,p:12,route:"GORA",recv:"2026/06/02",d:["2026/06/03","2026/05/21","2026/06/15","2026/07/02"],s:["","","",""],kk:"",tel:"0724xxxxxx",mob:"09012345678"},
  {n:"佐藤 花子",play:"2026/06/15",wd:"月",course:"犬鳴",time:"08:52",g:3,p:10,route:"AGWeb",recv:"2026/04/16",d:["2026/04/17","2026/04/16","2026/06/03","2026/05/28"],s:["〇","不要","",""],kk:"",tel:"06xxxxxxxx",mob:"08012345678"},
@@ -242,7 +276,42 @@ function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replac
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1900);}
 function copyText(t){if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(()=>toast('コピーしました：'+t),()=>fallbackCopy(t));}else{fallbackCopy(t);}}
 function fallbackCopy(t){const ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.focus();ta.select();try{document.execCommand('copy');toast('コピーしました：'+t);}catch(e){toast('コピーできませんでした');}document.body.removeChild(ta);}
-function flip(imp){document.getElementById('screenMain').classList.toggle('hidden',imp);document.getElementById('screenImport').classList.toggle('hidden',!imp);document.getElementById('toImport').classList.toggle('hidden',imp);document.getElementById('toMain').classList.toggle('hidden',!imp);document.getElementById('modeBtn').classList.toggle('hidden',imp);document.getElementById('refBtn').classList.toggle('hidden',imp||showAll);document.getElementById('undoBtn').classList.toggle('hidden',imp);}
+function showScreen(name){
+  const main=name==='main';
+  document.getElementById('screenMain').classList.toggle('hidden',name!=='main');
+  document.getElementById('screenImport').classList.toggle('hidden',name!=='import');
+  document.getElementById('screenSettings').classList.toggle('hidden',name!=='settings');
+  ['modeBtn','undoBtn','toImport','toSettings'].forEach(id=>document.getElementById(id).classList.toggle('hidden',!main));
+  document.getElementById('refBtn').classList.toggle('hidden',!main||showAll);
+  document.getElementById('toMain').classList.toggle('hidden',main);
+}
+function setImpMode(m){
+  const mig=m==='mig';
+  document.getElementById('tabNew').classList.toggle('on',!mig);
+  document.getElementById('tabMig').classList.toggle('on',mig);
+  document.getElementById('bExtract').classList.toggle('hidden',mig);
+  document.getElementById('bReg').classList.toggle('hidden',mig);
+  document.getElementById('bMig').classList.toggle('hidden',!mig);
+  document.getElementById('impHint').textContent = mig
+    ? '初期セットアップ用：旧台帳（氏名・プレー日・①〜④の状態・組数確定・備考など）を貼り付け→「既存データを移行」。現在の対応状況も含めて取り込みます。'
+    : '日次運用：予約受付一覧CSVを貼り付け→「①抽出して確認」→「②台帳へ登録」。3組以上・未来日のみ自動抽出します。';
+  document.getElementById('ta').placeholder = mig ? '旧台帳の行を貼り付け（氏名,プレー日,コース,組数,①,②,③,④,組数確定,備考 …）' : '予約受付一覧CSVを貼り付け（Ctrl+V）';
+  document.getElementById('ta').value=''; document.getElementById('impMsg').textContent='';
+}
+function migrate(){
+  const t=document.getElementById('ta').value.trim();
+  if(!t){document.getElementById('impMsg').textContent='移行する台帳データを貼り付けてください';return;}
+  const n=t.split(/\n/).filter(l=>l.trim()&&l.indexOf('プレー日')<0).length;
+  document.getElementById('impMsg').innerHTML=`<span style="color:#1a7f37;font-weight:700">${n} 件を移行しました（デモ）。現在の対応状況（①〜④・組数確定・備考）も引き継いで取り込みます</span>`;
+  toast(n+' 件を移行しました（デモ）');
+}
+function saveSettings(){
+  o1=+document.getElementById('so1').value||0; o2=+document.getElementById('so2').value||0;
+  o3=+document.getElementById('so3').value||0; o4=+document.getElementById('so4').value||0;
+  recompute();
+  document.getElementById('setMsg').innerHTML='<span style="color:#1a7f37;font-weight:700">保存しました（①〜④の予定日を再計算）。一覧へ戻ると反映されています</span>';
+  toast('設定を保存しました'); render();
+}
 const sample=`ゴルフ場名,データ種別,プレー日,コース,スタート時間,代表者名(漢字),代表者名(カナ),組数,人数,連絡先電話番号,携帯電話番号,FAX番号,予約チャネル,予約受付日時,受付者,受付者ロール
 泉佐野カントリークラブ,一般予約,2026-08-04 00:00,稲倉,07:15:00,新規 太郎,ｼﾝｷ,3組,9人,'072xxxxxxx,'090xxxxxxx,',AGWeb,2026-06-01 09:20,受付,管理者
 泉佐野カントリークラブ,一般予約,2026-09-12 00:00,犬鳴,08:30:00,体験 五郎,ﾀｲｹﾝ,5組,20人,'072xxxxxxx,'090xxxxxxx,',電話,2026-06-02 10:05,受付,一般
@@ -251,9 +320,9 @@ const sample=`ゴルフ場名,データ種別,プレー日,コース,スター�
 泉佐野カントリークラブ,一般予約,2026-10-01 00:00,大阪湾,07:52:00,抽出 花子,ﾁｭｳｼｭﾂ,4組,16人,'072xxxxxxx,'090xxxxxxx,',GORA,2026-06-03 08:11,受付,管理者`;
 function pasteSample(){document.getElementById('ta').value=sample;document.getElementById('impMsg').textContent='サンプルを貼り付けました。「① 抽出して確認」を押してください';}
 let ecount=0;
-function extract(){const t=document.getElementById('ta').value.trim();if(!t){document.getElementById('impMsg').textContent='CSVを貼り付けてください';return;}const lines=t.split(/\n/).filter(l=>l.trim()&&l.indexOf('プレー日')<0);let pick=0;lines.forEach(l=>{const c=l.split(',');const g=parseInt((c[7]||'').replace(/[^0-9]/g,''))||0;const m=(c[2]||'').match(/(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);const dt=m?new Date(+m[1],+m[2]-1,+m[3]):null;if(g>=3&&dt&&dt>=TODAY)pick++;});ecount=pick;document.getElementById('impMsg').innerHTML=`抽出 <b>${pick}</b> 件 ／ 新規 <b>${pick}</b> 件（3組以上・未来日のみ。3組未満や過去日は自動除外）。『② 台帳へ登録』へ`;document.getElementById('regBtn').disabled=pick===0;}
-function register(){document.getElementById('impMsg').innerHTML=`<span style="color:#1a7f37;font-weight:700">${ecount} 件を台帳に登録しました。『今日やること』に反映されます</span>`;document.getElementById('ta').value='';document.getElementById('regBtn').disabled=true;toast(ecount+' 件を登録しました');}
-render();
+function extract(){const t=document.getElementById('ta').value.trim();if(!t){document.getElementById('impMsg').textContent='CSVを貼り付けてください';return;}const lines=t.split(/\n/).filter(l=>l.trim()&&l.indexOf('プレー日')<0);let pick=0;lines.forEach(l=>{const c=l.split(',');const g=parseInt((c[7]||'').replace(/[^0-9]/g,''))||0;const m=(c[2]||'').match(/(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);const dt=m?new Date(+m[1],+m[2]-1,+m[3]):null;if(g>=3&&dt&&dt>=TODAY)pick++;});ecount=pick;document.getElementById('impMsg').innerHTML=`抽出 <b>${pick}</b> 件 ／ 新規 <b>${pick}</b> 件（3組以上・未来日のみ。3組未満や過去日は自動除外）。『② 台帳へ登録』へ`;document.getElementById('bReg').disabled=pick===0;}
+function register(){document.getElementById('impMsg').innerHTML=`<span style="color:#1a7f37;font-weight:700">${ecount} 件を台帳に登録しました。『今日やること』に反映されます</span>`;document.getElementById('ta').value='';document.getElementById('bReg').disabled=true;toast(ecount+' 件を登録しました');}
+recompute(); setImpMode('new'); render();
 </script>
 </body>
 </html>
