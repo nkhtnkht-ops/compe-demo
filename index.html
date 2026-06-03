@@ -39,6 +39,8 @@
   .detail{flex:1;padding:14px 20px;overflow:auto;min-width:0;}
   .dh{display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:12px;}
   .dh .name{font-size:18px;font-weight:700;}
+  .delbtn{border:1px solid #d1453b;background:#fff;color:#c0392b;border-radius:6px;font-size:13px;font-weight:700;padding:7px 14px;cursor:pointer;}
+  .delbtn:hover{background:#fdecea;}
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 22px;}
   .fld .k{font-size:12px;color:#374151;font-weight:600;margin-bottom:3px;}
   .fld .v{background:#f3f4f6;border-radius:4px;padding:7px 10px;font-size:14px;min-height:32px;}
@@ -137,6 +139,7 @@ function undoLast(){
 }
 function refreshList(){ rows.forEach(r=>r._touch=false); undoStack=[]; document.getElementById('undoBtn').disabled=true; toast('一覧を整理しました（解決済みを除外）'); render(); }
 function toggleMode(){showAll=!showAll;render();}
+function delRow(gi){const r=rows[gi];if(!r)return;if(confirm(r.n+' を削除しますか？\n（この操作は元に戻せません）')){rows.splice(gi,1);if(selIdx>=rows.length)selIdx=Math.max(0,rows.length-1);toast('削除しました：'+r.n);render();}}
 
 function render(){
   const vis=visibleRows();
@@ -181,7 +184,7 @@ function renderDetail(){
   const gi=selIdx,r=rows[gi],a=actRound(r);
   let head; if(a<0)head='<div class="v green">対応完了（要対応なし）</div>'; else if(r.s[a]==="不在")head='<div class="v red">繰越（前回不在）：'+lbl[a]+'</div>'; else head='<div class="v" style="color:#b35900;font-weight:700">要対応：'+lbl[a]+'（'+r.d[a]+'）</div>';
   d.innerHTML=`
-   <div class="dh"><span style="display:flex;align-items:center;gap:10px"><span class="name">${r.n}</span><button class="sb" onclick="copyText('${r.n}')">コピー</button></span><span style="color:#9aa1aa">✏ 🗑</span></div>
+   <div class="dh"><span style="display:flex;align-items:center;gap:10px"><span class="name">${r.n}</span><button class="sb" onclick="copyText('${r.n}')">コピー</button></span><button class="delbtn" onclick="delRow(${gi})">削除</button></div>
    <div class="grid">
     <div class="fld"><div class="k">プレー日</div><div class="v">${r.play}（${r.wd}）</div></div>
     <div class="fld"><div class="k">コース名</div><div class="v">${r.course}</div></div>
