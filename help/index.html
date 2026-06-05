@@ -1,0 +1,1579 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>予約チェック管理 使い方ガイド</title>
+<meta name="description" content="ゴルフコンペ予約のフォロー連絡を、スタッフがやり漏れなく進めるための予約チェック管理 使い方ガイド。">
+<style>
+:root {
+  --ink: #000;
+  --paper: #fff;
+  --line: #e8e8e8;
+  --soft: #f7f7f7;
+  --soft-2: #fafafa;
+  --muted: #6b7280;
+  --muted-2: #9aa1aa;
+  --orange: #b35900;
+  --orange-bg: #fdf0dd;
+  --red: #b91c1c;
+  --red-bg: #fdecea;
+  --green: #13652b;
+  --green-bg: #e7f6ec;
+  --mono: "SF Mono", Menlo, ui-monospace, monospace;
+  --display: "SF Pro Display", "SF Pro Text", system-ui, -apple-system, "Helvetica Neue", "Hiragino Sans", "Noto Sans JP", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  font-family: var(--display);
+  font-feature-settings: "kern" 1;
+  letter-spacing: -0.14px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+*:focus-visible {
+  outline: 2px dashed var(--ink);
+  outline-offset: 2px;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-weight: 330;
+  line-height: 1.75;
+}
+
+a {
+  color: inherit;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: #000;
+  color: #fff;
+  border-bottom: 1px solid #000;
+}
+
+.brand {
+  font-size: 17px;
+  font-weight: 540;
+  letter-spacing: -0.4px;
+  white-space: nowrap;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.nav::-webkit-scrollbar {
+  display: none;
+}
+
+.pill-link,
+.button,
+.ghost-button,
+.mini-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50px;
+  border: 1px solid #000;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 480;
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.pill-link {
+  border-color: rgba(255,255,255,.22);
+  background: rgba(255,255,255,.16);
+  color: #fff;
+  padding: 8px 14px;
+}
+
+.pill-link:hover {
+  background: rgba(255,255,255,.26);
+}
+
+.button {
+  min-height: 42px;
+  padding: 12px 20px;
+  background: #000;
+  color: #fff;
+}
+
+.button:hover {
+  background: #232323;
+}
+
+.ghost-button {
+  min-height: 42px;
+  padding: 12px 20px;
+  background: #fff;
+  color: #000;
+}
+
+.ghost-button:hover {
+  background: #f4f4f5;
+}
+
+.wrap {
+  width: min(1120px, calc(100% - 32px));
+  margin: 0 auto;
+}
+
+.hero {
+  position: relative;
+  width: 100vw;
+  min-height: min(680px, calc(100vh - 130px));
+  margin-left: calc(50% - 50vw);
+  display: flex;
+  align-items: center;
+  padding-block: 64px 76px;
+  padding-inline: max(16px, calc((100vw - 1120px) / 2));
+  border-bottom: 1px solid var(--line);
+  overflow: hidden;
+}
+
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(255,255,255,.96), rgba(255,255,255,.74) 46%, rgba(255,255,255,.12)), url("assets/hero-abstract-ledger.png") center / cover no-repeat;
+  filter: grayscale(1);
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+  width: min(1040px, 100%);
+}
+
+.eyebrow,
+.section-label,
+.card-label,
+.step-kicker {
+  font-family: var(--mono);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: .75px;
+  text-transform: uppercase;
+}
+
+.hero h1 {
+  max-width: 720px;
+  margin: 12px 0 14px;
+  font-size: clamp(42px, 7vw, 82px);
+  line-height: .96;
+  letter-spacing: -2.4px;
+  font-weight: 430;
+  word-break: keep-all;
+}
+
+.hero h1 span {
+  display: block;
+}
+
+.lead {
+  max-width: 1040px;
+  margin: 0;
+  color: #1f2937;
+  font-size: clamp(17px, 2vw, 21px);
+  letter-spacing: -0.35px;
+  line-height: 1.8;
+}
+
+.hero .lead {
+  white-space: nowrap;
+  font-size: min(21px, calc((100vw - 32px) / 42));
+}
+
+.hero-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 26px;
+}
+
+.hero-note {
+  margin-top: 20px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.hero-panel {
+  align-self: stretch;
+  min-height: 560px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  overflow: hidden;
+  box-shadow: 0 12px 36px rgba(0,0,0,.04);
+}
+
+.appbar-mock {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 54px;
+  padding: 10px 14px;
+  background: #000;
+  color: #fff;
+}
+
+.appbar-title {
+  font-size: 15px;
+  font-weight: 540;
+  letter-spacing: -0.35px;
+}
+
+.seg {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  margin-left: auto;
+  background: rgba(255,255,255,.16);
+  border-radius: 50px;
+}
+
+.seg span {
+  padding: 7px 12px;
+  border-radius: 50px;
+  color: rgba(255,255,255,.8);
+  font-size: 12px;
+  font-weight: 480;
+  line-height: 1;
+}
+
+.seg .on {
+  background: #fff;
+  color: #000;
+}
+
+.panel-body {
+  display: grid;
+  grid-template-columns: .92fr 1.08fr;
+  min-height: 0;
+  flex: 1;
+}
+
+.mock-list {
+  border-right: 1px solid var(--line);
+}
+
+.mock-toolbar {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.search-line {
+  flex: 1;
+  height: 28px;
+  border: 1px solid #d4d4d4;
+  border-radius: 50px;
+  background: #fff;
+}
+
+.mock-card {
+  padding: 14px;
+  border-bottom: 1px solid var(--line);
+  border-left: 3px solid transparent;
+}
+
+.mock-card.active {
+  background: #f4f4f5;
+  border-left-color: #000;
+}
+
+.mock-card strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 540;
+  letter-spacing: -0.3px;
+}
+
+.mock-card small {
+  display: block;
+  margin-top: 3px;
+  color: #4b5563;
+  font-size: 12px;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  margin-top: 8px;
+  padding: 3px 9px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 480;
+  line-height: 1.45;
+}
+
+.status.need { color: var(--orange); background: var(--orange-bg); }
+.status.late { color: #fff; background: #d1453b; }
+.status.carry { color: #9a1d14; background: #fbe3e0; }
+.status.done { color: var(--green); background: var(--green-bg); }
+.status.soon { color: #3f4753; background: #eef0f2; }
+
+.mock-detail {
+  padding: 18px;
+  overflow: hidden;
+}
+
+.detail-name {
+  padding-bottom: 13px;
+  border-bottom: 1px solid var(--line);
+  font-size: 25px;
+  font-weight: 540;
+  letter-spacing: -0.65px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 13px 16px;
+  margin-top: 14px;
+}
+
+.field {
+  min-height: 60px;
+}
+
+.field .key {
+  margin-bottom: 4px;
+  font-family: var(--mono);
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+}
+
+.field .val,
+.edit-row {
+  min-height: 34px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  font-size: 13px;
+}
+
+.contact-box {
+  margin-top: 16px;
+  padding: 4px 13px;
+  background: #fafafa;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.edit-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 9px 0;
+}
+
+.state-buttons {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.mini-pill {
+  min-height: 27px;
+  padding: 5px 10px;
+  background: #fff;
+  border-color: #d4d4d4;
+  color: #000;
+  font-size: 12px;
+}
+
+.mini-pill.green { color: #1a7f37; border-color: #1a7f37; }
+.mini-pill.orange { color: var(--orange); border-color: var(--orange); }
+.mini-pill.gray { color: #6b7280; border-color: #6b7280; }
+
+section {
+  padding: 74px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.section-head {
+  display: grid;
+  grid-template-columns: .38fr 1fr;
+  gap: 36px;
+  align-items: start;
+  margin-bottom: 26px;
+}
+
+h2 {
+  margin: 0;
+  font-size: clamp(30px, 4vw, 52px);
+  line-height: 1.08;
+  letter-spacing: -1.35px;
+  font-weight: 430;
+}
+
+h3 {
+  margin: 0 0 8px;
+  font-size: 20px;
+  line-height: 1.35;
+  letter-spacing: -0.45px;
+  font-weight: 520;
+}
+
+p {
+  margin: 0;
+}
+
+.body-copy {
+  color: #1f2937;
+  font-size: 16px;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.025);
+}
+
+.card p,
+.card li {
+  color: #1f2937;
+  font-size: 15px;
+}
+
+.plain-list,
+.check-list {
+  display: grid;
+  gap: 10px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.plain-list li,
+.check-list li {
+  padding-left: 18px;
+  position: relative;
+}
+
+.plain-list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: .72em;
+  width: 6px;
+  height: 1px;
+  background: #000;
+}
+
+.check-list li::before {
+  content: "〇";
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: var(--green);
+  font-weight: 540;
+}
+
+.steps {
+  display: grid;
+  gap: 12px;
+  counter-reset: step;
+}
+
+.step {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 16px;
+  align-items: start;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.step::before {
+  counter-increment: step;
+  content: counter(step, decimal-leading-zero);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border: 1px solid #000;
+  border-radius: 50%;
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: .4px;
+}
+
+.visual-guide {
+  display: grid;
+  grid-template-columns: 1.1fr .9fr;
+  gap: 18px;
+  align-items: stretch;
+}
+
+.callout {
+  border: 1px dashed #000;
+  border-radius: 8px;
+  padding: 18px;
+  background: #fff;
+}
+
+.callout strong {
+  font-weight: 540;
+}
+
+.save-diagram {
+  display: grid;
+  grid-template-columns: 1fr 72px 1fr 72px 1fr;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 18px;
+}
+
+.diagram-node {
+  min-height: 150px;
+  display: grid;
+  align-content: center;
+  gap: 8px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.diagram-node.dark {
+  background: #000;
+  color: #fff;
+  border-color: #000;
+}
+
+.diagram-node .node-label {
+  font-family: var(--mono);
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: .7px;
+  text-transform: uppercase;
+}
+
+.diagram-node.dark .node-label {
+  color: rgba(255,255,255,.66);
+}
+
+.diagram-node strong {
+  display: block;
+  font-size: 20px;
+  line-height: 1.3;
+  font-weight: 520;
+  letter-spacing: -0.35px;
+}
+
+.diagram-node p {
+  color: #4b5563;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.diagram-node.dark p {
+  color: rgba(255,255,255,.72);
+}
+
+.diagram-arrow {
+  position: relative;
+  height: 1px;
+  background: #000;
+}
+
+.diagram-arrow::after {
+  content: "";
+  position: absolute;
+  right: -1px;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-top: 1px solid #000;
+  border-right: 1px solid #000;
+  transform: translateY(-50%) rotate(45deg);
+  background: #fff;
+}
+
+.diagram-arrow span {
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  transform: translateX(-50%);
+  padding: 2px 6px;
+  background: #fff;
+  font-family: var(--mono);
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: .5px;
+  white-space: nowrap;
+}
+
+.csv-mock {
+  display: grid;
+  gap: 18px;
+}
+
+.csv-drop {
+  min-height: 250px;
+  padding: 24px;
+  border: 1px solid #d4d4d4;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--muted);
+  font-size: 16px;
+  font-weight: 520;
+}
+
+.csv-actions {
+  display: grid;
+  grid-template-columns: 1.2fr .74fr .86fr;
+  gap: 10px;
+}
+
+.csv-button {
+  min-height: 54px;
+  padding: 12px 18px;
+  border: 0;
+  border-radius: 50px;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 540;
+  text-align: center;
+}
+
+.csv-button.gray {
+  background: #6b7280;
+}
+
+.csv-button.black {
+  background: #000;
+}
+
+.csv-button.green {
+  background: #9fbba6;
+}
+
+.flow-note {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.reference-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.op-card {
+  display: grid;
+  gap: 10px;
+  min-height: 220px;
+}
+
+.op-pair {
+  display: grid;
+  gap: 7px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.op-pair b {
+  font-weight: 540;
+}
+
+.tag-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 4px 10px;
+  border: 1px solid #d4d4d4;
+  border-radius: 50px;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 480;
+}
+
+.tag.black {
+  background: #000;
+  color: #fff;
+  border-color: #000;
+}
+
+.status-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.status-table th,
+.status-table td {
+  padding: 12px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+  font-size: 14px;
+}
+
+.status-table th {
+  font-family: var(--mono);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+  background: #fafafa;
+}
+
+.status-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.feedback-form {
+  display: grid;
+  gap: 14px;
+}
+
+.feedback-options {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.feedback-options label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 8px 13px;
+  border: 1px solid #d4d4d4;
+  border-radius: 50px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 480;
+  cursor: pointer;
+}
+
+.feedback-options input {
+  accent-color: #000;
+}
+
+.feedback-field {
+  display: grid;
+  gap: 6px;
+}
+
+.feedback-field label {
+  font-family: var(--mono);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+}
+
+.feedback-input,
+.feedback-textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: #000;
+  font-size: 15px;
+  font-weight: 360;
+}
+
+.feedback-input {
+  min-height: 42px;
+  padding: 10px 12px;
+}
+
+.feedback-textarea {
+  min-height: 190px;
+  padding: 12px;
+  resize: vertical;
+}
+
+.feedback-status {
+  min-height: 22px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.feedback-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.feedback-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.feedback-item {
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.feedback-item-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .55px;
+  text-transform: uppercase;
+}
+
+.feedback-item strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 15px;
+  font-weight: 540;
+}
+
+.feedback-item p {
+  color: #1f2937;
+  font-size: 14px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.trouble {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.footer {
+  padding: 36px 0 44px;
+  background: #000;
+  color: #fff;
+}
+
+.footer-inner {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.footer .pill-link {
+  border-color: rgba(255,255,255,.28);
+}
+
+.small {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.footer .small {
+  color: rgba(255,255,255,.7);
+}
+
+@media (max-width: 960px) {
+  .topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .nav {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .section-head,
+  .visual-guide {
+    grid-template-columns: 1fr;
+  }
+
+  .hero {
+    min-height: auto;
+    padding-top: 38px;
+  }
+
+  .hero-panel {
+    min-height: 520px;
+  }
+
+  .grid-3,
+  .trouble {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .wrap {
+    width: min(100% - 22px, 1120px);
+  }
+
+  section {
+    padding: 54px 0;
+  }
+
+  .hero h1 {
+    letter-spacing: -1.6px;
+  }
+
+  .hero {
+    min-height: calc(100vh - 150px);
+    align-items: flex-start;
+    padding-top: 40px;
+  }
+
+  .hero::before {
+    background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(255,255,255,.88) 44%, rgba(255,255,255,.32)), url("assets/hero-abstract-ledger.png") center bottom / cover no-repeat;
+  }
+
+  .csv-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .save-diagram {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .diagram-node {
+    min-height: 0;
+  }
+
+  .diagram-arrow {
+    width: 150px;
+    height: 34px;
+    margin: 0 auto;
+    background: transparent;
+  }
+
+  .diagram-arrow::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: #000;
+    transform: translateX(-50%);
+  }
+
+  .diagram-arrow::after {
+    right: 50%;
+    top: auto;
+    bottom: -1px;
+    transform: translateX(50%) rotate(135deg);
+  }
+
+  .diagram-arrow span {
+    left: 50%;
+    bottom: 9px;
+    transform: translateX(calc(-50% + 44px));
+  }
+
+  .hero-panel {
+    min-height: 0;
+  }
+
+  .panel-body,
+  .grid-2,
+  .reference-grid,
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mock-detail {
+    display: none;
+  }
+
+  .mock-list {
+    border-right: 0;
+  }
+
+  .step {
+    grid-template-columns: 1fr;
+  }
+
+  .card {
+    padding: 17px;
+  }
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">予約チェック管理</div>
+  <nav class="nav" aria-label="ページ内メニュー">
+    <a class="pill-link" href="#start">はじめ方</a>
+    <a class="pill-link" href="#daily">日々の運用</a>
+    <a class="pill-link" href="#screen">画面の見方</a>
+    <a class="pill-link" href="#operations">主な操作</a>
+    <a class="pill-link" href="#saving">保存</a>
+    <a class="pill-link" href="#feedback">フィードバック</a>
+  </nav>
+</header>
+
+<main>
+  <div class="wrap">
+    <section class="hero" id="top">
+      <div class="hero-content">
+        <div class="eyebrow">Staff Guide / Golf Competition Booking</div>
+        <h1><span>予約チェック管理</span><span>使い方ガイド</span></h1>
+        <p class="lead">既存Excel台帳を取り込んで使用できる、見やすいWEBアプリ台帳を作りました。</p>
+        <div class="hero-actions">
+          <a class="button" href="https://nkhtnkht-ops.github.io/compe-demo/" target="_blank" rel="noopener">アプリを開く</a>
+          <a class="ghost-button" href="#start">はじめ方を見る</a>
+        </div>
+        <p class="hero-note">Chrome / Edge 推奨。共有ドライブ上の台帳ファイルにつなぐと、編集内容は自動保存されます。</p>
+      </div>
+    </section>
+  </div>
+
+  <section id="start">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-label">Start</div>
+        <div>
+          <h2>はじめ方</h2>
+          <p class="body-copy">完全初期の状態から、現行のExcel台帳を取り込んで使い始める流れです。最初に保存先となる台帳ファイルを作り、その中へExcelの予約データを全件移行します。</p>
+        </div>
+      </div>
+      <div class="grid-2" style="margin-bottom: 14px;">
+        <div class="card">
+          <div class="card-label">Prepare</div>
+          <h3>用意するもの</h3>
+          <p>現行のExcel台帳（.xlsm/.xlsx）を用意します。これを初回に取り込み、予約チェック管理の台帳データとして使います。</p>
+        </div>
+        <div class="card">
+          <div class="card-label">Create</div>
+          <h3>作成されるもの</h3>
+          <p>共有ドライブ上に台帳ファイルを作ります。Excel取り込み後は、この台帳ファイルが日常運用の保存先になります。</p>
+        </div>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div>
+            <div class="step-kicker">Initial 01</div>
+            <h3>Chrome / Edgeでアプリを開く</h3>
+            <p>ファイルの読み書きに対応しているChromeまたはEdgeで「アプリを開く」を押します。共有ドライブの台帳に接続して使うため、推奨ブラウザで始めます。</p>
+          </div>
+        </div>
+        <div class="step">
+          <div>
+            <div class="step-kicker">Initial 02</div>
+            <h3>設定を開く</h3>
+            <p>画面上部の「設定」を開きます。初回だけ「初回起動時メニュー」を使います。通常運用では、このメニューは基本的に触りません。</p>
+          </div>
+        </div>
+        <div class="step">
+          <div>
+            <div class="step-kicker">Initial 03</div>
+            <h3>空の台帳ファイルを作る</h3>
+            <p>「① 新規台帳作成」を押し、共有ドライブ上に保存先の台帳ファイルを作ります。これはExcelを取り込むための受け皿です。</p>
+          </div>
+        </div>
+        <div class="step">
+          <div>
+            <div class="step-kicker">Initial 04</div>
+            <h3>既存台帳移行取り込みを選ぶ</h3>
+            <p>続けて「② 既存台帳移行取り込み」を使います。現行のExcel台帳（.xlsm/.xlsx）を選択し、取り込み内容を確認します。</p>
+          </div>
+        </div>
+        <div class="step">
+          <div>
+            <div class="step-kicker">Initial 05</div>
+            <h3>台帳へ移行する</h3>
+            <p>「台帳へ移行」を押すと、Excelの予約データが台帳ファイルへ移ります。移行後は「← 一覧へ戻る」で、取り込んだ予約が一覧に出ているか確認します。</p>
+          </div>
+        </div>
+        <div class="step">
+          <div>
+            <div class="step-kicker">Initial 06</div>
+            <h3>保存状態を確認する</h3>
+            <p>上部のファイル表示が、作成した台帳ファイル名になっていれば準備完了です。以後の編集は自動保存されます。次回以降は、権限再付与が出た時だけ1回クリックします。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="daily">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-label">Daily Operation</div>
+        <div>
+          <h2>日々の運用</h2>
+          <p class="body-copy">毎日の予約受付一覧CSVを取り込み、登録前に内容を確認してから台帳へ登録します。登録後は「今日やること」で連絡対象を確認します。</p>
+        </div>
+      </div>
+      <div class="visual-guide">
+        <div class="card csv-mock">
+          <div>
+            <h3>日次CSV取込</h3>
+            <p class="flow-note">日次運用：予約受付一覧CSVをドラッグ＆ドロップ → 「① 抽出して確認」 → 「② 台帳へ登録」。登録前に内容を確認できます。</p>
+          </div>
+          <div class="csv-drop">予約受付一覧CSVをここにドラッグ＆ドロップ</div>
+          <div class="csv-actions">
+            <div class="csv-button gray">サンプルを読み込み（デモ）</div>
+            <div class="csv-button black">① 抽出して確認</div>
+            <div class="csv-button green">② 台帳へ登録</div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>取り込みの流れ</h3>
+          <ul class="plain-list">
+            <li>予約システムから、当日の予約受付一覧CSVを出します。</li>
+            <li>アプリの「＋ CSV取込」を開きます。</li>
+            <li>予約受付一覧CSVファイルを、取込エリアへドラッグ＆ドロップします。</li>
+            <li>「① 抽出して確認」を押し、取り込まれる予約を確認します。</li>
+            <li>問題なければ「② 台帳へ登録」を押します。登録後は「← 一覧へ戻る」で確認します。</li>
+          </ul>
+        </div>
+      </div>
+      <div class="steps" style="margin-top: 14px;">
+        <div class="step">
+          <div>
+            <div class="step-kicker">Daily 01</div>
+            <h3>予約受付一覧CSVを取り込む</h3>
+            <p>「＋ CSV取込」を開き、予約受付一覧CSVファイルを取込エリアへドラッグ＆ドロップします。その後、登録内容を確認します。</p>
+          </div>
+        </div>
+        <div class="step">
+          <div>
+            <div class="step-kicker">Daily 02</div>
+            <h3>今日やることを見る</h3>
+            <p>上部の「今日やること」を選び、対応が必要な予約だけを確認します。必要に応じて氏名検索やコンタクトフィルタを使います。</p>
+          </div>
+        </div>
+        <div class="step">
+          <div>
+            <div class="step-kicker">Daily 03</div>
+            <h3>状態を付ける</h3>
+            <p>カードや詳細で、〇／不在／不要を選びます。選んだ直後は一覧から即消えず、更新するまで残ります。</p>
+          </div>
+        </div>
+        <div class="step">
+          <div>
+            <div class="step-kicker">Daily 04</div>
+            <h3>更新（整理）する</h3>
+            <p>確認が終わったら「⟳ 更新（整理）」を押します。解決済みが「今日やること」から外れ、一覧が整理されます。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="contacts">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-label">Contact 01-04</div>
+        <div>
+          <h2>コンタクト①〜④</h2>
+          <p class="body-copy">連絡タイミングは、①受付翌日／②60日前／③35日前／④18日前です。日数は設定で事業所ごとに変更できます。</p>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>状態の意味</h3>
+          <table class="status-table">
+            <tr><th>表示</th><th>意味</th></tr>
+            <tr><td><span class="tag">〇</span></td><td>連絡済です。</td></tr>
+            <tr><td><span class="tag">不在</span></td><td>つながらず、繰越します。</td></tr>
+            <tr><td><span class="tag">不要</span></td><td>その回の連絡は不要です。</td></tr>
+            <tr><td><span class="tag">空</span></td><td>まだ未対応です。</td></tr>
+          </table>
+        </div>
+        <div class="card">
+          <h3>ほかに記録すること</h3>
+          <ul class="plain-list">
+            <li>組数確定は、〇 or キャンセルで記録します。</li>
+            <li>組合せ入力は、済/未で記録します。</li>
+            <li>組合せ入力が済むと追跡終了です。</li>
+          </ul>
+          <div class="tag-row">
+            <span class="status need">要対応</span>
+            <span class="status carry">繰越</span>
+            <span class="status done">完了</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="screen">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-label">Screen</div>
+        <div>
+          <h2>画面の基本</h2>
+          <p class="body-copy">画面は、上部の切替、左の予約一覧、右の詳細パネルで見ます。</p>
+        </div>
+      </div>
+      <div class="visual-guide">
+        <div class="card">
+          <div class="hero-panel" style="min-height: 430px; box-shadow: none;">
+            <div class="appbar-mock">
+              <span class="appbar-title">予約チェック管理</span>
+              <span class="seg"><span class="on">今日やること</span><span>全件</span></span>
+            </div>
+            <div class="panel-body">
+              <div class="mock-list">
+                <div class="mock-toolbar"><span>並び：</span><span class="tag black">プレー日順</span><span class="tag">受付日順</span></div>
+                <div class="mock-card active"><strong>氏名</strong><small>日付・曜日 / コース・時間・組数</small><span class="status need">状態バッジ</span></div>
+                <div class="mock-card"><strong>カード</strong><small>予約ごとの要点だけを見る場所</small><span class="status soon">あと3日</span></div>
+              </div>
+              <div class="mock-detail">
+                <div class="detail-name">詳細パネル</div>
+                <div class="contact-box">
+                  <div class="edit-row"><span>コンタクト①</span><span class="state-buttons"><span class="mini-pill green">〇</span><span class="mini-pill orange">不在</span><span class="mini-pill gray">不要</span></span></div>
+                  <div class="edit-row"><span>組数確定</span><span class="state-buttons"><span class="mini-pill green">〇</span><span class="mini-pill gray">キャンセル</span></span></div>
+                  <div class="edit-row"><span>組合せ入力</span><span class="state-buttons"><span class="mini-pill green">済</span><span class="mini-pill gray">未</span></span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>見る順番</h3>
+          <ul class="plain-list">
+            <li>上部の「今日やること／全件」切替：今日やること＝対応が必要な予約だけ、全件＝すべて。</li>
+            <li>左＝予約一覧（カード）、右＝詳細パネル。</li>
+            <li>カードは「氏名／日付・曜日／コース・時間・組数／状態バッジ」。</li>
+            <li>並び替えは、プレー日順／受付日順。</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="operations">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-label">Operations</div>
+        <div>
+          <h2>操作リファレンス</h2>
+          <p class="body-copy">各操作は「いつ使うか」を先に見てから、「どうするか」を確認してください。</p>
+        </div>
+      </div>
+      <div class="reference-grid">
+        <div class="card op-card">
+          <h3>状態を付ける</h3>
+          <div class="op-pair"><p><b>いつ使うか：</b>代表者へ連絡した後、結果を残したい時。</p><p><b>どうするか：</b>カードや詳細で 〇／不在／不要 を選びます。即消えず、更新するまで一覧に残ります。</p></div>
+        </div>
+        <div class="card op-card">
+          <h3>氏名検索</h3>
+          <div class="op-pair"><p><b>いつ使うか：</b>特定の予約をすぐ探したい時。</p><p><b>どうするか：</b>上部の検索ボックスで氏名を入力し、該当予約へ移動します。</p></div>
+        </div>
+        <div class="card op-card">
+          <h3>コンタクトフィルタ</h3>
+          <div class="op-pair"><p><b>いつ使うか：</b>①だけ、③だけのように同じ回を続けて処理したい時。</p><p><b>どうするか：</b>「全部／①／②／③／④」から選びます。そのコンタクトが“期限到来かつ未対応/不在”の予約だけを全件から抽出します。</p></div>
+        </div>
+        <div class="card op-card">
+          <h3>期限の見え方</h3>
+          <div class="op-pair"><p><b>いつ使うか：</b>急ぐ予約か、後日でよい予約かを見分けたい時。</p><p><b>どうするか：</b>バッジで確認します。遅延●日（赤）／本日／あと●日（予告）／繰越（不在）で表示されます。</p></div>
+          <div class="tag-row"><span class="status late">遅延2日</span><span class="status need">本日</span><span class="status soon">あと3日</span><span class="status carry">繰越</span></div>
+        </div>
+        <div class="card op-card">
+          <h3>不在時の次回連絡日</h3>
+          <div class="op-pair"><p><b>いつ使うか：</b>不在の予約を、指定した日に再表示したい時。</p><p><b>どうするか：</b>不在の予約に再架電日を設定します。その日まで「今日やること」から外れ、当日に再表示されます。</p></div>
+        </div>
+        <div class="card op-card">
+          <h3>④までスキップ</h3>
+          <div class="op-pair"><p><b>いつ使うか：</b>メンバー・定例コンペなど、前半の連絡が不要な時。</p><p><b>どうするか：</b>①〜③を一括「不要」にして、④だけ残します。</p></div>
+        </div>
+        <div class="card op-card">
+          <h3>元に戻す</h3>
+          <div class="op-pair"><p><b>いつ使うか：</b>直前の状態変更を取り消したい時。</p><p><b>どうするか：</b>「元に戻す」を押します。1つずつ取消できます。「更新（整理）」を押すまで有効です。削除・取込は対象外です。</p></div>
+        </div>
+        <div class="card op-card">
+          <h3>⟳ 更新（整理）</h3>
+          <div class="op-pair"><p><b>いつ使うか：</b>対応済みの予約を今日の一覧から外したい時。</p><p><b>どうするか：</b>「⟳ 更新（整理）」を押します。解決済みを「今日やること」から外して一覧を整理します。</p></div>
+        </div>
+        <div class="card op-card">
+          <h3>Excel書き出し</h3>
+          <div class="op-pair"><p><b>いつ使うか：</b>現在の台帳をバックアップしたい時。</p><p><b>どうするか：</b>「Excel書き出し」を押します。.xlsxで保存でき、再取込可能です。組合せ入力も保持されます。</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="settings">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-label">Settings</div>
+        <div>
+          <h2>設定の使い方</h2>
+          <p class="body-copy">通常運用では頻繁に触りません。事業所ごとのルールや初回セットアップ時に確認します。</p>
+        </div>
+      </div>
+      <div class="grid-3">
+        <div class="card">
+          <h3>初回起動時メニュー</h3>
+          <p>完全初期のセットアップで使います。台帳ファイルの保存先を作ってから、現行Excel台帳を取り込みます。</p>
+          <ul class="plain-list">
+            <li>① 新規台帳作成：Excel取り込み先になる空の台帳ファイルを共有ドライブに作成。</li>
+            <li>② 既存台帳移行取り込み：現行のExcel台帳(.xlsm/.xlsx)を全件取り込み。</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>コンタクトのタイミング（日数）</h3>
+          <p>①〜④の日数を事業所ごとに変更できます。</p>
+          <div class="tag-row"><span class="tag">①受付翌日</span><span class="tag">②60日前</span><span class="tag">③35日前</span><span class="tag">④18日前</span></div>
+        </div>
+        <div class="card">
+          <h3>表示オプション</h3>
+          <ul class="plain-list">
+            <li>「今日やること」に表示するコンタクト①〜④の ON/OFFを設定します。</li>
+            <li>②は既定オフです。事業所により②も使用できます。</li>
+            <li>組数確定したら「今日やること」から外す ON/OFFを設定します。</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="saving">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-label">Files & Save</div>
+        <div>
+          <h2>ファイルと保存</h2>
+          <p class="body-copy">顧客データはWEB上のサーバーに保存されません。アプリは、ローカルPCまたは事業所の共有フォルダ内に置いた台帳ファイルを、ブラウザから直接読み書きします。</p>
+        </div>
+      </div>
+      <div class="save-diagram" aria-label="データ保存の流れ">
+        <div class="diagram-node">
+          <div class="node-label">Web app</div>
+          <strong>WEBアプリ本体</strong>
+          <p>画面を表示するだけ。顧客データはここには保存しません。</p>
+        </div>
+        <div class="diagram-arrow"><span>表示</span></div>
+        <div class="diagram-node dark">
+          <div class="node-label">Browser</div>
+          <strong>Chrome / Edge</strong>
+          <p>利用者が選んだ台帳ファイルを開き、編集内容を書き込みます。</p>
+        </div>
+        <div class="diagram-arrow"><span>読み書き</span></div>
+        <div class="diagram-node">
+          <div class="node-label">Ledger file</div>
+          <strong>台帳ファイル</strong>
+          <p>ローカルPC、または事業所の共有フォルダ内に置くデータの正本です。</p>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>データの置き場所</h3>
+          <ul class="check-list">
+            <li>予約情報・顧客情報は、選択した台帳ファイルの中に保存されます。</li>
+            <li>台帳ファイルは、ローカルPC内または事業所の共有フォルダ内に置きます。</li>
+            <li>保存時のファイル名末尾が「.json」でも、普段は「台帳ファイル」として扱えば大丈夫です。</li>
+            <li>GitHub Pages上のWEBアプリ本体には、顧客データを保存しません。</li>
+            <li>WEBアプリは画面を表示するだけで、データの正本は手元または共有フォルダのファイルです。</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>読み書きのしくみ</h3>
+          <ul class="plain-list">
+            <li>Chrome/Edgeのファイル読み書き機能を使い、利用者が選んだ台帳ファイルを読み込みます。</li>
+            <li>状態変更やメモの編集は、その台帳ファイルへ自動保存されます。</li>
+            <li>初回は、設定の「初回起動時メニュー」で台帳ファイルを作り、現行Excel台帳を取り込みます。</li>
+            <li>一度つなげば「どのファイルか」はブラウザが記憶します。毎回選び直しは不要です。</li>
+          </ul>
+        </div>
+      </div>
+      <div class="grid-2" style="margin-top: 14px;">
+        <div class="card">
+          <h3>共有フォルダで使う場合</h3>
+          <ul class="plain-list">
+            <li>事業所内で同じ台帳を使う場合は、共有フォルダ上に台帳ファイルを置きます。</li>
+            <li>各スタッフは同じ台帳ファイルを開いて作業します。</li>
+            <li>画面上部のファイル表示で、正しい台帳につながっているか確認してから作業します。</li>
+            <li>別の人が更新した場合は、画面の案内に従って読み直します。</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>困ったとき</h3>
+          <ul class="plain-list">
+            <li>ブラウザを再起動すると、ファイルへの読み書き権限が切れることがあります。</li>
+            <li>その時だけ「権限再付与」を1回クリックします。</li>
+            <li>ファイルの場所はブラウザが記憶しているため、通常は選び直し不要です。</li>
+            <li>Chrome/Edge推奨です（ファイル読み書きに対応しているブラウザ）。</li>
+          </ul>
+        </div>
+      </div>
+      <div class="trouble" style="margin-top: 14px;">
+        <div class="callout"><strong>未接続表示の意味</strong><br>ローカルPCまたは共有フォルダ上の台帳ファイルにつながっていない状態です。初回セットアップで保存先を作成してから、Excel台帳を取り込みます。</div>
+        <div class="callout"><strong>WEB保存ではありません</strong><br>顧客データはWEB上のサーバーへ預けません。利用者が選んだ台帳ファイルを、ブラウザが直接読み書きします。</div>
+        <div class="callout"><strong>バックアップ</strong><br>Excel書き出しで現在の台帳を.xlsxにできます。再取込可能で、組合せ入力も保持されます。</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="feedback">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-label">Feedback</div>
+        <div>
+          <h2>フィードバック</h2>
+          <p class="body-copy">使いながら気づいた要望や不具合を、メールで簡単に共有できます。入力して「メールを作成」を押すと、宛先と本文が入ったメール作成画面が開きます。</p>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>報告内容を入力</h3>
+          <form class="feedback-form" onsubmit="return false;">
+            <div class="feedback-options" aria-label="種別">
+              <label><input type="radio" name="feedbackType" value="要望" checked> 要望</label>
+              <label><input type="radio" name="feedbackType" value="不具合"> 不具合</label>
+              <label><input type="radio" name="feedbackType" value="質問"> 質問</label>
+            </div>
+            <div class="feedback-field">
+              <label for="feedbackScreen">画面・操作</label>
+              <input class="feedback-input" id="feedbackScreen" type="text" placeholder="例）日次CSV取込、今日やること、Excel書き出し">
+            </div>
+            <div class="feedback-field">
+              <label for="feedbackBody">内容</label>
+              <textarea class="feedback-textarea" id="feedbackBody" placeholder="例）どの操作をした時に、何が起きたか。こうなると助かる、という要望でもOKです。"></textarea>
+            </div>
+            <div class="feedback-actions">
+              <button class="button" type="button" onclick="createFeedbackEmail()">メールを作成</button>
+              <button class="ghost-button" type="button" onclick="copyFeedback()">内容をコピー</button>
+            </div>
+            <div class="feedback-status" id="feedbackStatus" role="status"></div>
+          </form>
+        </div>
+        <div class="card">
+          <h3>送信先</h3>
+          <p class="small">宛先：keiji.nakahata@accordiagolf.com</p>
+          <ul class="plain-list" style="margin-top: 14px;">
+            <li>どの画面で起きたか。</li>
+            <li>どのボタンや操作をしたか。</li>
+            <li>期待していた動きと、実際の動き。</li>
+            <li>急ぎかどうか。</li>
+            <li>不具合の場合は、分かれば予約者名や日付も添えます。</li>
+          </ul>
+          <div class="callout" style="margin-top: 14px;"><strong>送信前に確認</strong><br>「メールを作成」を押すだけでは送信されません。開いたメール画面で内容を確認してから送信してください。</div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="wrap footer-inner">
+    <div>
+      <div class="brand">予約チェック管理 使い方ガイド</div>
+      <div class="small">スタッフ向け・ゴルフコンペ予約フォロー連絡の管理ガイド</div>
+    </div>
+    <div class="hero-actions" style="margin: 0;">
+      <a class="pill-link" href="https://nkhtnkht-ops.github.io/compe-demo/" target="_blank" rel="noopener">アプリを開く</a>
+      <a class="pill-link" href="https://github.com/nkhtnkht-ops/compe-demo" target="_blank" rel="noopener">リポジトリ</a>
+    </div>
+  </div>
+</footer>
+<script>
+function getFeedbackPayload(){
+  const type = document.querySelector('input[name="feedbackType"]:checked')?.value || '要望';
+  const screen = document.getElementById('feedbackScreen')?.value.trim() || '未記入';
+  const body = document.getElementById('feedbackBody')?.value.trim() || '未記入';
+  return { type, screen, body };
+}
+
+function formatFeedbackText(item){
+  return `【予約チェック管理 フィードバック】\n種別：${item.type}\n画面・操作：${item.screen}\n内容：\n${item.body}`;
+}
+
+function createFeedbackEmail(){
+  const payload = getFeedbackPayload();
+  const status = document.getElementById('feedbackStatus');
+  if (payload.body === '未記入') {
+    status.textContent = '内容を入力してからメールを作成してください。';
+    return;
+  }
+  const to = 'keiji.nakahata@accordiagolf.com';
+  const subject = `予約チェック管理フィードバック（${payload.type}）`;
+  const body = formatFeedbackText(payload);
+  window.location.href = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  status.textContent = 'メール作成画面を開きました。内容を確認して送信してください。';
+}
+
+function copyFeedback(){
+  const text = formatFeedbackText(getFeedbackPayload());
+  const status = document.getElementById('feedbackStatus');
+  navigator.clipboard.writeText(text).then(() => {
+    status.textContent = 'コピーしました。担当者への連絡に貼り付けて共有してください。';
+  }).catch(() => {
+    status.textContent = 'コピーできませんでした。入力内容を選択してコピーしてください。';
+  });
+}
+</script>
+</body>
+</html>

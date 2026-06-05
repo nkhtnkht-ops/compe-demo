@@ -14,7 +14,7 @@
   .appbar{background:#000;color:#fff;display:flex;align-items:center;gap:8px;padding:10px 16px;flex-wrap:wrap;flex-shrink:0;}
   .appbar .ttl{font-weight:540;font-size:17px;letter-spacing:-0.4px;}
   .appbar .sp{flex:1;}
-  .nav{background:rgba(255,255,255,.16);color:#fff;border:0;border-radius:50px;font-weight:450;font-size:13px;padding:8px 14px;cursor:pointer;}
+  .nav{background:rgba(255,255,255,.16);color:#fff;border:0;border-radius:50px;font-weight:450;font-size:13px;padding:8px 14px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;}
   .nav:hover{background:rgba(255,255,255,.26);}
   .nav:disabled{opacity:.4;cursor:default;}
   .toggle{background:#fff;color:#000;border:0;border-radius:50px;font-weight:480;font-size:13px;padding:8px 16px;cursor:pointer;}
@@ -113,6 +113,7 @@
     <button class="nav" id="undoBtn" onclick="undoLast()" title="直前の状態変更（〇/不在/不要・組数確定/キャンセル・組合せ入力）を1つずつ取り消します。「更新（整理）」を押すまで有効。削除・取込は対象外。" disabled>元に戻す</button>
     <button class="nav" id="toImport" onclick="showScreen('import')">＋ CSV取込</button>
     <button class="nav" id="toSettings" onclick="showScreen('settings')">設定</button>
+    <a class="nav" id="toHelp" href="help/" target="_blank" rel="noopener">ヘルプ</a>
     <button class="nav hidden" id="toMain" onclick="showScreen('main')">← 一覧へ戻る</button>
     <span class="sp"></span>
     <span id="fileStatus" class="filestat" title="データファイルの接続状態">未接続（メモリ動作）</span>
