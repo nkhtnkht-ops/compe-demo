@@ -21,7 +21,8 @@
   .seg{display:inline-flex;background:rgba(255,255,255,.16);border-radius:50px;padding:3px;gap:2px;}
   .segb{border:0;background:transparent;color:#fff;font-weight:480;font-size:13px;padding:7px 16px;border-radius:50px;cursor:pointer;white-space:nowrap;opacity:.8;}
   .segb.on{background:#fff;color:#000;opacity:1;}
-  .refresh{background:#fff;color:#000;border:0;border-radius:50px;font-weight:480;font-size:13px;padding:8px 16px;cursor:pointer;}
+  .refresh{display:inline-flex;align-items:center;gap:5px;background:#fff;color:#000;border:0;border-radius:50px;font-weight:480;font-size:13px;padding:8px 16px;cursor:pointer;}
+  .refresh .ricon{font-size:19px;line-height:1;}
   .body{display:flex;flex:1;min-height:0;}
   .side{flex:1;border-right:1px solid var(--line);display:flex;flex-direction:column;min-width:0;min-height:0;}
   .sbar{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--line);font-size:12px;color:var(--muted);gap:6px;flex-wrap:wrap;}
@@ -31,6 +32,9 @@
   .searchbox{flex:1;min-width:110px;border:1px solid #d4d4d4;background:#fff;color:#000;border-radius:50px;font-size:12px;font-weight:400;padding:6px 12px;}
   .datein{border:1px solid #d4d4d4;background:#fff;border-radius:8px;padding:5px 9px;font-size:12px;font-family:inherit;color:#000;}
   .ttlab{display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-weight:480;font-size:13px;white-space:nowrap;}
+  .cfbar .sortgrp{flex-wrap:wrap;}
+  .cflabel{white-space:nowrap;}
+  .cfbar .sortb{font-size:15px;font-weight:540;padding:4px 13px;line-height:1.1;}
   .list{overflow:auto;flex:1;min-height:0;}
   .gi{padding:12px 14px;border-bottom:1px solid var(--line);border-left:3px solid transparent;display:flex;gap:10px;align-items:center;cursor:pointer;transition:background .12s;}
   .gi:hover{background:#fafafa;} .gi.sel{background:#f4f4f5;border-left-color:#000;}
@@ -98,7 +102,7 @@
       <button class="segb on" id="segToday" onclick="setMode(false)">今日やること</button>
       <button class="segb" id="segAll" onclick="setMode(true)">全件</button>
     </span>
-    <button class="refresh" id="refBtn" onclick="refreshList()">⟳ 更新（整理）</button>
+    <button class="refresh" id="refBtn" onclick="refreshList()"><span class="ricon">⟳</span> 更新（整理）</button>
     <button class="nav" id="undoBtn" onclick="undoLast()" title="直前の状態変更（〇/不在/不要・組数確定/キャンセル・組合せ入力）を1つずつ取り消します。「更新（整理）」を押すまで有効。削除・取込は対象外。" disabled>元に戻す</button>
     <button class="nav" id="toImport" onclick="showScreen('import')">＋ CSV取込</button>
     <button class="nav" id="toSettings" onclick="showScreen('settings')">設定</button>
@@ -126,7 +130,7 @@
           <button class="sortb" id="sortRecv" onclick="setSort('recv')">受付日順</button>
         </span>
       </div>
-      <div class="sbar cfbar"><span class="sortgrp">接点：
+      <div class="sbar cfbar"><span class="sortgrp"><span class="cflabel">コンタクト：</span>
         <button class="sortb on" id="cfAll" onclick="setContact('')">全部</button>
         <button class="sortb" id="cf0" onclick="setContact('0')" title="①受付翌日の対応だけ表示">①</button>
         <button class="sortb" id="cf1" onclick="setContact('1')" title="②60日前の対応だけ表示（事業所により使用）">②</button>
@@ -182,7 +186,7 @@
     </div>
     <div style="font-size:13px;font-weight:700;margin:16px 0 6px">表示オプション</div>
     <div class="onecard" style="max-width:680px">
-      <div class="orow"><div class="ok">「今日やること」に表示する接点<span class="note">（事業所ごと。②は既定オフ）</span></div>
+      <div class="orow"><div class="ok">「今日やること」に表示するコンタクト<span class="note">（事業所ごと。②は既定オフ）</span></div>
         <span class="sel-wrap" style="gap:12px">
           <label class="ttlab"><input type="checkbox" id="tt0" checked> ①受付翌日</label>
           <label class="ttlab"><input type="checkbox" id="tt1"> ②60日前</label>
@@ -649,7 +653,7 @@ function renderDetail(){
    <div class="editcell"><span>${r.next?('設定：'+r.next+'（その日まで今日やることから外します）'):'未設定（不在は毎日「今日やること」に表示）'}</span><span class="sel-wrap"><input type="date" class="datein" value="${r.next?r.next.replace(/\//g,'-'):''}" onchange="setNext(${gi},this.value)"><button class="sb" onclick="setNext(${gi},'')">クリア</button></span></div>`:''}
    <div class="sec">メモ（連絡内容・申し送り）</div>
    <textarea onchange="rows[${gi}].memo=this.value;markDirty()" placeholder="例）6/3 田中様へ連絡、組数は3組で確定見込み。次回6/15に再確認。" style="width:100%;height:84px;border:1px solid var(--line);border-radius:6px;padding:10px;font-size:13px;font-family:inherit">${(r.memo||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')}</textarea>
-   <p style="color:#9aa1aa;font-size:12px;margin-top:14px">戻し方は2通り：①上部 <b>元に戻す</b> で直前操作を取消／②この詳細で各接点を選び直し（<b>全件</b>表示にすれば完了済みの予約も探して修正できます）。「不在」は〇/不要にするまで繰越で残ります。</p>`;
+   <p style="color:#9aa1aa;font-size:12px;margin-top:14px">戻し方は2通り：①上部 <b>元に戻す</b> で直前操作を取消／②この詳細で各コンタクトを選び直し（<b>全件</b>表示にすれば完了済みの予約も探して修正できます）。「不在」は〇/不要にするまで繰越で残ります。</p>`;
 }
 function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1900);}
