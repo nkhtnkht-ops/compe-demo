@@ -108,13 +108,30 @@
       <button class="tabb" id="tabMig" onclick="setImpMode('mig')">既存台帳の移行（初期）</button>
     </div>
     <div id="impHint" style="font-size:12px;color:#6b7280;margin-bottom:8px"></div>
-    <textarea class="ta" id="ta"></textarea>
-    <div class="row">
-      <button class="btn b-gray" onclick="pasteSample()">サンプルを貼り付け（デモ）</button>
-      <button class="btn b-blue" id="bExtract" onclick="extract()">① 抽出して確認</button>
-      <button class="btn b-green" id="bReg" onclick="register()" disabled>② 台帳へ登録</button>
-      <button class="btn b-blue hidden" id="bMig" onclick="migrate()">既存データを移行</button>
+
+    <!-- 新規取込（CSV貼り付け） -->
+    <div id="newBox">
+      <textarea class="ta" id="ta"></textarea>
+      <div class="row">
+        <button class="btn b-gray" onclick="pasteSample()">サンプルを貼り付け（デモ）</button>
+        <button class="btn b-blue" id="bExtract" onclick="extract()">① 抽出して確認</button>
+        <button class="btn b-green" id="bReg" onclick="register()" disabled>② 台帳へ登録</button>
+      </div>
     </div>
+
+    <!-- 既存台帳の移行（Excelファイル読み込み） -->
+    <div id="migBox" class="hidden">
+      <div style="border:2px dashed var(--line);border-radius:10px;padding:22px;text-align:center;background:#fafbfc">
+        <div style="font-size:13px;color:#374151;margin-bottom:12px">現行のExcelマクロ台帳（.xlsm / .xlsx）を選んでください。<br>「予約チェック進捗確認シート」を読み取り、①〜④の対応状況も引き継ぎます。</div>
+        <input type="file" id="xlsxFile" accept=".xlsx,.xlsm" class="hidden" onchange="onXlsxPicked(this)">
+        <button class="btn b-blue" onclick="document.getElementById('xlsxFile').click()">📄 Excelファイルを選択</button>
+        <div id="xlsxName" style="font-size:12px;color:#6b7280;margin-top:10px"></div>
+      </div>
+      <div class="row" style="margin-top:14px">
+        <button class="btn b-green" id="bMig" onclick="migrate()" disabled>台帳へ移行（既存データを置き換え）</button>
+      </div>
+    </div>
+
     <div class="msg" id="impMsg"></div>
   </div>
 
@@ -140,6 +157,7 @@
 </div>
 <div id="toast"></div>
 
+<script src="xlsx.full.min.js"></script>
 <script>
 const SCHEMA_VERSION=1;
 let TODAY=new Date(2026,5,3);   // デモ基準日。実ファイル接続時は useRealToday() で当日へ切替
@@ -494,21 +512,84 @@ function setImpMode(m){
   const mig=m==='mig';
   document.getElementById('tabNew').classList.toggle('on',!mig);
   document.getElementById('tabMig').classList.toggle('on',mig);
-  document.getElementById('bExtract').classList.toggle('hidden',mig);
-  document.getElementById('bReg').classList.toggle('hidden',mig);
-  document.getElementById('bMig').classList.toggle('hidden',!mig);
+  document.getElementById('newBox').classList.toggle('hidden',mig);
+  document.getElementById('migBox').classList.toggle('hidden',!mig);
   document.getElementById('impHint').textContent = mig
-    ? '初期セットアップ用：旧台帳（氏名・プレー日・①〜④の状態・組数確定・備考など）を貼り付け→「既存データを移行」。現在の対応状況も含めて取り込みます。'
+    ? '初期セットアップ用：現行のExcelマクロ台帳（.xlsm）を選択→「台帳へ移行」。①〜④の対応状況・組数確定・備考も含めて全件取り込みます（既存データは置き換え）。'
     : '日次運用：予約受付一覧CSVを貼り付け→「①抽出して確認」→「②台帳へ登録」。3組以上・未来日のみ自動抽出します。';
-  document.getElementById('ta').placeholder = mig ? '旧台帳の行を貼り付け（氏名,プレー日,コース,組数,①,②,③,④,組数確定,備考 …）' : '予約受付一覧CSVを貼り付け（Ctrl+V）';
+  document.getElementById('ta').placeholder = '予約受付一覧CSVを貼り付け（Ctrl+V）';
   document.getElementById('ta').value=''; document.getElementById('impMsg').textContent='';
+  _migRows=null; document.getElementById('bMig').disabled=true;
+  document.getElementById('xlsxName').textContent=''; document.getElementById('xlsxFile').value='';
 }
+
+// ===== 既存Excel台帳の移行（SheetJS） =====
+// 進捗確認シートの列(0始まり): 0抽出日 1受付日 2プレー日 3曜日 4代表者氏名 5連絡先 6携帯 7コース 8時間
+//   9組数 10人数 11経路 12連絡可能時間帯 13① 14② 15③ 16④ 17出欠締切 18組数確定 19備考
+let _migRows=null;
+function xstat(v){ const s=(v==null?'':String(v)).replace(/['"]/g,'').trim(); return (s==='〇'||s==='不在'||s==='不要')?s:''; }
+function xkk(v){ const s=(v==null?'':String(v)).replace(/['"]/g,'').trim(); return (s==='〇'||s==='キャンセル')?s:''; }
+function xclean(v){ return (v==null?'':String(v)).replace(/['"]/g,'').trim(); }
+function xdate(v){
+  if(v==null||v==='')return '';
+  if(v instanceof Date && !isNaN(v)) return v.getFullYear()+'/'+String(v.getMonth()+1).padStart(2,'0')+'/'+String(v.getDate()).padStart(2,'0');
+  const m=String(v).match(/(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+  return m?m[1]+'/'+m[2].padStart(2,'0')+'/'+m[3].padStart(2,'0'):'';
+}
+function xtime(v){ if(v==null)return ''; const m=String(v).match(/(\d{1,2}):(\d{2})/); return m?m[1].padStart(2,'0')+':'+m[2]:String(v).trim(); }
+function xnum(v){ const n=parseInt(String(v==null?'':v).replace(/[^0-9]/g,'')); return isNaN(n)?0:n; }
+
+function onXlsxPicked(input){
+  const f=input.files&&input.files[0];
+  if(!f){return;}
+  document.getElementById('xlsxName').textContent='読み込み中… '+f.name;
+  const reader=new FileReader();
+  reader.onload=(e)=>{
+    try{
+      const wb=XLSX.read(e.target.result,{type:'array',cellDates:true});
+      const sheetName=wb.SheetNames.find(n=>n.indexOf('進捗')>=0) || wb.SheetNames.find(n=>n.indexOf('チェック')>=0);
+      if(!sheetName){ document.getElementById('impMsg').innerHTML='<span style="color:#b91c1c">「進捗確認シート」が見つかりません。シート名をご確認ください。</span>'; return; }
+      const ws=wb.Sheets[sheetName];
+      const aoa=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,cellDates:true,defval:null});
+      const out=[];
+      for(let i=2;i<aoa.length;i++){          // 3行目(index2)からデータ
+        const r=aoa[i]; if(!r)continue;
+        const name=xclean(r[4]); if(!name)continue;
+        const recv=xdate(r[1]), play=xdate(r[2]);
+        out.push({n:name,play,wd:xclean(r[3]),course:xclean(r[7]),time:xtime(r[8]),
+          g:xnum(r[9]),p:xnum(r[10]),route:xclean(r[11]),recv,
+          d:["","","",""], s:[xstat(r[13]),xstat(r[14]),xstat(r[15]),xstat(r[16])],
+          kk:xkk(r[18]),kumi:"",memo:xclean(r[19]),tel:xclean(r[5]),mob:xclean(r[6])});
+      }
+      if(!out.length){ document.getElementById('impMsg').innerHTML='<span style="color:#b91c1c">有効な行が見つかりませんでした。</span>'; return; }
+      _migRows=out;
+      document.getElementById('xlsxName').textContent='✅ '+f.name+'（シート「'+sheetName+'」）';
+      document.getElementById('bMig').disabled=false;
+      const cancel=out.filter(x=>x.kk==='キャンセル').length;
+      document.getElementById('impMsg').innerHTML=`<b>${out.length}</b> 件を読み込みました（うちキャンセル ${cancel} 件）。`
+        +`①〜④の対応状況・組数確定・備考も引き継ぎます。`
+        +`<br><span style="color:#b35900;font-weight:700">「台帳へ移行」を押すと、現在のデータは全て置き換わります。</span>`;
+    }catch(err){
+      console.error(err);
+      document.getElementById('impMsg').innerHTML='<span style="color:#b91c1c">読み込みエラー：'+(err.message||err)+'</span>';
+    }
+  };
+  reader.onerror=()=>{document.getElementById('impMsg').innerHTML='<span style="color:#b91c1c">ファイルを読めませんでした。</span>';};
+  reader.readAsArrayBuffer(f);
+}
+
 function migrate(){
-  const t=document.getElementById('ta').value.trim();
-  if(!t){document.getElementById('impMsg').textContent='移行する台帳データを貼り付けてください';return;}
-  const n=t.split(/\n/).filter(l=>l.trim()&&l.indexOf('プレー日')<0).length;
-  document.getElementById('impMsg').innerHTML=`<span style="color:#1a7f37;font-weight:700">${n} 件を移行しました（デモ）。現在の対応状況（①〜④・組数確定・備考）も引き継いで取り込みます</span>`;
-  toast(n+' 件を移行しました（デモ）');
+  if(!_migRows||!_migRows.length){document.getElementById('impMsg').textContent='先にExcelファイルを選択してください';return;}
+  if(rows.length && !confirm('現在の '+rows.length+' 件を、Excelの '+_migRows.length+' 件で置き換えます。よろしいですか？\n（この操作の前のデータには、OneDrive/共有のファイル履歴から戻せます）')) return;
+  const n=_migRows.length;
+  rows = _migRows.map(r=>({...r, d:[...r.d], s:[...r.s]}));
+  recompute();                       // ①〜④予定日を受付/プレー＋設定日数から計算
+  selIdx=0; _migRows=null;
+  document.getElementById('bMig').disabled=true;
+  document.getElementById('impMsg').innerHTML=`<span style="color:#1a7f37;font-weight:700">${n} 件を移行しました。「← 一覧へ戻る」で確認できます（自動保存）。</span>`;
+  markDirty();
+  toast(n+' 件を移行しました');
+  render();
 }
 function saveSettings(){
   o1=+document.getElementById('so1').value||0; o2=+document.getElementById('so2').value||0;

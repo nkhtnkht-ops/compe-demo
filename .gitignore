@@ -4,3 +4,8 @@
 *_tmp.json
 compe-yoyaku-*.json
 data*.json
+
+# PII保護: Excel台帳は絶対コミットしない
+*.xlsm
+*.xlsx
+_test.*
