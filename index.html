@@ -537,7 +537,7 @@ function render(){
       ${cur?`<button class="sb undo" onclick="setS(${gi},${a},'')">取消</button>`:``}</div>`;}
     const div=document.createElement('div'); div.className='gi'+(gi===selIdx?' sel':'');
     const memoPrev = r.memo ? `<div class="memo-prev" title="${esc(r.memo)}">📝 ${esc(r.memo)}</div>` : ``;
-    div.innerHTML=`<div class="main"><div class="nm">${r.n}</div><div class="sub">${r.play}・${r.wd}・${r.course}・${r.g}組</div><div class="due ${cls}">${due}</div>${memoPrev}</div>${ctrl}`;
+    div.innerHTML=`<div class="main"><div class="nm">${r.n}</div><div class="sub">${r.play}・${r.wd}${r.time?'・<b>'+r.time+'</b>':''}・${r.course}・${r.g}組</div><div class="due ${cls}">${due}</div>${memoPrev}</div>${ctrl}`;
     div.onclick=()=>{selIdx=gi;render();};
     list.appendChild(div);
   });
@@ -561,6 +561,7 @@ function renderDetail(){
    <div class="dh"><span style="display:flex;align-items:center;gap:10px"><span class="name">${r.n}</span><button class="sb" onclick="copyText('${r.n}')">コピー</button></span><button class="delbtn" onclick="delRow(${gi})">削除</button></div>
    <div class="grid">
     <div class="fld"><div class="k">プレー日</div><div class="v">${r.play}（${r.wd}）</div></div>
+    <div class="fld"><div class="k">スタート時間</div><div class="v">${r.time||'—'}</div></div>
     <div class="fld"><div class="k">コース名</div><div class="v">${r.course}</div></div>
     <div class="fld"><div class="k">組数 / 人数</div><div class="v">${r.g}組 / ${r.p}人</div></div>
     <div class="fld"><div class="k">経路</div><div class="v">${r.route}</div></div>
