@@ -149,14 +149,8 @@
   </div>
 
   <div class="imp hidden" id="screenSettings">
-    <div style="font-size:15px;font-weight:700;margin-bottom:10px">⚙ 設定（事業所ごと）</div>
-    <div class="onecard" style="max-width:680px">
-      <div class="orow"><div class="ok">接続先リスト（事業所）</div>
-        <input id="setList" value="予約チェック管理（泉佐野）" style="border:1px solid var(--line);border-radius:6px;padding:7px 10px;font-size:13px;width:260px"></div>
-      <div class="orow"><div class="ok">コース名<span class="note">（事業所ごとに設定）</span></div>
-        <input id="setCourse" value="犬鳴 / 稲倉 / 大阪湾" style="border:1px solid var(--line);border-radius:6px;padding:7px 10px;font-size:13px;width:260px"></div>
-    </div>
-    <div style="font-size:13px;font-weight:700;margin:16px 0 6px">コンタクトのタイミング（日数）<span class="note" style="font-weight:400;color:#9ca3af">　事業所ごとに変更できます</span></div>
+    <div style="font-size:15px;font-weight:700;margin-bottom:10px">⚙ 設定</div>
+    <div style="font-size:13px;font-weight:700;margin:4px 0 6px">コンタクトのタイミング（日数）<span class="note" style="font-weight:400;color:#9ca3af">　事業所ごとに変更できます</span></div>
     <div class="onecard" style="max-width:680px">
       <div class="orow"><div class="ok">① 受付日から</div><span class="sel-wrap"><input type="number" id="so1" value="1" class="numin"> 日後</span></div>
       <div class="orow"><div class="ok">② プレー日の</div><span class="sel-wrap"><input type="number" id="so2" value="60" class="numin"> 日前</span></div>
@@ -170,7 +164,7 @@
     </div>
     <div class="row" style="margin-top:14px"><button class="btn b-green" onclick="saveSettings()">設定を保存</button></div>
     <div class="msg" id="setMsg"></div>
-    <p style="color:#9aa1aa;font-size:12px;margin-top:10px">日数を変えて保存すると、①〜④の予定日が再計算され、今日やることの判定にも反映されます（このデモでも実際に動きます）。本アプリでは事業所ごとのリストにこの設定を保存します。</p>
+    <p style="color:#9aa1aa;font-size:12px;margin-top:10px">日数を変えて保存すると、①〜④の予定日が再計算され、今日やることの判定にも反映されます。この設定はデータのJSONファイルに一緒に保存されます。</p>
   </div>
 </div>
 <div id="toast"></div>
@@ -255,9 +249,7 @@ function buildJson(){
       updatedBy: updatedBy || '',
       tenpo: '泉佐野'
     },
-    settings:{ courseName:document.getElementById('setCourse')?.value || '犬鳴 / 稲倉 / 大阪湾',
-               listName:document.getElementById('setList')?.value || '予約チェック管理（泉佐野）',
-               o1,o2,o3,o4, excludeKakutei },
+    settings:{ o1,o2,o3,o4, excludeKakutei },
     rows: rows.map(r=>{
       // _touchは実行時フラグなので保存しない
       const {_touch, ...rest} = r;
