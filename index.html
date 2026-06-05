@@ -16,6 +16,9 @@
   .nav{background:rgba(255,255,255,.18);color:#fff;border:0;border-radius:6px;font-size:13px;padding:7px 11px;cursor:pointer;}
   .nav:disabled{opacity:.4;cursor:default;}
   .toggle{background:#fff;color:var(--blue);border:0;border-radius:20px;font-weight:700;font-size:13px;padding:7px 14px;cursor:pointer;}
+  .seg{display:inline-flex;background:rgba(255,255,255,.2);border-radius:18px;padding:3px;gap:2px;}
+  .segb{border:0;background:transparent;color:#fff;font-weight:700;font-size:13px;padding:6px 16px;border-radius:15px;cursor:pointer;white-space:nowrap;opacity:.85;}
+  .segb.on{background:#fff;color:var(--blue);opacity:1;}
   .refresh{background:#ffd54a;color:#5b4500;border:0;border-radius:20px;font-weight:700;font-size:13px;padding:7px 14px;cursor:pointer;}
   .body{display:flex;flex:1;min-height:0;}
   .side{flex:1;border-right:1px solid var(--line);display:flex;flex-direction:column;min-width:0;min-height:0;}
@@ -82,7 +85,10 @@
 <div class="app">
   <div class="appbar">
     <span class="ttl">予約チェック管理</span>
-    <button class="toggle" id="modeBtn" onclick="toggleMode()"></button>
+    <span class="seg" id="modeSeg">
+      <button class="segb on" id="segToday" onclick="setMode(false)">今日やること</button>
+      <button class="segb" id="segAll" onclick="setMode(true)">全件</button>
+    </span>
     <button class="refresh" id="refBtn" onclick="refreshList()">🔄 更新（整理）</button>
     <button class="nav" id="undoBtn" onclick="undoLast()" disabled>↩ 元に戻す</button>
     <button class="nav" id="toImport" onclick="showScreen('import')">＋ CSV取込</button>
@@ -503,6 +509,7 @@ function undoLast(){
 }
 function refreshList(){ rows.forEach(r=>r._touch=false); undoStack=[]; document.getElementById('undoBtn').disabled=true; toast('一覧を整理しました（解決済みを除外）'); render(); }
 function toggleMode(){showAll=!showAll;render();}
+function setMode(all){showAll=all;render();}
 function setSort(k){sortKey=k;document.getElementById('sortPlay').classList.toggle('on',k==='play');document.getElementById('sortRecv').classList.toggle('on',k==='recv');render();}
 function delRow(gi){const r=rows[gi];if(!r)return;if(confirm(r.n+' を削除しますか？\n（この操作は元に戻せません）')){rows.splice(gi,1);if(selIdx>=rows.length)selIdx=Math.max(0,rows.length-1);toast('削除しました：'+r.n);markDirty();render();}}
 
@@ -510,7 +517,8 @@ function render(){
   const vis=visibleRows();
   vis.sort((a,b)=>{const ka=pd(sortKey==='recv'?a.recv:a.play),kb=pd(sortKey==='recv'?b.recv:b.play);return (ka?ka.getTime():0)-(kb?kb.getTime():0);});
   document.getElementById('countLbl').textContent=(showAll?"全件":"今日やること")+"："+vis.length+"件";
-  document.getElementById('modeBtn').textContent="表示："+(showAll?"全件":"今日やること")+" ▾";
+  document.getElementById('segToday').classList.toggle('on',!showAll);
+  document.getElementById('segAll').classList.toggle('on',showAll);
   document.getElementById('refBtn').classList.toggle('hidden',showAll);
   const list=document.getElementById('list'); list.innerHTML='';
   if(vis.length===0){list.innerHTML='<div class="empty">'+(showAll?'データなし':'今日やることはありません 🎉')+'</div>';renderDetail();return;}
@@ -599,7 +607,7 @@ function showScreen(name){
   document.getElementById('screenMain').classList.toggle('hidden',name!=='main');
   document.getElementById('screenImport').classList.toggle('hidden',name!=='import');
   document.getElementById('screenSettings').classList.toggle('hidden',name!=='settings');
-  ['modeBtn','undoBtn','toImport','toSettings'].forEach(id=>document.getElementById(id).classList.toggle('hidden',!main));
+  ['modeSeg','undoBtn','toImport','toSettings'].forEach(id=>document.getElementById(id).classList.toggle('hidden',!main));
   document.getElementById('refBtn').classList.toggle('hidden',!main||showAll);
   document.getElementById('toMain').classList.toggle('hidden',main);
 }
