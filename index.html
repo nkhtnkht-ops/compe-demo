@@ -512,13 +512,38 @@ let o1=1,o2=60,o3=35,o4=18; // ①受付+o1日 / ②③④はプレー日のo2,o
 let excludeKakutei=true;    // 組数確定〇で「今日やること」から除外する（設定で切替）
 let todayTouch=[true,false,true,true]; // ①〜④を「今日やること」に表示するか（既定②オフ・事業所ごとに設定）
 function recompute(){rows.forEach(r=>{const rc=pd(r.recv),pl=pd(r.play);r.d=[fmt(addDays(rc,o1)),fmt(addDays(pl,-o2)),fmt(addDays(pl,-o3)),fmt(addDays(pl,-o4))];});}
+// ダミーデータ30件（UI確認用・PIIなし／基準日2026-06-03。d[]はrecompute()で受付・プレー＋設定日数から自動計算）
 let rows=[
- {n:"山田 太郎",play:"2026/07/20",wd:"月",course:"稲倉",time:"07:37",g:3,p:12,route:"GORA",recv:"2026/06/02",d:["2026/06/03","2026/05/21","2026/06/15","2026/07/02"],s:["","","",""],kk:"",tel:"0724xxxxxx",mob:"09012345678"},
- {n:"佐藤 花子",play:"2026/06/15",wd:"月",course:"犬鳴",time:"08:52",g:3,p:10,route:"AGWeb",recv:"2026/04/16",d:["2026/04/17","2026/04/16","2026/06/03","2026/05/28"],s:["〇","不要","",""],kk:"",tel:"06xxxxxxxx",mob:"08012345678"},
- {n:"鈴木 一郎",play:"2026/08/01",wd:"土",course:"大阪湾",time:"09:07",g:4,p:16,route:"AGWeb",recv:"2026/05/30",d:["2026/05/31","2026/06/02","2026/06/27","2026/07/14"],s:["不在","","",""],kk:"",tel:"0724xxxxxx",mob:"09012345678"},
- {n:"田中 美咲",play:"2026/06/21",wd:"日",course:"犬鳴",time:"10:07",g:5,p:20,route:"電話",recv:"2026/03/05",d:["2026/03/06","2026/04/22","2026/05/17","2026/06/03"],s:["〇","不要","〇",""],kk:"",tel:"0724xxxxxx",mob:"09012345678"},
- {n:"高橋 健",play:"2026/06/25",wd:"木",course:"稲倉",time:"12:37",g:6,p:24,route:"GORA",recv:"2026/04/10",d:["2026/04/11","2026/04/26","2026/05/21","2026/06/07"],s:["〇","〇","〇","〇"],kk:"〇",kumi:"済",tel:"0724xxxxxx",mob:"09012345678"},
- {n:"伊藤 直美",play:"2026/07/03",wd:"金",course:"稲倉",time:"08:22",g:3,p:12,route:"RECRUIT",recv:"2026/05/13",d:["2026/05/14","2026/05/04","2026/05/29","2026/06/15"],s:["〇","不要","〇","〇"],kk:"",tel:"0724xxxxxx",mob:"09012345678"}
+ {n:"山本 健太",play:"2026/06/04",wd:"木",course:"犬鳴",time:"07:22",g:3,p:12,route:"AGWeb",recv:"2026/03/20",d:["","","",""],s:["","","",""],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
+ {n:"中村 由美",play:"2026/06/07",wd:"日",course:"稲倉",time:"08:00",g:4,p:16,route:"GORA",recv:"2026/04/02",d:["","","",""],s:["〇","不要","",""],kk:"",tel:"072xxxxxxx",mob:"080xxxxxxx"},
+ {n:"小林 誠",play:"2026/06/10",wd:"水",course:"大阪湾",time:"09:15",g:3,p:12,route:"電話",recv:"2026/04/28",d:["","","",""],s:["〇","","〇",""],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
+ {n:"加藤 さゆり",play:"2026/06/12",wd:"金",course:"犬鳴",time:"07:45",g:5,p:20,route:"RECRUIT",recv:"2026/03/15",d:["","","",""],s:["〇","不要","不在",""],kk:"",memo:"6/2 TEL不在、夕方に再架電予定",tel:"072xxxxxxx",mob:"090xxxxxxx"},
+ {n:"吉田 隆",play:"2026/06/14",wd:"日",course:"稲倉",time:"10:30",g:3,p:12,route:"AGWeb",recv:"2026/05/01",d:["","","",""],s:["〇","不要","〇","〇"],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
+ {n:"山田 太郎",play:"2026/06/18",wd:"木",course:"稲倉",time:"07:37",g:3,p:12,route:"GORA",recv:"2026/04/20",d:["","","",""],s:["","","",""],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
+ {n:"佐藤 花子",play:"2026/06/21",wd:"日",course:"犬鳴",time:"08:52",g:4,p:14,route:"AGWeb",recv:"2026/04/16",d:["","","",""],s:["〇","不要","",""],kk:"",tel:"072xxxxxxx",mob:"080xxxxxxx"},
+ {n:"鈴木 一郎",play:"2026/06/25",wd:"木",course:"大阪湾",time:"09:07",g:6,p:24,route:"GDO",recv:"2026/05/10",d:["","","",""],s:["〇","","不在",""],kk:"",memo:"幹事多忙、連絡はメール希望",tel:"072xxxxxxx",mob:"090xxxxxxx"},
+ {n:"田中 美咲",play:"2026/06/28",wd:"日",course:"犬鳴",time:"10:07",g:5,p:20,route:"電話",recv:"2026/03/05",d:["","","",""],s:["〇","不要","〇","不在"],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
+ {n:"高橋 健",play:"2026/07/02",wd:"木",course:"稲倉",time:"12:37",g:6,p:24,route:"GORA",recv:"2026/04/10",d:["","","",""],s:["〇","〇","〇","〇"],kk:"〇",kumi:"済",tel:"072xxxxxxx",mob:"090xxxxxxx"},
+ {n:"伊藤 直美",play:"2026/07/05",wd:"日",course:"稲倉",time:"08:22",g:3,p:12,route:"RECRUIT",recv:"2026/05/13",d:["","","",""],s:["〇","不要","",""],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
+ {n:"渡辺 浩",play:"2026/07/08",wd:"水",course:"大阪湾",time:"11:00",g:4,p:16,route:"AGWeb",recv:"2026/05/20",d:["","","",""],s:["〇","","",""],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
+ {n:"斎藤 恵",play:"2026/07/12",wd:"日",course:"犬鳴/稲倉",time:"07:30",g:7,p:28,route:"電話",recv:"2026/04/25",d:["","","",""],s:["","","",""],kk:"〇",memo:"組数確定済（コース2面）",tel:"072xxxxxxx",mob:"090xxxxxxx"},
+ {n:"松本 翔",play:"2026/07/15",wd:"水",course:"稲倉",time:"13:05",g:3,p:12,route:"GORA",recv:"2026/06/01",d:["","","",""],s:["","","",""],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
+ {n:"井上 真理",play:"2026/07/20",wd:"月",course:"犬鳴",time:"08:15",g:5,p:20,route:"AGWeb",recv:"2026/05/28",d:["","","",""],s:["〇","","",""],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
+ {n:"木村 大輔",play:"2026/07/26",wd:"日",course:"大阪湾",time:"09:40",g:4,p:16,route:"GDO",recv:"2026/06/02",d:["","","",""],s:["","","",""],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
+ {n:"林 智子",play:"2026/08/01",wd:"土",course:"稲倉",time:"07:52",g:3,p:12,route:"RECRUIT",recv:"2026/05/15",d:["","","",""],s:["〇","不要","",""],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
+ {n:"清水 学",play:"2026/08/05",wd:"水",course:"犬鳴",time:"10:20",g:6,p:24,route:"電話",recv:"2026/04/30",d:["","","",""],s:["〇","不要","〇",""],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
+ {n:"山口 香織",play:"2026/08/10",wd:"月",course:"大阪湾",time:"08:30",g:4,p:16,route:"AGWeb",recv:"2026/06/01",d:["","","",""],s:["","","",""],kk:"キャンセル",memo:"先方都合でキャンセル",tel:"072xxxxxxx",mob:"090xxxxxxx"},
+ {n:"森田 剛",play:"2026/08/16",wd:"日",course:"稲倉/大阪湾",time:"11:15",g:5,p:20,route:"GORA",recv:"2026/05/20",d:["","","",""],s:["〇","","",""],kk:"",memo:"コンペ後に表彰式あり",tel:"072xxxxxxx",mob:"090xxxxxxx"},
+ {n:"池田 七海",play:"2026/08/22",wd:"土",course:"犬鳴",time:"07:00",g:3,p:12,route:"RECRUIT",recv:"2026/06/03",d:["","","",""],s:["","","",""],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
+ {n:"橋本 亮",play:"2026/08/28",wd:"金",course:"稲倉",time:"09:25",g:4,p:16,route:"GDO",recv:"2026/05/25",d:["","","",""],s:["〇","不要","",""],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
+ {n:"阿部 京子",play:"2026/09/02",wd:"水",course:"大阪湾",time:"12:00",g:6,p:24,route:"電話",recv:"2026/06/01",d:["","","",""],s:["","","",""],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
+ {n:"石川 修",play:"2026/09/08",wd:"火",course:"犬鳴/稲倉/大阪湾",time:"07:40",g:7,p:28,route:"AGWeb",recv:"2026/05/18",d:["","","",""],s:["〇","","",""],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
+ {n:"前田 明日香",play:"2026/09/13",wd:"日",course:"稲倉",time:"08:48",g:3,p:12,route:"GORA",recv:"2026/06/02",d:["","","",""],s:["","","",""],kk:"〇",tel:"072xxxxxxx",mob:"090xxxxxxx"},
+ {n:"藤田 渉",play:"2026/09/18",wd:"金",course:"犬鳴",time:"10:55",g:4,p:16,route:"RECRUIT",recv:"2026/06/03",d:["","","",""],s:["","","",""],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
+ {n:"岡田 みなみ",play:"2026/09/22",wd:"火",course:"大阪湾",time:"09:10",g:5,p:20,route:"電話",recv:"2026/05/30",d:["","","",""],s:["〇","不要","",""],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
+ {n:"後藤 健二",play:"2026/09/27",wd:"日",course:"稲倉",time:"07:33",g:3,p:12,route:"AGWeb",recv:"2026/06/01",d:["","","",""],s:["","","",""],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
+ {n:"長谷川 愛",play:"2026/06/16",wd:"火",course:"犬鳴",time:"13:20",g:4,p:16,route:"GDO",recv:"2026/04/05",d:["","","",""],s:["〇","不要","不在","不在"],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
+ {n:"村上 拓也",play:"2026/06/30",wd:"火",course:"稲倉",time:"08:05",g:6,p:24,route:"GORA",recv:"2026/05/05",d:["","","",""],s:["〇","","",""],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"}
 ];
 let showAll=false, selIdx=0, undoStack=[], sortKey='play', searchQ='', contactFilter='';
 function actRound(r){ if((r.kumi||"")==="済"||r.kk==="キャンセル"||(excludeKakutei&&r.kk==="〇"))return -1; for(const i of [0,1,2,3]){if(!todayTouch[i])continue;const dt=pd(r.d[i]); if(dt&&dt<=TODAY&&(r.s[i]===""||r.s[i]==="不在"))return i;} return -1; }
