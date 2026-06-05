@@ -180,14 +180,16 @@
     <div style="font-size:13px;font-weight:700;margin:4px 0 6px">初回起動時メニュー<span class="note" style="font-weight:400;color:#9ca3af">　初回セットアップ用（通常運用では使いません）</span></div>
     <div class="onecard" style="max-width:680px">
       <div class="orow">
-        <div class="ok">① 新規台帳作成<span class="note">　空の新しいJSON台帳ファイルを作成します</span>
-          <div class="note" style="margin-top:4px">事業所の共有フォルダに保存してください</div>
+        <div class="ok">① 新規台帳作成
+          <div class="note" style="margin-top:4px">空の新しいJSON台帳ファイルを作成します</div>
+          <div class="note" style="margin-top:2px">事業所の共有フォルダに保存してください</div>
         </div>
         <span class="sel-wrap"><button class="btn b-blue" onclick="onNewFile()">新規台帳を作成</button></span>
       </div>
       <div class="orow" style="display:block">
-        <div class="ok" style="margin-bottom:8px">② 既存台帳移行取り込み<span class="note">　現行のExcel台帳(.xlsm/.xlsx)を全件取り込み（既存データは置換）</span>
-          <div class="note" style="margin-top:4px">空の新しいJSON台帳に既存台帳を取り込みます</div>
+        <div class="ok" style="margin-bottom:8px">② 既存台帳移行取り込み
+          <div class="note" style="margin-top:4px">現行のExcel台帳(.xlsm/.xlsx)を全件取り込み（既存データは置換）</div>
+          <div class="note" style="margin-top:2px">空の新しいJSON台帳に既存台帳を取り込みます</div>
         </div>
         <div style="border:2px dashed var(--line);border-radius:10px;padding:16px;text-align:center;background:#fafbfc">
           <input type="file" id="xlsxFile" accept=".xlsx,.xlsm" class="hidden" onchange="onXlsxPicked(this)">
