@@ -1,2 +1,6 @@
 *.bak-*
 .claude/
+# PII保護: 実データJSONは絶対にコミットしない（このリポはpublic）
+*_tmp.json
+compe-yoyaku-*.json
+data*.json

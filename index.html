@@ -142,7 +142,8 @@
 
 <script>
 const SCHEMA_VERSION=1;
-const TODAY=new Date(2026,5,3);
+let TODAY=new Date(2026,5,3);   // デモ基準日。実ファイル接続時は useRealToday() で当日へ切替
+function useRealToday(){ const n=new Date(); TODAY=new Date(n.getFullYear(),n.getMonth(),n.getDate()); }
 const lbl=["①受付翌日","②60日前","③35日前","④18日前"];
 
 // ===== File System Access API + IndexedDB（ファイルハンドル永続化） =====
@@ -228,6 +229,8 @@ async function loadFromHandle(handle){
     fileName = handle.name || file.name || 'data.json';
     dataLoadedFromFile = true;
     isDirty = false;
+    useRealToday();              // 実データは当日基準で判定
+    recompute();
     document.getElementById('demoNote')?.classList.add('hidden');
     setFileStatus('📁 '+fileName+'（同期OK）','ok');
     selIdx = Math.min(selIdx, Math.max(0, rows.length-1));
@@ -300,6 +303,7 @@ async function onNewFile(){
       types:[{description:'JSON台帳',accept:{'application/json':['.json']}}]
     });
     fileHandle=h; fileName=h.name; dataLoadedFromFile=true;
+    useRealToday();             // 新規台帳も当日基準
     // 空の正本を書き込む（現在のメモリrowsを正本にする選択肢もあるが、誤上書き防止で空配列で初期化）
     rows = []; selIdx=0;
     document.getElementById('demoNote')?.classList.add('hidden');
