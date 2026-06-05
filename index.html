@@ -150,11 +150,11 @@
 
   <div class="imp hidden" id="screenImport">
     <div style="font-size:15px;font-weight:700;margin-bottom:10px">日次CSV取込</div>
-    <div id="impHint" style="font-size:12px;color:#6b7280;margin-bottom:8px">日次運用：CSVファイルをドロップ（または貼り付け）→ 中身を確認 → 「② 台帳へ登録」。3組以上・未来日のみ自動抽出します。</div>
+    <div id="impHint" style="font-size:12px;color:#6b7280;margin-bottom:8px">日次運用：CSVファイルをドロップ（または貼り付け）→ 中身を確認 → 「② 台帳へ登録」。３組以上の予約を自動抽出します。</div>
     <div id="newBox">
       <div class="dropzone" id="dropZone" ondragover="dzOver(event)" ondragleave="dzLeave(event)" ondrop="dzDrop(event)">
         <div class="dz-cta">
-          <div class="dz-title">CSVファイルをここにドロップ</div>
+          <div class="dz-title">予約受付一覧CSVファイルをここにドロップ</div>
           <div class="dz-sub">
             <button class="btn b-blue" onclick="document.getElementById('csvFile').click()">ファイルを選択</button>
             <input type="file" id="csvFile" accept=".csv,.txt" class="hidden" onchange="onCsvFile(this)">
