@@ -64,11 +64,15 @@
   .imp .row{margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;} .imp .msg{margin-top:14px;font-size:14px;min-height:22px;}
   .btn{border:0;border-radius:6px;color:#fff;font-weight:700;font-size:13px;padding:8px 12px;cursor:pointer;} .b-gray{background:#6b7280;}.b-blue{background:var(--blue);}.b-green{background:#1a7f37;} .btn:disabled{opacity:.4;}
   .hidden{display:none!important;}
+  .filestat{background:rgba(255,255,255,.18);color:#fff;border-radius:6px;font-size:12px;padding:5px 9px;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .filestat.ok{background:#1a7f37;}
+  .filestat.warn{background:#b35900;}
+  .filestat.err{background:#b91c1c;}
   @media(max-width:820px){.body{flex-direction:column}.side{max-height:50vh}.grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-<div class="demo-note">体験デモ｜ダミーデータ｜基準日2026/06/03｜状態は選択式・即消えない・元に戻せます</div>
+<div class="demo-note" id="demoNote">体験デモ｜ダミーデータ｜基準日2026/06/03｜状態は選択式・即消えない・元に戻せます</div>
 <div class="app">
   <div class="appbar">
     <span class="ttl">予約チェック管理</span>
@@ -79,6 +83,10 @@
     <button class="nav" id="toSettings" onclick="showScreen('settings')">⚙ 設定</button>
     <button class="nav hidden" id="toMain" onclick="showScreen('main')">← 一覧へ戻る</button>
     <span class="sp"></span>
+    <span id="fileStatus" class="filestat" title="データファイルの接続状態">未接続（メモリ動作）</span>
+    <button class="nav" id="btnOpenFile" onclick="onOpenFile()" title="OneDrive内のJSON台帳を開きます">📁 開く</button>
+    <button class="nav" id="btnNewFile" onclick="onNewFile()" title="新しいJSON台帳を作成します">＋ 新規</button>
+    <button class="nav hidden" id="btnReauth" onclick="onReauth()" title="ブラウザを再起動するとファイル権限が切れます。クリックで再付与">🔓 権限再付与</button>
   </div>
 
   <div class="body" id="screenMain">
@@ -133,8 +141,201 @@
 <div id="toast"></div>
 
 <script>
+const SCHEMA_VERSION=1;
 const TODAY=new Date(2026,5,3);
 const lbl=["①受付翌日","②60日前","③35日前","④18日前"];
+
+// ===== File System Access API + IndexedDB（ファイルハンドル永続化） =====
+const FSA_SUPPORTED = !!(window.showOpenFilePicker && window.showSaveFilePicker);
+const IDB_NAME='compe-yoyaku', IDB_STORE='kv', HANDLE_KEY='fileHandle';
+let fileHandle=null, fileName='', isDirty=false, saveTimer=null, isSaving=false;
+let suspendDirty=false;            // 読み込み中などはdirtyにしない
+let updatedBy = localStorage.getItem('compe.updatedBy') || '';
+let dataLoadedFromFile=false;       // trueなら起動時のサンプルではなくJSONが正本
+
+function idbOpen(){
+  return new Promise((res,rej)=>{
+    const req=indexedDB.open(IDB_NAME,1);
+    req.onupgradeneeded=()=>req.result.createObjectStore(IDB_STORE);
+    req.onsuccess=()=>res(req.result); req.onerror=()=>rej(req.error);
+  });
+}
+async function idbGet(k){const db=await idbOpen();return new Promise((res,rej)=>{const tx=db.transaction(IDB_STORE,'readonly');const r=tx.objectStore(IDB_STORE).get(k);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});}
+async function idbSet(k,v){const db=await idbOpen();return new Promise((res,rej)=>{const tx=db.transaction(IDB_STORE,'readwrite');const r=tx.objectStore(IDB_STORE).put(v,k);r.onsuccess=()=>res();r.onerror=()=>rej(r.error);});}
+async function idbDel(k){const db=await idbOpen();return new Promise((res,rej)=>{const tx=db.transaction(IDB_STORE,'readwrite');const r=tx.objectStore(IDB_STORE).delete(k);r.onsuccess=()=>res();r.onerror=()=>rej(r.error);});}
+
+function setFileStatus(text,cls){
+  const el=document.getElementById('fileStatus');
+  el.textContent=text;
+  el.classList.remove('ok','warn','err');
+  if(cls)el.classList.add(cls);
+}
+function showReauth(show){document.getElementById('btnReauth').classList.toggle('hidden',!show);}
+
+async function ensurePermission(handle,mode){
+  if(!handle)return 'denied';
+  const opts={mode:mode||'readwrite'};
+  if((await handle.queryPermission(opts))==='granted')return 'granted';
+  return await handle.requestPermission(opts);
+}
+
+function buildJson(){
+  return {
+    schemaVersion:SCHEMA_VERSION,
+    meta:{
+      updatedAt: new Date().toISOString(),
+      updatedBy: updatedBy || '',
+      tenpo: '泉佐野'
+    },
+    settings:{ courseName:document.getElementById('setCourse')?.value || '犬鳴 / 稲倉 / 大阪湾',
+               listName:document.getElementById('setList')?.value || '予約チェック管理（泉佐野）',
+               o1,o2,o3,o4 },
+    rows: rows.map(r=>{
+      // _touchは実行時フラグなので保存しない
+      const {_touch, ...rest} = r;
+      return rest;
+    })
+  };
+}
+
+function applyJson(data){
+  if(!data || typeof data!=='object') throw new Error('JSONが不正です');
+  if(data.schemaVersion && data.schemaVersion>SCHEMA_VERSION) throw new Error('未対応のschemaVersion: '+data.schemaVersion);
+  const s=data.settings||{};
+  if(typeof s.o1==='number')o1=s.o1;
+  if(typeof s.o2==='number')o2=s.o2;
+  if(typeof s.o3==='number')o3=s.o3;
+  if(typeof s.o4==='number')o4=s.o4;
+  if(s.courseName && document.getElementById('setCourse'))document.getElementById('setCourse').value=s.courseName;
+  if(s.listName && document.getElementById('setList'))document.getElementById('setList').value=s.listName;
+  if(document.getElementById('so1'))document.getElementById('so1').value=o1;
+  if(document.getElementById('so2'))document.getElementById('so2').value=o2;
+  if(document.getElementById('so3'))document.getElementById('so3').value=o3;
+  if(document.getElementById('so4'))document.getElementById('so4').value=o4;
+  rows = Array.isArray(data.rows) ? data.rows.map(r=>({s:["","","",""],d:["","","",""],...r})) : [];
+  rows.forEach(r=>{ delete r._touch; if(!Array.isArray(r.s))r.s=["","","",""]; if(!Array.isArray(r.d))r.d=["","","",""]; });
+  recompute();
+}
+
+async function loadFromHandle(handle){
+  suspendDirty=true;
+  try{
+    const file = await handle.getFile();
+    const text = await file.text();
+    const data = text.trim() ? JSON.parse(text) : {schemaVersion:SCHEMA_VERSION,rows:[]};
+    applyJson(data);
+    fileHandle = handle;
+    fileName = handle.name || file.name || 'data.json';
+    dataLoadedFromFile = true;
+    isDirty = false;
+    document.getElementById('demoNote')?.classList.add('hidden');
+    setFileStatus('📁 '+fileName+'（同期OK）','ok');
+    selIdx = Math.min(selIdx, Math.max(0, rows.length-1));
+    render();
+    toast('ファイルを読み込みました：'+rows.length+'件');
+  } finally { suspendDirty=false; }
+}
+
+async function saveToFile(){
+  if(!fileHandle){ return; }
+  if(isSaving){ markDirty(); return; }  // 競合時は次回キックで
+  isSaving=true;
+  try{
+    const perm = await ensurePermission(fileHandle,'readwrite');
+    if(perm!=='granted'){ setFileStatus('🔒 権限切れ：再付与してください','err'); showReauth(true); return; }
+    const json = buildJson();
+    const w = await fileHandle.createWritable();
+    await w.write(new Blob([JSON.stringify(json,null,2)],{type:'application/json'}));
+    await w.close();
+    isDirty=false;
+    setFileStatus('📁 '+fileName+'（保存済 '+new Date().toLocaleTimeString('ja-JP')+'）','ok');
+  }catch(e){
+    console.error(e);
+    setFileStatus('⚠ 保存エラー：'+(e.message||e),'err');
+    toast('保存に失敗しました：'+(e.message||e));
+  }finally{
+    isSaving=false;
+    if(isDirty){ scheduleSave(); }
+  }
+}
+
+function scheduleSave(){
+  if(!fileHandle)return;
+  if(saveTimer)clearTimeout(saveTimer);
+  saveTimer=setTimeout(saveToFile,1500);
+}
+function markDirty(){
+  if(suspendDirty)return;
+  isDirty=true;
+  if(fileHandle){ setFileStatus('📁 '+fileName+'（編集中…）','warn'); scheduleSave(); }
+}
+
+async function askUpdatedBy(){
+  if(updatedBy)return updatedBy;
+  const v = prompt('あなたのお名前（変更履歴に記録します。あとで⚙設定から変更可）','');
+  if(v && v.trim()){ updatedBy=v.trim(); localStorage.setItem('compe.updatedBy',updatedBy); }
+  return updatedBy;
+}
+
+async function onOpenFile(){
+  if(!FSA_SUPPORTED){ alert('このブラウザはFile System Access API非対応です（Chrome/Edgeで開いてください）'); return; }
+  try{
+    await askUpdatedBy();
+    const [h] = await window.showOpenFilePicker({
+      types:[{description:'JSON台帳',accept:{'application/json':['.json']}}],
+      excludeAcceptAllOption:false, multiple:false
+    });
+    await loadFromHandle(h);
+    await idbSet(HANDLE_KEY, h);
+    showReauth(false);
+  }catch(e){ if(e.name!=='AbortError'){ console.error(e); alert('ファイルを開けませんでした：'+e.message); } }
+}
+
+async function onNewFile(){
+  if(!FSA_SUPPORTED){ alert('このブラウザはFile System Access API非対応です（Chrome/Edgeで開いてください）'); return; }
+  try{
+    await askUpdatedBy();
+    const h = await window.showSaveFilePicker({
+      suggestedName: 'compe-yoyaku-izumisano.json',
+      types:[{description:'JSON台帳',accept:{'application/json':['.json']}}]
+    });
+    fileHandle=h; fileName=h.name; dataLoadedFromFile=true;
+    // 空の正本を書き込む（現在のメモリrowsを正本にする選択肢もあるが、誤上書き防止で空配列で初期化）
+    rows = []; selIdx=0;
+    document.getElementById('demoNote')?.classList.add('hidden');
+    isDirty=true;
+    await saveToFile();
+    await idbSet(HANDLE_KEY, h);
+    showReauth(false);
+    setFileStatus('📁 '+fileName+'（新規作成）','ok');
+    toast('新規ファイルを作成しました');
+    render();
+  }catch(e){ if(e.name!=='AbortError'){ console.error(e); alert('新規作成できませんでした：'+e.message); } }
+}
+
+async function onReauth(){
+  if(!fileHandle){ onOpenFile(); return; }
+  const perm = await ensurePermission(fileHandle,'readwrite');
+  if(perm==='granted'){ showReauth(false); setFileStatus('📁 '+fileName+'（同期OK）','ok'); if(isDirty)saveToFile(); }
+  else { setFileStatus('🔒 権限拒否されました','err'); }
+}
+
+async function bootstrapFile(){
+  if(!FSA_SUPPORTED){ setFileStatus('⚠ 非対応ブラウザ（メモリ動作）','warn'); return; }
+  try{
+    const h = await idbGet(HANDLE_KEY);
+    if(!h){ setFileStatus('未接続（📁開く or ＋新規）','warn'); return; }
+    const q = await h.queryPermission({mode:'readwrite'});
+    if(q==='granted'){
+      await loadFromHandle(h);
+    } else {
+      fileHandle=h; fileName=h.name||'data.json';
+      setFileStatus('🔒 '+fileName+'：権限再付与が必要','warn'); showReauth(true);
+    }
+  }catch(e){ console.error(e); setFileStatus('⚠ 復元失敗（📁開くを押してください）','err'); }
+}
+window.addEventListener('load', bootstrapFile);
+window.addEventListener('beforeunload', (e)=>{ if(isDirty && fileHandle){ e.preventDefault(); e.returnValue=''; } });
 function pd(s){const m=s&&s.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);return m?new Date(+m[1],+m[2]-1,+m[3]):null;}
 function fmt(d){return d?d.getFullYear()+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getDate()).padStart(2,'0'):'';}
 function addDays(d,n){if(!d)return null;const x=new Date(d);x.setDate(x.getDate()+n);return x;}
@@ -165,7 +366,7 @@ function setS(gi,i,val,quiet){
     else if(val==='不在')toast(lbl[i]+'＝不在（繰越で残ります）');
     else toast(lbl[i]+'＝'+val+'（更新するまで一覧に残ります）');
   }
-  render();
+  markDirty(); render();
 }
 function setF(gi,key,val,jp){
   const r=rows[gi]; if((r[key]||"")===val)return;
@@ -173,7 +374,7 @@ function setF(gi,key,val,jp){
   r[key]=val; r._touch=true; selIdx=gi;
   document.getElementById('undoBtn').disabled=false;
   toast(jp+'＝'+(val===''?'未':val)+'（更新するまで一覧に残ります）');
-  render();
+  markDirty(); render();
 }
 function undoLast(){
   if(undoStack.length===0){toast('戻す操作がありません');return;}
@@ -182,12 +383,12 @@ function undoLast(){
   rows[u.gi]._touch=true; selIdx=u.gi;
   document.getElementById('undoBtn').disabled=undoStack.length===0;
   toast('元に戻しました：'+rows[u.gi].n);
-  render();
+  markDirty(); render();
 }
 function refreshList(){ rows.forEach(r=>r._touch=false); undoStack=[]; document.getElementById('undoBtn').disabled=true; toast('一覧を整理しました（解決済みを除外）'); render(); }
 function toggleMode(){showAll=!showAll;render();}
 function setSort(k){sortKey=k;document.getElementById('sortPlay').classList.toggle('on',k==='play');document.getElementById('sortRecv').classList.toggle('on',k==='recv');render();}
-function delRow(gi){const r=rows[gi];if(!r)return;if(confirm(r.n+' を削除しますか？\n（この操作は元に戻せません）')){rows.splice(gi,1);if(selIdx>=rows.length)selIdx=Math.max(0,rows.length-1);toast('削除しました：'+r.n);render();}}
+function delRow(gi){const r=rows[gi];if(!r)return;if(confirm(r.n+' を削除しますか？\n（この操作は元に戻せません）')){rows.splice(gi,1);if(selIdx>=rows.length)selIdx=Math.max(0,rows.length-1);toast('削除しました：'+r.n);markDirty();render();}}
 
 function render(){
   const vis=visibleRows();
@@ -269,7 +470,7 @@ function renderDetail(){
     <div class="fld"><div class="k">④18日前</div>${editCell(gi,3)}</div>
    </div>
    <div style="font-size:12px;font-weight:700;color:#374151;margin:14px 0 6px">メモ（連絡内容・申し送り）</div>
-   <textarea onchange="rows[${gi}].memo=this.value" placeholder="例）6/3 田中様へ連絡、組数は3組で確定見込み。次回6/15に再確認。" style="width:100%;height:84px;border:1px solid var(--line);border-radius:6px;padding:10px;font-size:13px;font-family:inherit">${(r.memo||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')}</textarea>
+   <textarea onchange="rows[${gi}].memo=this.value;markDirty()" placeholder="例）6/3 田中様へ連絡、組数は3組で確定見込み。次回6/15に再確認。" style="width:100%;height:84px;border:1px solid var(--line);border-radius:6px;padding:10px;font-size:13px;font-family:inherit">${(r.memo||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')}</textarea>
    <p style="color:#9aa1aa;font-size:12px;margin-top:14px">戻し方は2通り：①上部 <b>↩ 元に戻す</b> で直前操作を取消／②この詳細で各接点を選び直し（<b>全件</b>表示にすれば完了済みの予約も探して修正できます）。「不在」は〇/不要にするまで繰越で残ります。</p>`;
 }
 function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
@@ -310,7 +511,7 @@ function saveSettings(){
   o3=+document.getElementById('so3').value||0; o4=+document.getElementById('so4').value||0;
   recompute();
   document.getElementById('setMsg').innerHTML='<span style="color:#1a7f37;font-weight:700">保存しました（①〜④の予定日を再計算）。一覧へ戻ると反映されています</span>';
-  toast('設定を保存しました'); render();
+  toast('設定を保存しました'); markDirty(); render();
 }
 const sample=`ゴルフ場名,データ種別,プレー日,コース,スタート時間,代表者名(漢字),代表者名(カナ),組数,人数,連絡先電話番号,携帯電話番号,FAX番号,予約チャネル,予約受付日時,受付者,受付者ロール
 泉佐野カントリークラブ,一般予約,2026-08-04 00:00,稲倉,07:15:00,新規 太郎,ｼﾝｷ,3組,9人,'072xxxxxxx,'090xxxxxxx,',AGWeb,2026-06-01 09:20,受付,管理者
