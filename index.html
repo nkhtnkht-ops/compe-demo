@@ -77,7 +77,14 @@
   .tabb{border:1px solid #d4d4d4;background:#fff;color:#000;border-radius:50px;font-size:13px;font-weight:480;padding:8px 18px;cursor:pointer;}
   .tabb.on{background:#000;color:#fff;border-color:#000;}
   .numin{width:64px;border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:13px;text-align:right;}
-  .imp{padding:16px 20px;flex:1;min-height:0;overflow:auto;} .imp .ta{width:100%;height:190px;border:1px solid var(--line);border-radius:6px;padding:12px;font-size:13px;font-family:monospace;}
+  .imp{padding:16px 20px;flex:1;min-height:0;overflow:auto;} .imp .ta{width:100%;height:160px;border:1px solid var(--line);border-radius:8px;padding:12px;font-size:13px;font-family:var(--mono);background:#fff;}
+  .dropzone{border:2px dashed #d4d4d4;border-radius:14px;padding:18px;background:#fafafa;transition:background .15s, border-color .15s;}
+  .dropzone.over{border-color:#000;background:#f0f0f0;}
+  .dz-cta{text-align:center;padding:6px 0 14px;}
+  .dz-title{font-size:15px;font-weight:540;letter-spacing:-0.3px;margin-bottom:10px;}
+  .dz-sub{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;}
+  .dz-note{font-size:12px;color:#6b7280;}
+  .dz-file{font-family:var(--mono);font-size:11px;color:#374151;margin-top:10px;letter-spacing:.4px;}
   .imp .row{margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;} .imp .msg{margin-top:14px;font-size:14px;min-height:22px;}
   .btn{border:0;border-radius:50px;color:#fff;font-weight:480;font-size:13px;padding:9px 16px;cursor:pointer;} .b-gray{background:#6b7280;}.b-blue{background:#000;}.b-green{background:#13652b;} .btn:disabled{opacity:.4;}
   .hidden{display:none!important;}
@@ -143,9 +150,20 @@
 
   <div class="imp hidden" id="screenImport">
     <div style="font-size:15px;font-weight:700;margin-bottom:10px">日次CSV取込</div>
-    <div id="impHint" style="font-size:12px;color:#6b7280;margin-bottom:8px">日次運用：予約受付一覧CSVを貼り付け→「① 抽出して確認」→「② 台帳へ登録」。3組以上・未来日のみ自動抽出します。</div>
+    <div id="impHint" style="font-size:12px;color:#6b7280;margin-bottom:8px">日次運用：CSVファイルをドロップ（または貼り付け）→ 中身を確認 → 「② 台帳へ登録」。3組以上・未来日のみ自動抽出します。</div>
     <div id="newBox">
-      <textarea class="ta" id="ta"></textarea>
+      <div class="dropzone" id="dropZone" ondragover="dzOver(event)" ondragleave="dzLeave(event)" ondrop="dzDrop(event)">
+        <div class="dz-cta">
+          <div class="dz-title">CSVファイルをここにドロップ</div>
+          <div class="dz-sub">
+            <button class="btn b-blue" onclick="document.getElementById('csvFile').click()">ファイルを選択</button>
+            <input type="file" id="csvFile" accept=".csv,.txt" class="hidden" onchange="onCsvFile(this)">
+            <span class="dz-note">または下のエリアに貼り付け（Ctrl+V）</span>
+          </div>
+          <div class="dz-file" id="dzFile"></div>
+        </div>
+        <textarea class="ta" id="ta" placeholder="ここに直接CSVを貼り付けることもできます（Ctrl+V）"></textarea>
+      </div>
       <div class="row">
         <button class="btn b-gray" onclick="pasteSample()">サンプルを貼り付け（デモ）</button>
         <button class="btn b-blue" id="bExtract" onclick="extract()">① 抽出して確認</button>
@@ -669,8 +687,10 @@ function showScreen(name){
 }
 function setImpMode(){
   // 日次CSV取込画面の初期化（移行UIは設定メニューへ集約済み）
-  const ta=document.getElementById('ta'); if(ta){ta.placeholder='予約受付一覧CSVを貼り付け（Ctrl+V）'; ta.value='';}
+  const ta=document.getElementById('ta'); if(ta){ta.value='';}
   const im=document.getElementById('impMsg'); if(im)im.textContent='';
+  const df=document.getElementById('dzFile'); if(df)df.textContent='';
+  const cf=document.getElementById('csvFile'); if(cf)cf.value='';
   _migRows=null;
   const bm=document.getElementById('bMig'); if(bm)bm.disabled=true;
   const xn=document.getElementById('xlsxName'); if(xn)xn.textContent='';
@@ -764,6 +784,30 @@ const sample=`ゴルフ場名,データ種別,プレー日,コース,スター�
 泉佐野カントリークラブ,一般予約,2026-05-30 00:00,犬鳴,07:30:00,過去 三郎,ｶｺ,3組,12人,'072xxxxxxx,'090xxxxxxx,',AGWeb,2026-05-20 10:00,受付,管理者
 泉佐野カントリークラブ,一般予約,2026-10-01 00:00,大阪湾,07:52:00,抽出 花子,ﾁｭｳｼｭﾂ,4組,16人,'072xxxxxxx,'090xxxxxxx,',GORA,2026-06-03 08:11,受付,管理者`;
 function pasteSample(){document.getElementById('ta').value=sample;document.getElementById('impMsg').textContent='サンプルを貼り付けました。「① 抽出して確認」を押してください';}
+function dzOver(e){e.preventDefault();document.getElementById('dropZone').classList.add('over');if(e.dataTransfer)e.dataTransfer.dropEffect='copy';}
+function dzLeave(e){if(e.target.id==='dropZone')document.getElementById('dropZone').classList.remove('over');}
+function dzDrop(e){
+  e.preventDefault();document.getElementById('dropZone').classList.remove('over');
+  const dt=e.dataTransfer; if(!dt)return;
+  if(dt.files&&dt.files.length){ readCsvFile(dt.files[0]); return; }
+  const t=dt.getData&&dt.getData('text'); if(t){ document.getElementById('ta').value=t; document.getElementById('dzFile').textContent=''; extract(); }
+}
+function onCsvFile(input){ const f=input.files&&input.files[0]; if(f){readCsvFile(f); input.value='';} }
+function readCsvFile(f){
+  if(!/\.(csv|txt)$/i.test(f.name)){ document.getElementById('impMsg').innerHTML='<span style="color:#b91c1c">CSV(.csv)またはテキスト(.txt)を選んでください</span>'; return; }
+  document.getElementById('dzFile').textContent='読み込み中… '+f.name;
+  const reader=new FileReader();
+  reader.onload=(e)=>{
+    const buf=e.target.result;
+    let text=''; try{ text=new TextDecoder('utf-8',{fatal:false}).decode(buf); }catch(_){}
+    if(!/プレー日|代表者|受付|予約/.test(text)){ try{ text=new TextDecoder('shift-jis').decode(buf); }catch(_){} }
+    document.getElementById('ta').value=text;
+    document.getElementById('dzFile').textContent='読み込み済み：'+f.name+'（'+text.split(/\r?\n/).filter(l=>l.trim()).length+'行）';
+    extract();
+  };
+  reader.onerror=()=>{ document.getElementById('impMsg').innerHTML='<span style="color:#b91c1c">ファイルを読めませんでした</span>'; };
+  reader.readAsArrayBuffer(f);
+}
 
 // ===== CSV取込（実データ処理） =====
 const WD=["日","月","火","水","木","金","土"];
