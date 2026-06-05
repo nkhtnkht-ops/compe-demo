@@ -68,6 +68,12 @@
   .filestat.ok{background:#1a7f37;}
   .filestat.warn{background:#b35900;}
   .filestat.err{background:#b91c1c;}
+  .infobar{display:flex;align-items:center;gap:10px;padding:5px 14px;background:#eef2f6;border-bottom:1px solid var(--line);font-size:12px;color:#374151;}
+  .infobar .ib-sp{flex:1;}
+  .ib-btn{border:1px solid var(--blue);background:#fff;color:var(--blue);border-radius:6px;font-size:12px;font-weight:700;padding:4px 10px;cursor:pointer;}
+  .ib-btn:hover{background:#eef4fb;}
+  .ext-warn{background:#fdecea;color:#b91c1c;font-weight:700;padding:3px 8px;border-radius:6px;}
+  .ext-warn button{margin-left:6px;border:1px solid #b91c1c;background:#fff;color:#b91c1c;border-radius:5px;padding:2px 8px;cursor:pointer;font-weight:700;}
   @media(max-width:820px){.body{flex-direction:column}.side{max-height:50vh}.grid{grid-template-columns:1fr}}
 </style>
 </head>
@@ -87,6 +93,13 @@
     <button class="nav" id="btnOpenFile" onclick="onOpenFile()" title="OneDrive内のJSON台帳を開きます">📁 開く</button>
     <button class="nav" id="btnNewFile" onclick="onNewFile()" title="新しいJSON台帳を作成します">＋ 新規</button>
     <button class="nav hidden" id="btnReauth" onclick="onReauth()" title="ブラウザを再起動するとファイル権限が切れます。クリックで再付与">🔓 権限再付与</button>
+  </div>
+
+  <div class="infobar" id="infobar">
+    <span id="updatedInfo">ファイル未接続</span>
+    <span class="ext-warn hidden" id="extWarn">⚠ 別の人がこのファイルを更新しました <button onclick="reloadFromFile()">読み直す</button></span>
+    <span class="ib-sp"></span>
+    <button class="ib-btn" id="btnExport" onclick="exportExcel()" title="現在の台帳をExcel(.xlsx)で書き出します（バックアップ用）">⬇ Excel書き出し</button>
   </div>
 
   <div class="body" id="screenMain">
@@ -171,6 +184,37 @@ let fileHandle=null, fileName='', isDirty=false, saveTimer=null, isSaving=false;
 let suspendDirty=false;            // 読み込み中などはdirtyにしない
 let updatedBy = localStorage.getItem('compe.updatedBy') || '';
 let dataLoadedFromFile=false;       // trueなら起動時のサンプルではなくJSONが正本
+let lastWrittenMtime=0;             // 自分が最後に書いた時のファイル更新時刻
+let externalChange=false;           // 他の人がファイルを更新したか
+let loadedUpdatedAt='', loadedUpdatedBy='';
+
+function fmtMeta(iso){
+  if(!iso)return '';
+  const d=new Date(iso); if(isNaN(d))return '';
+  return (d.getMonth()+1)+'/'+d.getDate()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+}
+function updateUpdatedChip(){
+  const el=document.getElementById('updatedInfo'); if(!el)return;
+  if(!fileHandle){ el.textContent='ファイル未接続（メモリ動作）'; return; }
+  el.textContent = loadedUpdatedBy ? ('最終更新： '+loadedUpdatedBy+'　'+fmtMeta(loadedUpdatedAt)) : '最終更新： —';
+}
+function showExtWarn(b){ document.getElementById('extWarn')?.classList.toggle('hidden',!b); }
+async function reloadFromFile(){
+  if(!fileHandle){return;}
+  if(isDirty && !confirm('未保存の変更があります。最新のファイルを読み直すと、あなたの未保存の変更は失われます。読み直しますか？'))return;
+  externalChange=false; showExtWarn(false);
+  await loadFromHandle(fileHandle);
+}
+async function checkExternal(){
+  if(!fileHandle || isSaving || externalChange) return;
+  try{
+    const f=await fileHandle.getFile();
+    if(f.lastModified > lastWrittenMtime + 1500){   // 自分の最終書込より新しい＝他者が更新
+      externalChange=true; showExtWarn(true);
+      setFileStatus('⚠ 別の人が更新（読み直してください）','warn');
+    }
+  }catch(e){ /* 権限切れ等は別経路で扱う */ }
+}
 
 function idbOpen(){
   return new Promise((res,rej)=>{
@@ -247,6 +291,11 @@ async function loadFromHandle(handle){
     fileName = handle.name || file.name || 'data.json';
     dataLoadedFromFile = true;
     isDirty = false;
+    lastWrittenMtime = file.lastModified;
+    externalChange=false; showExtWarn(false);
+    loadedUpdatedAt = (data.meta&&data.meta.updatedAt)||'';
+    loadedUpdatedBy = (data.meta&&data.meta.updatedBy)||'';
+    updateUpdatedChip();
     useRealToday();              // 実データは当日基準で判定
     recompute();
     document.getElementById('demoNote')?.classList.add('hidden');
@@ -254,6 +303,13 @@ async function loadFromHandle(handle){
     selIdx = Math.min(selIdx, Math.max(0, rows.length-1));
     render();
     toast('ファイルを読み込みました：'+rows.length+'件');
+    // ソフト「使用中」：直前(10分以内)に別の人が更新していたら注意
+    if(loadedUpdatedBy && updatedBy && loadedUpdatedBy!==updatedBy && loadedUpdatedAt){
+      const mins=(Date.now()-new Date(loadedUpdatedAt).getTime())/60000;
+      if(mins>=0 && mins<10){
+        setTimeout(()=>toast('⚠ '+loadedUpdatedBy+' さんが直前（'+fmtMeta(loadedUpdatedAt)+'）まで操作していました。重複編集にご注意ください'),300);
+      }
+    }
   } finally { suspendDirty=false; }
 }
 
@@ -264,11 +320,24 @@ async function saveToFile(){
   try{
     const perm = await ensurePermission(fileHandle,'readwrite');
     if(perm!=='granted'){ setFileStatus('🔒 権限切れ：再付与してください','err'); showReauth(true); return; }
+    // 他者更新の検知：自分の最終書込より新しければ上書き確認
+    try{
+      const cur = await fileHandle.getFile();
+      if(cur.lastModified > lastWrittenMtime + 1500){
+        externalChange=true; showExtWarn(true);
+        const ok = confirm('別の人がこのファイルを更新しています。\n\n[OK]：あなたの変更で上書き保存する\n[キャンセル]：保存せず残す（上の「読み直す」で最新を取得できます）');
+        if(!ok){ isDirty=true; setFileStatus('⚠ 保存保留（別の人が更新）','warn'); return; }
+        externalChange=false; showExtWarn(false);
+      }
+    }catch(_){}
     const json = buildJson();
+    loadedUpdatedAt = json.meta.updatedAt; loadedUpdatedBy = json.meta.updatedBy;
     const w = await fileHandle.createWritable();
     await w.write(new Blob([JSON.stringify(json,null,2)],{type:'application/json'}));
     await w.close();
     isDirty=false;
+    try{ lastWrittenMtime = (await fileHandle.getFile()).lastModified; }catch(_){ lastWrittenMtime = Date.now(); }
+    updateUpdatedChip();
     setFileStatus('📁 '+fileName+'（保存済 '+new Date().toLocaleTimeString('ja-JP')+'）','ok');
   }catch(e){
     console.error(e);
@@ -356,7 +425,32 @@ async function bootstrapFile(){
     }
   }catch(e){ console.error(e); setFileStatus('⚠ 復元失敗（📁開くを押してください）','err'); }
 }
-window.addEventListener('load', bootstrapFile);
+// ===== Excel書き出し（現行台帳と同じ形式＝バックアップ＆再取込可能） =====
+function exportExcel(){
+  if(typeof XLSX==='undefined'){ toast('Excel機能の読み込みに失敗しました'); return; }
+  if(!rows.length){ toast('書き出すデータがありません'); return; }
+  const head=['抽出日','受付日','プレー日','曜日','代表者氏名','連絡先電話番号','携帯電話番号','コース名','時間','組数','人数','経路','連絡可能時間帯','①予約1日後','②60日前','③35日前','④18日前','出欠締切日','組数確定','備考'];
+  const aoa=[['予約チェック台帳（HTMLツール書き出し）'], head];
+  rows.forEach(r=>{
+    const s=r.s||["","","",""], d=r.d||["","","",""];
+    aoa.push(['', r.recv||'', r.play||'', r.wd||'', r.n||'', r.tel||'', r.mob||'', r.course||'', r.time||'',
+      r.g||'', r.p||'', r.route||'', '',
+      s[0]||d[0]||'', s[1]||d[1]||'', s[2]||d[2]||'', s[3]||d[3]||'',
+      '', r.kk||'', r.memo||'']);
+  });
+  const ws=XLSX.utils.aoa_to_sheet(aoa);
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'予約チェック進捗確認シート');
+  const n=new Date(); const ymd=n.getFullYear()+String(n.getMonth()+1).padStart(2,'0')+String(n.getDate()).padStart(2,'0');
+  XLSX.writeFile(wb,'予約チェック_backup_'+ymd+'.xlsx');
+  toast('Excelを書き出しました（'+rows.length+'件）');
+}
+
+// 他者更新の検知：タブに戻った時＋20秒ごと
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) checkExternal(); });
+setInterval(()=>{ if(!document.hidden) checkExternal(); }, 20000);
+
+window.addEventListener('load', ()=>{ bootstrapFile(); updateUpdatedChip(); });
 window.addEventListener('beforeunload', (e)=>{ if(isDirty && fileHandle){ e.preventDefault(); e.returnValue=''; } });
 function pd(s){const m=s&&s.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);return m?new Date(+m[1],+m[2]-1,+m[3]):null;}
 function fmt(d){return d?d.getFullYear()+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getDate()).padStart(2,'0'):'';}
