@@ -251,6 +251,10 @@
         <span class="sel-wrap"><label class="ttlab"><input type="checkbox" id="smsPast" checked> 除外する</label></span></div>
       <div class="orow"><div class="ok">キャンセルを除外</div>
         <span class="sel-wrap"><label class="ttlab"><input type="checkbox" id="smsExclCancel" checked> 除外する</label></span></div>
+      <div class="orow"><div class="ok">インバウンドを除外<span class="note">　詳細でマークした予約＋備考に「インバウンド」</span></div>
+        <span class="sel-wrap"><label class="ttlab"><input type="checkbox" id="smsExclInbound" checked> 除外する</label></span></div>
+      <div class="orow"><div class="ok">外国名を除外<span class="note">　ローマ字・ハングル等の氏名（漢字名は判別不可）</span></div>
+        <span class="sel-wrap"><label class="ttlab"><input type="checkbox" id="smsExclForeign" checked> 除外する</label></span></div>
       <div class="orow"><div class="ok">同じ携帯番号は1件にまとめる</div>
         <span class="sel-wrap"><label class="ttlab"><input type="checkbox" id="smsDedupe" checked> 集約（最新のプレー日を採用）</label></span></div>
       <div class="orow"><div class="ok">予約回数で絞る<span class="note">　指定回数以上のリピーターだけ（集約ON時）</span></div>
@@ -533,11 +537,15 @@ function smsFilteredRows(){
   const routes=[...document.querySelectorAll('.smsRoute:checked')].map(c=>c.value);
   const past=document.getElementById('smsPast').checked;
   const exclC=document.getElementById('smsExclCancel').checked;
+  const exclInb=document.getElementById('smsExclInbound').checked;
+  const exclFor=document.getElementById('smsExclForeign').checked;
   const fromD=pd((document.getElementById('smsFrom').value||'').replace(/-/g,'/'));
   const toD=pd((document.getElementById('smsTo').value||'').replace(/-/g,'/'));
   return rows.filter(r=>{
     if(routes.length && !routes.includes(r.route))return false;
     if(exclC && r.kk==='キャンセル')return false;
+    if(exclInb && (r.inbound==='〇' || /インバウンド/.test(r.memo||'')))return false;
+    if(exclFor && smsIsForeignName(r.n))return false;
     const pl=pd(r.play);
     if(past && (!pl||pl>TODAY))return false;
     if(fromD && (!pl||pl<fromD))return false;
@@ -545,6 +553,14 @@ function smsFilteredRows(){
     if(!smsIsMobile(r.mob))return false;
     return true;
   });
+}
+// 外国名の判定：ローマ字/英字・ハングル・代表的な簡体字を検出（漢字名の韓国・中国は判別不可＝手動マークで対応）
+function smsIsForeignName(n){
+  const s=n||'';
+  if(/[A-Za-zＡ-Ｚａ-ｚ]/.test(s))return true;                         // ローマ字・英字（全半角）
+  if(/[ᄀ-ᇿ㄰-㆏가-힣]/.test(s))return true;  // ハングル
+  if(/[张刘陈杨赵韩龙罗郑冯邓萧苏蒋贾顾卢钱孙马严华叶吕齐]/.test(s))return true; // 主な簡体字（日本語に無い字形）
+  return false;
 }
 function smsAggregate(list, dedupe){
   if(!dedupe) return list.map(r=>({mob:smsNormPhone(r.mob),n:r.n,play:r.play,course:r.course,route:r.route,cnt:1}));
@@ -655,7 +671,8 @@ let rows=[
  // --- 実施済み（過去）コンペ：SMS配信リスト（OTA対策）デモ用。完了済みで今日やることには出ない ---
  {n:"近藤 武",play:"2026/04/12",wd:"日",course:"犬鳴",time:"08:00",g:4,p:16,route:"GORA",recv:"2026/02/01",d:["","","",""],s:["〇","不要","〇","〇"],kk:"〇",kumi:"済",tel:"0724778888",mob:"09077778888"},
  {n:"遠藤 裕子",play:"2026/04/26",wd:"日",course:"稲倉",time:"09:30",g:5,p:20,route:"RECRUIT",recv:"2026/02/14",d:["","","",""],s:["〇","不要","〇","〇"],kk:"〇",kumi:"済",tel:"072xxxxxxx",mob:"090xxxxxxx"},
- {n:"坂本 隆志",play:"2026/05/10",wd:"日",course:"大阪湾",time:"07:45",g:3,p:12,route:"GDO",recv:"2026/03/01",d:["","","",""],s:["〇","不要","〇","〇"],kk:"〇",kumi:"済",tel:"072xxxxxxx",mob:"090xxxxxxx"},
+ {n:"坂本 隆志",play:"2026/05/10",wd:"日",course:"大阪湾",time:"07:45",g:3,p:12,route:"GDO",recv:"2026/03/01",d:["","","",""],s:["〇","不要","〇","〇"],kk:"〇",kumi:"済",inbound:"〇",memo:"インバウンド団体",tel:"072xxxxxxx",mob:"090xxxxxxx"},
+ {n:"PARK JISUNG",play:"2026/05/03",wd:"日",course:"犬鳴",time:"08:15",g:4,p:16,route:"GORA",recv:"2026/02/20",d:["","","",""],s:["〇","不要","〇","〇"],kk:"〇",kumi:"済",tel:"072xxxxxxx",mob:"090xxxxxxx"},
  {n:"福田 恵理",play:"2026/05/17",wd:"日",course:"犬鳴",time:"08:30",g:6,p:24,route:"GORA",recv:"2026/03/10",d:["","","",""],s:["〇","不要","〇","〇"],kk:"〇",kumi:"済",tel:"072xxxxxxx",mob:"090xxxxxxx"},
  {n:"近藤 武",play:"2026/05/24",wd:"日",course:"稲倉",time:"07:30",g:4,p:16,route:"GORA",recv:"2026/03/20",d:["","","",""],s:["〇","不要","〇","〇"],kk:"〇",kumi:"済",tel:"0724778888",mob:"09077778888"},
  {n:"大塚 健",play:"2026/05/31",wd:"日",course:"大阪湾",time:"09:00",g:3,p:12,route:"電話",recv:"2026/04/01",d:["","","",""],s:["〇","不要","〇","〇"],kk:"〇",kumi:"済",tel:"072xxxxxxx",mob:"090xxxxxxx"}
@@ -800,6 +817,13 @@ function renderDetail(){
       <button class="sb done ${(r.kumi||'')==='済'?'on-done':''}" onclick="setF(${gi},'kumi','済','組合せ入力')">入力済</button>
      </span>
     </div>
+    <div class="orow">
+     <div class="ok">インバウンド <span class="note">（訪日客。SMS配信リストから除外できます）</span></div>
+     <span class="sel-wrap">
+      <button class="sb ${(r.inbound||'')===''?'on-fuyo':''}" onclick="setF(${gi},'inbound','','インバウンド')">通常</button>
+      <button class="sb zai ${r.inbound==='〇'?'on-zai':''}" onclick="setF(${gi},'inbound','〇','インバウンド')">インバウンド</button>
+     </span>
+    </div>
    </div>
    <div class="sec">フォロー状況（ここで直接変更・修正できます）</div>
    <div class="grid">
@@ -877,10 +901,13 @@ function onXlsxPicked(input){
         const r=aoa[i]; if(!r)continue;
         const name=xclean(r[4]); if(!name)continue;
         const recv=xdate(r[1]), play=xdate(r[2]);
+        const memoV=xclean(r[19]);
         out.push({n:name,play,wd:xclean(r[3]),course:xclean(r[7]),time:xtime(r[8]),
           g:xnum(r[9]),p:xnum(r[10]),route:xclean(r[11]),recv,
           d:["","","",""], s:[xstat(r[13]),xstat(r[14]),xstat(r[15]),xstat(r[16])],
-          kk:xkk(r[18]),kumi:xkumi(r[20]),memo:xclean(r[19]),tel:xclean(r[5]),mob:xclean(r[6])});
+          kk:xkk(r[18]),kumi:xkumi(r[20]),memo:memoV,
+          inbound: /インバウンド/.test(memoV)?'〇':'',   // 備考に記載があれば自動でマーク
+          tel:xclean(r[5]),mob:xclean(r[6])});
       }
       if(!out.length){ document.getElementById('migMsg').innerHTML='<span style="color:#b91c1c">有効な行が見つかりませんでした。</span>'; return; }
       _migRows=out;
