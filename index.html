@@ -113,6 +113,7 @@
     <button class="nav" id="undoBtn" onclick="undoLast()" title="直前の状態変更（〇/不在/不要・組数確定/キャンセル・組合せ入力）を1つずつ取り消します。「更新（整理）」を押すまで有効。削除・取込は対象外。" disabled>元に戻す</button>
     <button class="nav" id="toImport" onclick="showScreen('import')">＋ CSV取込</button>
     <button class="nav" id="toSettings" onclick="showScreen('settings')">設定</button>
+    <button class="nav" id="toSms" onclick="showScreen('sms')">SMS配信リスト</button>
     <a class="nav" id="toHelp" href="help/" target="_blank" rel="noopener">ヘルプ</a>
     <button class="nav hidden" id="toMain" onclick="showScreen('main')">← 一覧へ戻る</button>
     <span class="sp"></span>
@@ -223,6 +224,35 @@
     <div class="row" style="margin-top:14px"><button class="btn b-green" onclick="saveSettings()">設定を保存</button></div>
     <div class="msg" id="setMsg"></div>
     <p style="color:#9aa1aa;font-size:12px;margin-top:10px">日数を変えて保存すると、①〜④の予定日が再計算され、今日やることの判定にも反映されます。この設定はデータのJSONファイルに一緒に保存されます。</p>
+  </div>
+
+  <div class="imp hidden" id="screenSms">
+    <div style="font-size:15px;font-weight:700;margin-bottom:6px">SMS配信リスト書き出し<span class="note" style="font-weight:400">　SMSLINK一括配信用CSV</span></div>
+    <div class="note" style="margin-bottom:14px;line-height:1.7">過去にコンペで来場した幹事を条件で抽出し、SMSLINK取込用のCSV（携帯番号＋氏名ほか）を書き出します。<br><span style="color:#b35900">※これらの連絡先は予約・追客の目的で取得したものです。販促・営業SMSへの利用は、利用目的・本人同意の範囲をご確認のうえ運用してください。</span></div>
+    <div class="onecard" style="max-width:700px">
+      <div class="orow"><div class="ok">経路<span class="note">　自社予約以外（OTA対策）を既定で選択</span></div>
+        <span class="sel-wrap" style="gap:12px;flex-wrap:wrap">
+          <label class="ttlab"><input type="checkbox" class="smsRoute" value="GORA" checked> GORA</label>
+          <label class="ttlab"><input type="checkbox" class="smsRoute" value="GDO" checked> GDO</label>
+          <label class="ttlab"><input type="checkbox" class="smsRoute" value="RECRUIT" checked> RECRUIT</label>
+          <label class="ttlab"><input type="checkbox" class="smsRoute" value="AGWeb"> AGWeb</label>
+          <label class="ttlab"><input type="checkbox" class="smsRoute" value="電話"> 電話</label>
+        </span></div>
+      <div class="orow"><div class="ok">対象期間（プレー日）<span class="note">　空欄なら全期間</span></div>
+        <span class="sel-wrap"><input type="date" id="smsFrom" class="numin" style="width:150px"> 〜 <input type="date" id="smsTo" class="numin" style="width:150px"></span></div>
+      <div class="orow"><div class="ok">実施済みのみ（プレー日が今日以前）</div>
+        <span class="sel-wrap"><label class="ttlab"><input type="checkbox" id="smsPast" checked> 過去のみ</label></span></div>
+      <div class="orow"><div class="ok">キャンセルを除外</div>
+        <span class="sel-wrap"><label class="ttlab"><input type="checkbox" id="smsExclCancel" checked> 除外</label></span></div>
+      <div class="orow"><div class="ok">同じ携帯番号は1件にまとめる</div>
+        <span class="sel-wrap"><label class="ttlab"><input type="checkbox" id="smsDedupe" checked> 集約（最新のプレー日を採用）</label></span></div>
+    </div>
+    <div class="row" style="margin-top:14px">
+      <button class="btn b-blue" onclick="smsPreview()">件数を確認</button>
+      <button class="btn b-green" onclick="smsExport()">SMSLINK用CSVを書き出し</button>
+    </div>
+    <div class="msg" id="smsMsg"></div>
+    <p style="color:#9aa1aa;font-size:12px;margin-top:8px">出力列：携帯番号／氏名／最終プレー日／コース／経路／来場回数。SMSLINKの一括配信でアップロードし、本文に「氏名」を差し込めば「〇〇様」で送れます。携帯番号(070/080/090)がある人のみが対象です。</p>
   </div>
 </div>
 <div id="toast"></div>
@@ -486,6 +516,61 @@ async function bootstrapFile(){
   }catch(e){ console.error(e); setFileStatus('⚠ 復元失敗（開くを押してください）','err'); }
 }
 // ===== Excel書き出し（現行台帳と同じ形式＝バックアップ＆再取込可能） =====
+// ===== SMS配信リスト書き出し（SMSLINK一括配信用） =====
+function smsNormPhone(s){ return (s||'').replace(/[^0-9]/g,''); }
+function smsIsMobile(s){ return /^(070|080|090)\d{8}$/.test(smsNormPhone(s)); }
+function smsFilteredRows(){
+  const routes=[...document.querySelectorAll('.smsRoute:checked')].map(c=>c.value);
+  const past=document.getElementById('smsPast').checked;
+  const exclC=document.getElementById('smsExclCancel').checked;
+  const fromD=pd((document.getElementById('smsFrom').value||'').replace(/-/g,'/'));
+  const toD=pd((document.getElementById('smsTo').value||'').replace(/-/g,'/'));
+  return rows.filter(r=>{
+    if(routes.length && !routes.includes(r.route))return false;
+    if(exclC && r.kk==='キャンセル')return false;
+    const pl=pd(r.play);
+    if(past && (!pl||pl>TODAY))return false;
+    if(fromD && (!pl||pl<fromD))return false;
+    if(toD && (!pl||pl>toD))return false;
+    if(!smsIsMobile(r.mob))return false;
+    return true;
+  });
+}
+function smsAggregate(list, dedupe){
+  if(!dedupe) return list.map(r=>({mob:smsNormPhone(r.mob),n:r.n,play:r.play,course:r.course,route:r.route,cnt:1}));
+  const map=new Map();
+  list.forEach(r=>{ const k=smsNormPhone(r.mob), pl=pd(r.play);
+    if(!map.has(k)) map.set(k,{mob:k,n:r.n,play:r.play,course:r.course,route:r.route,cnt:1,_pl:pl});
+    else { const e=map.get(k); e.cnt++; if(pl&&(!e._pl||pl>e._pl)){e.n=r.n;e.play=r.play;e.course=r.course;e.route=r.route;e._pl=pl;} }
+  });
+  return [...map.values()];
+}
+function smsPreview(){
+  const list=smsFilteredRows();
+  const agg=smsAggregate(list,document.getElementById('smsDedupe').checked);
+  document.getElementById('smsMsg').innerHTML=`該当 <b>${list.length}</b> 件 ／ 配信先（ユニーク携帯） <b>${agg.length}</b> 件`;
+  return agg;
+}
+function smsExport(){
+  if(typeof XLSX==='undefined'){ toast('CSV機能の読み込みに失敗しました'); return; }
+  const list=smsFilteredRows();
+  if(!list.length){ document.getElementById('smsMsg').innerHTML='<span style="color:#b35900">該当する配信先がありません（携帯番号070/080/090がある人・条件一致が必要）</span>'; return; }
+  const agg=smsAggregate(list,document.getElementById('smsDedupe').checked);
+  const aoa=[['携帯番号','氏名','最終プレー日','コース','経路','来場回数']];
+  agg.forEach(e=>aoa.push([e.mob, e.n, e.play, e.course, e.route, e.cnt]));
+  const ws=XLSX.utils.aoa_to_sheet(aoa);
+  const csv=XLSX.utils.sheet_to_csv(ws);   // UTF-8文字列
+  let bytes, enc='Shift-JIS';
+  try{ bytes=new Uint8Array(cptable.utils.encode(932,csv)); }            // 真のShift-JIS
+  catch(e){ console.warn('sjis encode failed, fallback utf8',e); bytes=new TextEncoder().encode(csv); enc='UTF-8'; }
+  const blob=new Blob([bytes],{type:'text/csv'});
+  const n=new Date(); const ymd=n.getFullYear()+String(n.getMonth()+1).padStart(2,'0')+String(n.getDate()).padStart(2,'0');
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='SMS配信リスト_'+ymd+'.csv'; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  document.getElementById('smsMsg').innerHTML=`<span style="color:#1a7f37;font-weight:700">${agg.length} 件を書き出しました（SMSLINK用CSV・${enc}）</span>`;
+  toast(agg.length+' 件のSMS配信リストを書き出しました');
+}
+
 function exportExcel(){
   if(typeof XLSX==='undefined'){ toast('Excel機能の読み込みに失敗しました'); return; }
   if(!rows.length){ toast('書き出すデータがありません'); return; }
@@ -550,8 +635,17 @@ let rows=[
  {n:"岡田 みなみ",play:"2026/09/22",wd:"火",course:"大阪湾",time:"09:10",g:5,p:20,route:"電話",recv:"2026/05/30",d:["","","",""],s:["〇","不要","",""],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
  {n:"後藤 健二",play:"2026/09/27",wd:"日",course:"稲倉",time:"07:33",g:3,p:12,route:"AGWeb",recv:"2026/06/01",d:["","","",""],s:["","","",""],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
  {n:"長谷川 愛",play:"2026/06/16",wd:"火",course:"犬鳴",time:"13:20",g:4,p:16,route:"GDO",recv:"2026/04/05",d:["","","",""],s:["〇","不要","不在","不在"],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
- {n:"村上 拓也",play:"2026/06/30",wd:"火",course:"稲倉",time:"08:05",g:6,p:24,route:"GORA",recv:"2026/05/05",d:["","","",""],s:["〇","","",""],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"}
+ {n:"村上 拓也",play:"2026/06/30",wd:"火",course:"稲倉",time:"08:05",g:6,p:24,route:"GORA",recv:"2026/05/05",d:["","","",""],s:["〇","","",""],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
+ // --- 実施済み（過去）コンペ：SMS配信リスト（OTA対策）デモ用。完了済みで今日やることには出ない ---
+ {n:"近藤 武",play:"2026/04/12",wd:"日",course:"犬鳴",time:"08:00",g:4,p:16,route:"GORA",recv:"2026/02/01",d:["","","",""],s:["〇","不要","〇","〇"],kk:"〇",kumi:"済",tel:"0724778888",mob:"09077778888"},
+ {n:"遠藤 裕子",play:"2026/04/26",wd:"日",course:"稲倉",time:"09:30",g:5,p:20,route:"RECRUIT",recv:"2026/02/14",d:["","","",""],s:["〇","不要","〇","〇"],kk:"〇",kumi:"済",tel:"072xxxxxxx",mob:"090xxxxxxx"},
+ {n:"坂本 隆志",play:"2026/05/10",wd:"日",course:"大阪湾",time:"07:45",g:3,p:12,route:"GDO",recv:"2026/03/01",d:["","","",""],s:["〇","不要","〇","〇"],kk:"〇",kumi:"済",tel:"072xxxxxxx",mob:"090xxxxxxx"},
+ {n:"福田 恵理",play:"2026/05/17",wd:"日",course:"犬鳴",time:"08:30",g:6,p:24,route:"GORA",recv:"2026/03/10",d:["","","",""],s:["〇","不要","〇","〇"],kk:"〇",kumi:"済",tel:"072xxxxxxx",mob:"090xxxxxxx"},
+ {n:"近藤 武",play:"2026/05/24",wd:"日",course:"稲倉",time:"07:30",g:4,p:16,route:"GORA",recv:"2026/03/20",d:["","","",""],s:["〇","不要","〇","〇"],kk:"〇",kumi:"済",tel:"0724778888",mob:"09077778888"},
+ {n:"大塚 健",play:"2026/05/31",wd:"日",course:"大阪湾",time:"09:00",g:3,p:12,route:"電話",recv:"2026/04/01",d:["","","",""],s:["〇","不要","〇","〇"],kk:"〇",kumi:"済",tel:"072xxxxxxx",mob:"090xxxxxxx"}
 ];
+// デモ用ダミー電話番号（実データ読込時はapplyJsonで置換される）。SMS配信リスト機能の動作確認用に有効桁数を付与
+rows.forEach((r,i)=>{ if(/x/.test(r.tel||'')) r.tel='0724'+String(100000+i*7).slice(-6); if(/x/.test(r.mob||'')) r.mob='090'+String(10000000+i*131).slice(-8); });
 let showAll=false, selIdx=0, undoStack=[], sortKey='play', searchQ='', contactFilter='';
 function actRound(r){ if((r.kumi||"")==="済"||r.kk==="キャンセル"||(excludeKakutei&&r.kk==="〇"))return -1; for(const i of [0,1,2,3]){if(!todayTouch[i])continue;const dt=pd(r.d[i]); if(dt&&dt<=TODAY&&(r.s[i]===""||r.s[i]==="不在"))return i;} return -1; }
 function nextFuture(r){ if((r.kumi||"")==="済"||r.kk==="キャンセル"||(excludeKakutei&&r.kk==="〇"))return -1; for(const i of [0,1,2,3]){if(!todayTouch[i])continue;const dt=pd(r.d[i]); if(dt&&dt>TODAY&&r.s[i]==="")return i;} return -1; }
@@ -714,7 +808,8 @@ function showScreen(name){
   document.getElementById('screenMain').classList.toggle('hidden',name!=='main');
   document.getElementById('screenImport').classList.toggle('hidden',name!=='import');
   document.getElementById('screenSettings').classList.toggle('hidden',name!=='settings');
-  ['modeSeg','undoBtn','toImport','toSettings'].forEach(id=>document.getElementById(id).classList.toggle('hidden',!main));
+  document.getElementById('screenSms').classList.toggle('hidden',name!=='sms');
+  ['modeSeg','undoBtn','toImport','toSettings','toSms'].forEach(id=>document.getElementById(id).classList.toggle('hidden',!main));
   document.getElementById('refBtn').classList.toggle('hidden',!main||showAll);
   document.getElementById('toMain').classList.toggle('hidden',main);
 }
