@@ -259,7 +259,7 @@
       <button class="btn b-green" onclick="smsExport()">SMSLINK用CSVを書き出し</button>
     </div>
     <div class="msg" id="smsMsg"></div>
-    <p style="color:#9aa1aa;font-size:12px;margin-top:8px">出力列：携帯番号／氏名／最終プレー日／コース／経路／来場回数。SMSLINKの一括配信でアップロードし、本文に「氏名」を差し込めば「〇〇様」で送れます。携帯番号(070/080/090)がある人のみが対象です。</p>
+    <p style="color:#9aa1aa;font-size:12px;margin-top:8px">出力列：携帯番号／氏名／姓／最終プレー日／コース／経路／来場回数。SMSLINKの一括配信でアップロードし、本文に <b>{{姓}}様</b> を差し込めば「中村様」のように送れます（氏名を使えばフルネーム）。携帯番号(070/080/090)がある人のみが対象です。</p>
   </div>
 </div>
 <div id="toast"></div>
@@ -526,6 +526,7 @@ async function bootstrapFile(){
 // ===== SMS配信リスト書き出し（SMSLINK一括配信用） =====
 function smsNormPhone(s){ return (s||'').replace(/[^0-9]/g,''); }
 function smsIsMobile(s){ return /^(070|080|090)\d{8}$/.test(smsNormPhone(s)); }
+function smsSurname(n){ const s=(n||'').trim(); const i=s.search(/[\s　]/); return i>0? s.slice(0,i): s; } // スペース前を姓に。会社名等はそのまま
 function smsFilteredRows(){
   const routes=[...document.querySelectorAll('.smsRoute:checked')].map(c=>c.value);
   const past=document.getElementById('smsPast').checked;
@@ -563,8 +564,8 @@ function smsExport(){
   const list=smsFilteredRows();
   if(!list.length){ document.getElementById('smsMsg').innerHTML='<span style="color:#b35900">該当する配信先がありません（携帯番号070/080/090がある人・条件一致が必要）</span>'; return; }
   const agg=smsAggregate(list,document.getElementById('smsDedupe').checked);
-  const aoa=[['携帯番号','氏名','最終プレー日','コース','経路','来場回数']];
-  agg.forEach(e=>aoa.push([e.mob, e.n, e.play, e.course, e.route, e.cnt]));
+  const aoa=[['携帯番号','氏名','姓','最終プレー日','コース','経路','来場回数']];
+  agg.forEach(e=>aoa.push([e.mob, e.n, smsSurname(e.n), e.play, e.course, e.route, e.cnt]));
   const ws=XLSX.utils.aoa_to_sheet(aoa);
   const csv=XLSX.utils.sheet_to_csv(ws);   // UTF-8文字列
   let bytes, enc='Shift-JIS';
