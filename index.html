@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>予約チェック管理 — 体験デモ</title>
+<title>予約チェック管理</title>
 <style>
   :root{--blue:#000000;--ink:#000000;--line:#e8e8e8;--muted:#6b7280;--mono:"SF Mono",ui-monospace,Menlo,monospace;}
   *{box-sizing:border-box;font-family:"SF Pro Display","SF Pro Text",system-ui,-apple-system,"Helvetica Neue","Hiragino Sans","Noto Sans JP",sans-serif;font-feature-settings:"kern" 1;letter-spacing:-0.14px;-webkit-tap-highlight-color:transparent;}
@@ -101,7 +101,7 @@
 </style>
 </head>
 <body>
-<div class="demo-note" id="demoNote">体験デモ｜ダミーデータ｜基準日2026/06/03｜状態は選択式・即消えない・元に戻せます</div>
+<div class="demo-note" id="demoNote">ファイル未接続｜上部の「開く」で共有ドライブの台帳ファイル（.json）を選んでください｜初回は「設定 → 新規台帳作成 / 既存台帳移行取り込み」</div>
 <div class="app">
   <div class="appbar">
     <span class="ttl">予約チェック管理</span>
@@ -636,49 +636,8 @@ let o1=1,o2=60,o3=35,o4=18; // ①受付+o1日 / ②③④はプレー日のo2,o
 let excludeKakutei=true;    // 組数確定〇で「今日やること」から除外する（設定で切替）
 let todayTouch=[true,false,true,true]; // ①〜④を「今日やること」に表示するか（既定②オフ・事業所ごとに設定）
 function recompute(){rows.forEach(r=>{const rc=pd(r.recv),pl=pd(r.play);r.d=[fmt(addDays(rc,o1)),fmt(addDays(pl,-o2)),fmt(addDays(pl,-o3)),fmt(addDays(pl,-o4))];});}
-// ダミーデータ30件（UI確認用・PIIなし／基準日2026-06-03。d[]はrecompute()で受付・プレー＋設定日数から自動計算）
-let rows=[
- {n:"山本 健太",play:"2026/06/04",wd:"木",course:"犬鳴",time:"07:22",g:3,p:12,route:"AGWeb",recv:"2026/03/20",d:["","","",""],s:["","","",""],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
- {n:"中村 由美",play:"2026/06/07",wd:"日",course:"稲倉",time:"08:00",g:4,p:16,route:"GORA",recv:"2026/04/02",d:["","","",""],s:["〇","不要","",""],kk:"",tel:"072xxxxxxx",mob:"080xxxxxxx"},
- {n:"小林 誠",play:"2026/06/10",wd:"水",course:"大阪湾",time:"09:15",g:3,p:12,route:"電話",recv:"2026/04/28",d:["","","",""],s:["〇","","〇",""],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
- {n:"加藤 さゆり",play:"2026/06/12",wd:"金",course:"犬鳴",time:"07:45",g:5,p:20,route:"RECRUIT",recv:"2026/03/15",d:["","","",""],s:["〇","不要","不在",""],kk:"",memo:"6/2 TEL不在、夕方に再架電予定",tel:"072xxxxxxx",mob:"090xxxxxxx"},
- {n:"吉田 隆",play:"2026/06/14",wd:"日",course:"稲倉",time:"10:30",g:3,p:12,route:"AGWeb",recv:"2026/05/01",d:["","","",""],s:["〇","不要","〇","〇"],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
- {n:"山田 太郎",play:"2026/06/18",wd:"木",course:"稲倉",time:"07:37",g:3,p:12,route:"GORA",recv:"2026/04/20",d:["","","",""],s:["","","",""],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
- {n:"佐藤 花子",play:"2026/06/21",wd:"日",course:"犬鳴",time:"08:52",g:4,p:14,route:"AGWeb",recv:"2026/04/16",d:["","","",""],s:["〇","不要","",""],kk:"",tel:"072xxxxxxx",mob:"080xxxxxxx"},
- {n:"鈴木 一郎",play:"2026/06/25",wd:"木",course:"大阪湾",time:"09:07",g:6,p:24,route:"GDO",recv:"2026/05/10",d:["","","",""],s:["〇","","不在",""],kk:"",memo:"幹事多忙、連絡はメール希望",tel:"072xxxxxxx",mob:"090xxxxxxx"},
- {n:"田中 美咲",play:"2026/06/28",wd:"日",course:"犬鳴",time:"10:07",g:5,p:20,route:"電話",recv:"2026/03/05",d:["","","",""],s:["〇","不要","〇","不在"],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
- {n:"高橋 健",play:"2026/07/02",wd:"木",course:"稲倉",time:"12:37",g:6,p:24,route:"GORA",recv:"2026/04/10",d:["","","",""],s:["〇","〇","〇","〇"],kk:"〇",kumi:"済",tel:"072xxxxxxx",mob:"090xxxxxxx"},
- {n:"伊藤 直美",play:"2026/07/05",wd:"日",course:"稲倉",time:"08:22",g:3,p:12,route:"RECRUIT",recv:"2026/05/13",d:["","","",""],s:["〇","不要","",""],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
- {n:"渡辺 浩",play:"2026/07/08",wd:"水",course:"大阪湾",time:"11:00",g:4,p:16,route:"AGWeb",recv:"2026/05/20",d:["","","",""],s:["〇","","",""],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
- {n:"斎藤 恵",play:"2026/07/12",wd:"日",course:"犬鳴/稲倉",time:"07:30",g:7,p:28,route:"電話",recv:"2026/04/25",d:["","","",""],s:["","","",""],kk:"〇",memo:"組数確定済（コース2面）",tel:"072xxxxxxx",mob:"090xxxxxxx"},
- {n:"松本 翔",play:"2026/07/15",wd:"水",course:"稲倉",time:"13:05",g:3,p:12,route:"GORA",recv:"2026/06/01",d:["","","",""],s:["","","",""],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
- {n:"井上 真理",play:"2026/07/20",wd:"月",course:"犬鳴",time:"08:15",g:5,p:20,route:"AGWeb",recv:"2026/05/28",d:["","","",""],s:["〇","","",""],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
- {n:"木村 大輔",play:"2026/07/26",wd:"日",course:"大阪湾",time:"09:40",g:4,p:16,route:"GDO",recv:"2026/06/02",d:["","","",""],s:["","","",""],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
- {n:"林 智子",play:"2026/08/01",wd:"土",course:"稲倉",time:"07:52",g:3,p:12,route:"RECRUIT",recv:"2026/05/15",d:["","","",""],s:["〇","不要","",""],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
- {n:"清水 学",play:"2026/08/05",wd:"水",course:"犬鳴",time:"10:20",g:6,p:24,route:"電話",recv:"2026/04/30",d:["","","",""],s:["〇","不要","〇",""],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
- {n:"山口 香織",play:"2026/08/10",wd:"月",course:"大阪湾",time:"08:30",g:4,p:16,route:"AGWeb",recv:"2026/06/01",d:["","","",""],s:["","","",""],kk:"キャンセル",memo:"先方都合でキャンセル",tel:"072xxxxxxx",mob:"090xxxxxxx"},
- {n:"森田 剛",play:"2026/08/16",wd:"日",course:"稲倉/大阪湾",time:"11:15",g:5,p:20,route:"GORA",recv:"2026/05/20",d:["","","",""],s:["〇","","",""],kk:"",memo:"コンペ後に表彰式あり",tel:"072xxxxxxx",mob:"090xxxxxxx"},
- {n:"池田 七海",play:"2026/08/22",wd:"土",course:"犬鳴",time:"07:00",g:3,p:12,route:"RECRUIT",recv:"2026/06/03",d:["","","",""],s:["","","",""],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
- {n:"橋本 亮",play:"2026/08/28",wd:"金",course:"稲倉",time:"09:25",g:4,p:16,route:"GDO",recv:"2026/05/25",d:["","","",""],s:["〇","不要","",""],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
- {n:"阿部 京子",play:"2026/09/02",wd:"水",course:"大阪湾",time:"12:00",g:6,p:24,route:"電話",recv:"2026/06/01",d:["","","",""],s:["","","",""],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
- {n:"石川 修",play:"2026/09/08",wd:"火",course:"犬鳴/稲倉/大阪湾",time:"07:40",g:7,p:28,route:"AGWeb",recv:"2026/05/18",d:["","","",""],s:["〇","","",""],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
- {n:"前田 明日香",play:"2026/09/13",wd:"日",course:"稲倉",time:"08:48",g:3,p:12,route:"GORA",recv:"2026/06/02",d:["","","",""],s:["","","",""],kk:"〇",tel:"072xxxxxxx",mob:"090xxxxxxx"},
- {n:"藤田 渉",play:"2026/09/18",wd:"金",course:"犬鳴",time:"10:55",g:4,p:16,route:"RECRUIT",recv:"2026/06/03",d:["","","",""],s:["","","",""],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
- {n:"岡田 みなみ",play:"2026/09/22",wd:"火",course:"大阪湾",time:"09:10",g:5,p:20,route:"電話",recv:"2026/05/30",d:["","","",""],s:["〇","不要","",""],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
- {n:"後藤 健二",play:"2026/09/27",wd:"日",course:"稲倉",time:"07:33",g:3,p:12,route:"AGWeb",recv:"2026/06/01",d:["","","",""],s:["","","",""],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
- {n:"長谷川 愛",play:"2026/06/16",wd:"火",course:"犬鳴",time:"13:20",g:4,p:16,route:"GDO",recv:"2026/04/05",d:["","","",""],s:["〇","不要","不在","不在"],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
- {n:"村上 拓也",play:"2026/06/30",wd:"火",course:"稲倉",time:"08:05",g:6,p:24,route:"GORA",recv:"2026/05/05",d:["","","",""],s:["〇","","",""],kk:"",tel:"072xxxxxxx",mob:"090xxxxxxx"},
- // --- 実施済み（過去）コンペ：SMS配信リスト（OTA対策）デモ用。完了済みで今日やることには出ない ---
- {n:"近藤 武",play:"2026/04/12",wd:"日",course:"犬鳴",time:"08:00",g:4,p:16,route:"GORA",recv:"2026/02/01",d:["","","",""],s:["〇","不要","〇","〇"],kk:"〇",kumi:"済",tel:"0724778888",mob:"09077778888"},
- {n:"遠藤 裕子",play:"2026/04/26",wd:"日",course:"稲倉",time:"09:30",g:5,p:20,route:"RECRUIT",recv:"2026/02/14",d:["","","",""],s:["〇","不要","〇","〇"],kk:"〇",kumi:"済",tel:"072xxxxxxx",mob:"090xxxxxxx"},
- {n:"坂本 隆志",play:"2026/05/10",wd:"日",course:"大阪湾",time:"07:45",g:3,p:12,route:"GDO",recv:"2026/03/01",d:["","","",""],s:["〇","不要","〇","〇"],kk:"〇",kumi:"済",inbound:"〇",memo:"インバウンド団体",tel:"072xxxxxxx",mob:"090xxxxxxx"},
- {n:"PARK JISUNG",play:"2026/05/03",wd:"日",course:"犬鳴",time:"08:15",g:4,p:16,route:"GORA",recv:"2026/02/20",d:["","","",""],s:["〇","不要","〇","〇"],kk:"〇",kumi:"済",tel:"072xxxxxxx",mob:"090xxxxxxx"},
- {n:"福田 恵理",play:"2026/05/17",wd:"日",course:"犬鳴",time:"08:30",g:6,p:24,route:"GORA",recv:"2026/03/10",d:["","","",""],s:["〇","不要","〇","〇"],kk:"〇",kumi:"済",tel:"072xxxxxxx",mob:"090xxxxxxx"},
- {n:"近藤 武",play:"2026/05/24",wd:"日",course:"稲倉",time:"07:30",g:4,p:16,route:"GORA",recv:"2026/03/20",d:["","","",""],s:["〇","不要","〇","〇"],kk:"〇",kumi:"済",tel:"0724778888",mob:"09077778888"},
- {n:"大塚 健",play:"2026/05/31",wd:"日",course:"大阪湾",time:"09:00",g:3,p:12,route:"電話",recv:"2026/04/01",d:["","","",""],s:["〇","不要","〇","〇"],kk:"〇",kumi:"済",tel:"072xxxxxxx",mob:"090xxxxxxx"}
-];
-// デモ用ダミー電話番号（実データ読込時はapplyJsonで置換される）。SMS配信リスト機能の動作確認用に有効桁数を付与
-rows.forEach((r,i)=>{ if(/x/.test(r.tel||'')) r.tel='0724'+String(100000+i*7).slice(-6); if(/x/.test(r.mob||'')) r.mob='090'+String(10000000+i*131).slice(-8); });
+// 本番：データはJSON台帳ファイルから読み込みます（未接続時は空）
+let rows=[];
 let showAll=false, selIdx=0, undoStack=[], sortKey='play', searchQ='', contactFilter='';
 function actRound(r){ if((r.kumi||"")==="済"||r.kk==="キャンセル"||(excludeKakutei&&r.kk==="〇"))return -1; for(const i of [0,1,2,3]){if(!todayTouch[i])continue;const dt=pd(r.d[i]); if(dt&&dt<=TODAY&&(r.s[i]===""||r.s[i]==="不在"))return i;} return -1; }
 function nextFuture(r){ if((r.kumi||"")==="済"||r.kk==="キャンセル"||(excludeKakutei&&r.kk==="〇"))return -1; for(const i of [0,1,2,3]){if(!todayTouch[i])continue;const dt=pd(r.d[i]); if(dt&&dt>TODAY&&r.s[i]==="")return i;} return -1; }
