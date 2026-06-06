@@ -230,20 +230,27 @@
     <div style="font-size:15px;font-weight:700;margin-bottom:6px">SMS配信リスト書き出し<span class="note" style="font-weight:400">　SMSLINK一括配信用CSV</span></div>
     <div class="note" style="margin-bottom:14px;line-height:1.7">過去にコンペで来場した幹事を条件で抽出し、SMSLINK取込用のCSV（携帯番号＋氏名ほか）を書き出します。<br><span style="color:#b35900">※これらの連絡先は予約・追客の目的で取得したものです。販促・営業SMSへの利用は、利用目的・本人同意の範囲をご確認のうえ運用してください。</span></div>
     <div class="onecard" style="max-width:700px">
-      <div class="orow"><div class="ok">経路<span class="note">　自社予約以外（OTA対策）を既定で選択</span></div>
-        <span class="sel-wrap" style="gap:12px;flex-wrap:wrap">
-          <label class="ttlab"><input type="checkbox" class="smsRoute" value="GORA" checked> GORA</label>
-          <label class="ttlab"><input type="checkbox" class="smsRoute" value="GDO" checked> GDO</label>
-          <label class="ttlab"><input type="checkbox" class="smsRoute" value="RECRUIT" checked> RECRUIT</label>
-          <label class="ttlab"><input type="checkbox" class="smsRoute" value="AGWeb"> AGWeb</label>
-          <label class="ttlab"><input type="checkbox" class="smsRoute" value="電話"> 電話</label>
-        </span></div>
+      <div class="orow" style="display:block"><div class="ok" style="margin-bottom:8px">送る対象の経路<span class="note">　OTA対策なら「外部予約サイト」だけONのまま</span></div>
+        <div style="display:flex;gap:24px;flex-wrap:wrap">
+          <span class="sel-wrap" style="gap:12px;flex-wrap:wrap">
+            <span class="note" style="font-weight:700;color:#374151">外部予約サイト（OTA）：</span>
+            <label class="ttlab"><input type="checkbox" class="smsRoute" value="GORA" checked> GORA</label>
+            <label class="ttlab"><input type="checkbox" class="smsRoute" value="GDO" checked> GDO</label>
+            <label class="ttlab"><input type="checkbox" class="smsRoute" value="RECRUIT" checked> RECRUIT</label>
+          </span>
+          <span class="sel-wrap" style="gap:12px;flex-wrap:wrap">
+            <span class="note" style="font-weight:700;color:#374151">自社予約：</span>
+            <label class="ttlab"><input type="checkbox" class="smsRoute" value="AGWeb"> AGWeb</label>
+            <label class="ttlab"><input type="checkbox" class="smsRoute" value="電話"> 電話</label>
+            <span class="note">（含めたい時だけON）</span>
+          </span>
+        </div></div>
       <div class="orow"><div class="ok">対象期間（プレー日）<span class="note">　空欄なら全期間</span></div>
         <span class="sel-wrap"><input type="date" id="smsFrom" class="numin" style="width:150px"> 〜 <input type="date" id="smsTo" class="numin" style="width:150px"></span></div>
-      <div class="orow"><div class="ok">実施済みのみ（プレー日が今日以前）</div>
-        <span class="sel-wrap"><label class="ttlab"><input type="checkbox" id="smsPast" checked> 過去のみ</label></span></div>
+      <div class="orow"><div class="ok">未来の予約を除外<span class="note">　実施済みのコンペだけを対象</span></div>
+        <span class="sel-wrap"><label class="ttlab"><input type="checkbox" id="smsPast" checked> 除外する</label></span></div>
       <div class="orow"><div class="ok">キャンセルを除外</div>
-        <span class="sel-wrap"><label class="ttlab"><input type="checkbox" id="smsExclCancel" checked> 除外</label></span></div>
+        <span class="sel-wrap"><label class="ttlab"><input type="checkbox" id="smsExclCancel" checked> 除外する</label></span></div>
       <div class="orow"><div class="ok">同じ携帯番号は1件にまとめる</div>
         <span class="sel-wrap"><label class="ttlab"><input type="checkbox" id="smsDedupe" checked> 集約（最新のプレー日を採用）</label></span></div>
     </div>
