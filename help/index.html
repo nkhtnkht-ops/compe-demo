@@ -1407,7 +1407,7 @@ p {
         <div class="section-label">SMS List</div>
         <div>
           <h2>SMS配信リストの書き出し</h2>
-          <p class="body-copy">台帳から条件を絞って、SMS配信サービス「SMSLINK」の一括配信に取り込めるCSV（携帯番号＋氏名ほか）を書き出します。外部予約サイト（OTA）経由で来場した幹事を抽出し、次回の公式予約へ案内する用途などに使います。</p>
+          <p class="body-copy">台帳から条件を絞って、SMS配信サービス「SMSLINK」の一括配信に取り込めるCSV（携帯番号＋氏名ほか）を書き出します。外部予約サイト（OTA）経由で予約した幹事を抽出し、次回の公式予約へ案内する用途などに使います。</p>
         </div>
       </div>
       <div class="grid-3">
@@ -1422,7 +1422,7 @@ p {
         <div class="card">
           <h3>書き出される内容</h3>
           <p>CSV（Shift-JIS）で書き出します。1行目は項目名です。</p>
-          <div class="tag-row"><span class="tag">携帯番号</span><span class="tag">氏名</span><span class="tag">姓</span><span class="tag">最終プレー日</span><span class="tag">コース</span><span class="tag">経路</span><span class="tag">来場回数</span></div>
+          <div class="tag-row"><span class="tag">携帯番号</span><span class="tag">氏名</span><span class="tag">姓</span><span class="tag">最終プレー日</span><span class="tag">コース</span><span class="tag">経路</span><span class="tag">予約回数</span></div>
         </div>
         <div class="card">
           <h3>使う手順</h3>
@@ -1444,10 +1444,10 @@ p {
           </ul>
         </div>
         <div class="card">
-          <h3>重複の集約・来場回数</h3>
+          <h3>重複の集約・予約回数</h3>
           <ul class="plain-list">
             <li>同じ携帯番号は1件にまとめ、最新のプレー日を採用します。</li>
-            <li>まとめた件数は「来場回数」列に入ります（複数回コンペを取った幹事がわかります）。</li>
+            <li>まとめた件数は「予約回数」列に入ります（複数回コンペを取った幹事がわかります）。</li>
           </ul>
         </div>
       </div>

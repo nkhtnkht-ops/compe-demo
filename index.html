@@ -228,7 +228,7 @@
 
   <div class="imp hidden" id="screenSms">
     <div style="font-size:15px;font-weight:700;margin-bottom:6px">SMS配信リスト書き出し<span class="note" style="font-weight:400">　SMSLINK一括配信用CSV</span></div>
-    <div class="note" style="margin-bottom:14px;line-height:1.7">過去にコンペで来場した幹事を条件で抽出し、SMSLINK取込用のCSV（携帯番号＋氏名ほか）を書き出します。<br><span style="color:#b35900">※これらの連絡先は予約・追客の目的で取得したものです。販促・営業SMSへの利用は、利用目的・本人同意の範囲をご確認のうえ運用してください。</span></div>
+    <div class="note" style="margin-bottom:14px;line-height:1.7">過去にコンペを予約した幹事を条件で抽出し、SMSLINK取込用のCSV（携帯番号＋氏名ほか）を書き出します。<br><span style="color:#b35900">※これらの連絡先は予約・追客の目的で取得したものです。販促・営業SMSへの利用は、利用目的・本人同意の範囲をご確認のうえ運用してください。</span></div>
     <div class="onecard" style="max-width:700px">
       <div class="orow" style="display:block"><div class="ok" style="margin-bottom:8px">送る対象の経路<span class="note">　OTA対策なら「外部予約サイト」だけONのまま</span></div>
         <div style="display:flex;gap:24px;flex-wrap:wrap">
@@ -253,13 +253,15 @@
         <span class="sel-wrap"><label class="ttlab"><input type="checkbox" id="smsExclCancel" checked> 除外する</label></span></div>
       <div class="orow"><div class="ok">同じ携帯番号は1件にまとめる</div>
         <span class="sel-wrap"><label class="ttlab"><input type="checkbox" id="smsDedupe" checked> 集約（最新のプレー日を採用）</label></span></div>
+      <div class="orow"><div class="ok">予約回数で絞る<span class="note">　指定回数以上のリピーターだけ（集約ON時）</span></div>
+        <span class="sel-wrap"><input type="number" id="smsMinVisits" value="1" min="1" class="numin"> 回以上</span></div>
     </div>
     <div class="row" style="margin-top:14px">
       <button class="btn b-blue" onclick="smsPreview()">件数を確認</button>
       <button class="btn b-green" onclick="smsExport()">SMSLINK用CSVを書き出し</button>
     </div>
     <div class="msg" id="smsMsg"></div>
-    <p style="color:#9aa1aa;font-size:12px;margin-top:8px">出力列：携帯番号／氏名／姓／最終プレー日／コース／経路／来場回数。SMSLINKの一括配信でアップロードし、本文に <b>{{姓}}様</b> を差し込めば「中村様」のように送れます（氏名を使えばフルネーム）。携帯番号(070/080/090)がある人のみが対象です。</p>
+    <p style="color:#9aa1aa;font-size:12px;margin-top:8px">出力列：携帯番号／氏名／姓／最終プレー日／コース／経路／予約回数。SMSLINKの一括配信でアップロードし、本文に <b>{{姓}}様</b> を差し込めば「中村様」のように送れます（氏名を使えばフルネーム）。携帯番号(070/080/090)がある人のみが対象です。</p>
   </div>
 </div>
 <div id="toast"></div>
@@ -553,18 +555,24 @@ function smsAggregate(list, dedupe){
   });
   return [...map.values()];
 }
-function smsPreview(){
+function smsResult(){
   const list=smsFilteredRows();
-  const agg=smsAggregate(list,document.getElementById('smsDedupe').checked);
-  document.getElementById('smsMsg').innerHTML=`該当 <b>${list.length}</b> 件 ／ 配信先（ユニーク携帯） <b>${agg.length}</b> 件`;
+  let agg=smsAggregate(list,document.getElementById('smsDedupe').checked);
+  const minV=Math.max(1, parseInt(document.getElementById('smsMinVisits').value)||1);
+  if(minV>1) agg=agg.filter(e=>e.cnt>=minV);
+  return {list, agg, minV};
+}
+function smsPreview(){
+  const {list,agg,minV}=smsResult();
+  const extra = minV>1 ? `・予約${minV}回以上` : '';
+  document.getElementById('smsMsg').innerHTML=`該当 <b>${list.length}</b> 件 ／ 配信先（ユニーク携帯${extra}） <b>${agg.length}</b> 件`;
   return agg;
 }
 function smsExport(){
   if(typeof XLSX==='undefined'){ toast('CSV機能の読み込みに失敗しました'); return; }
-  const list=smsFilteredRows();
-  if(!list.length){ document.getElementById('smsMsg').innerHTML='<span style="color:#b35900">該当する配信先がありません（携帯番号070/080/090がある人・条件一致が必要）</span>'; return; }
-  const agg=smsAggregate(list,document.getElementById('smsDedupe').checked);
-  const aoa=[['携帯番号','氏名','姓','最終プレー日','コース','経路','来場回数']];
+  const {agg}=smsResult();
+  if(!agg.length){ document.getElementById('smsMsg').innerHTML='<span style="color:#b35900">該当する配信先がありません（携帯番号070/080/090がある人・条件一致が必要）</span>'; return; }
+  const aoa=[['携帯番号','氏名','姓','最終プレー日','コース','経路','予約回数']];
   agg.forEach(e=>aoa.push([e.mob, e.n, smsSurname(e.n), e.play, e.course, e.route, e.cnt]));
   const ws=XLSX.utils.aoa_to_sheet(aoa);
   const csv=XLSX.utils.sheet_to_csv(ws);   // UTF-8文字列
