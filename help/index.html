@@ -1076,6 +1076,7 @@ p {
     <a class="pill-link" href="#daily">日々の運用</a>
     <a class="pill-link" href="#screen">画面の見方</a>
     <a class="pill-link" href="#operations">主な操作</a>
+    <a class="pill-link" href="#sms">SMS配信リスト</a>
     <a class="pill-link" href="#saving">保存</a>
     <a class="pill-link" href="#feedback">フィードバック</a>
   </nav>
@@ -1396,6 +1397,62 @@ p {
             <li>組数確定したら「今日やること」から外す ON/OFFを設定します。</li>
           </ul>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="sms">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-label">SMS List</div>
+        <div>
+          <h2>SMS配信リストの書き出し</h2>
+          <p class="body-copy">台帳から条件を絞って、SMS配信サービス「SMSLINK」の一括配信に取り込めるCSV（携帯番号＋氏名ほか）を書き出します。外部予約サイト（OTA）経由で来場した幹事を抽出し、次回の公式予約へ案内する用途などに使います。</p>
+        </div>
+      </div>
+      <div class="grid-3">
+        <div class="card">
+          <h3>絞り込み条件</h3>
+          <ul class="plain-list">
+            <li>経路：外部予約サイト（GORA / GDO / RECRUIT）と自社予約（AGWeb / 電話）を選択。OTA対策なら外部のみONのままにします。</li>
+            <li>対象期間（プレー日）／未来の予約を除外／キャンセルを除外。</li>
+            <li>携帯番号（070 / 080 / 090）がある人のみが対象です。</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>書き出される内容</h3>
+          <p>CSV（Shift-JIS）で書き出します。1行目は項目名です。</p>
+          <div class="tag-row"><span class="tag">携帯番号</span><span class="tag">氏名</span><span class="tag">姓</span><span class="tag">最終プレー日</span><span class="tag">コース</span><span class="tag">経路</span><span class="tag">来場回数</span></div>
+        </div>
+        <div class="card">
+          <h3>使う手順</h3>
+          <ul class="plain-list">
+            <li>上部メニューの「SMS配信リスト」を開く。</li>
+            <li>条件を選び「件数を確認」で対象人数をチェック。</li>
+            <li>「SMSLINK用CSVを書き出し」でCSVを保存。</li>
+          </ul>
+        </div>
+      </div>
+      <div class="grid-2" style="margin-top: 14px;">
+        <div class="card">
+          <h3>SMSLINKでの差し込み（〇〇様）</h3>
+          <ul class="plain-list">
+            <li>SMSLINKの一括配信でCSVをアップロードし、「携帯番号」列を選びます。</li>
+            <li>本文作成で差し込み項目から「姓」を選ぶと、本文に <code>{{姓}}</code> が入ります。</li>
+            <li>例：「{{姓}}様 いつもご利用ありがとうございます…」→ 「中村様」のように一人ひとりの名前で送れます。</li>
+            <li>フルネームにしたい場合は「氏名」を差し込みます。</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>重複の集約・来場回数</h3>
+          <ul class="plain-list">
+            <li>同じ携帯番号は1件にまとめ、最新のプレー日を採用します。</li>
+            <li>まとめた件数は「来場回数」列に入ります（複数回コンペを取った幹事がわかります）。</li>
+          </ul>
+        </div>
+      </div>
+      <div class="trouble" style="margin-top: 14px;">
+        <div class="callout"><strong>利用目的・同意の確認</strong><br>これらの連絡先は、予約・追客の目的で取得したものです。販促・営業SMSへの利用は、利用目的・本人同意の範囲をご確認のうえ運用してください。</div>
       </div>
     </div>
   </section>
