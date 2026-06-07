@@ -402,6 +402,7 @@ async function loadFromHandle(handle){
     applyJson(data);
     fileHandle = handle;
     fileName = handle.name || file.name || 'data.json';
+    try{ localStorage.setItem('compe.lastFileName', fileName); }catch(_){}  // 再選択案内用に前回名を記憶
     dataLoadedFromFile = true;
     isDirty = false;
     lastWrittenMtime = file.lastModified;
@@ -494,6 +495,7 @@ async function onOpenFile(){
   try{
     // ファイル選択を最初に（クリック直後の操作有効時間を使う）。名前入力は後。
     const [h] = await window.showOpenFilePicker({
+      id:'yoyakucheck', startIn:'documents',
       types:[{description:'JSON台帳',accept:{'application/json':['.json']}}],
       excludeAcceptAllOption:false, multiple:false
     });
@@ -509,6 +511,7 @@ async function onNewFile(){
   try{
     // 保存先選択を最初に（クリック直後の操作有効時間を使う）。名前入力は後。
     const h = await window.showSaveFilePicker({
+      id:'yoyakucheck', startIn:'documents',
       suggestedName: 'compe-yoyaku-izumisano.json',
       types:[{description:'JSON台帳',accept:{'application/json':['.json']}}]
     });
@@ -551,7 +554,17 @@ async function bootstrapFile(){
   if(!FSA_SUPPORTED){ setFileStatus('⚠ 非対応ブラウザ（メモリ動作）','warn'); return; }
   try{
     const h = await idbGet(HANDLE_KEY);
-    if(!h){ setFileStatus('未接続（「開く」/ 設定で新規作成）','warn'); return; }
+    if(!h){
+      const last = (()=>{ try{return localStorage.getItem('compe.lastFileName');}catch(_){return null;} })();
+      if(last){
+        // 前回は接続できていたのにハンドルが消えている＝このPCは終了時にサイトデータを消す設定の可能性
+        setFileStatus('未接続：右上「開く」で前回のファイルを選び直してください','warn');
+        const dn=document.getElementById('demoNote'); if(dn){ dn.textContent='右上の「開く」から前回のファイル（'+last+'）を選び直してください。※このPCはブラウザ終了時に接続情報が消えるため、起動のたびに選び直しが必要な場合があります（IT設定で改善可）'; dn.classList.remove('hidden'); }
+      } else {
+        setFileStatus('未接続（「開く」/ 設定で新規作成）','warn');
+      }
+      return;
+    }
     const q = await h.queryPermission({mode:'readwrite'});
     if(q==='granted'){
       await loadFromHandle(h);
