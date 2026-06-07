@@ -152,7 +152,7 @@
 
   <div class="imp hidden" id="screenImport">
     <div style="font-size:15px;font-weight:700;margin-bottom:10px">日次CSV取込</div>
-    <div id="impHint" style="font-size:12px;color:#6b7280;margin-bottom:8px">日次運用：CSVファイルをドロップ（または貼り付け）→ 中身を確認 → 「② 台帳へ登録」。３組以上の予約を自動抽出します。</div>
+    <div id="impHint" style="font-size:12px;color:#6b7280;margin-bottom:8px">日次運用：予約受付一覧CSVをドロップ（または貼り付け）すると中身を自動確認します → 内容を見て「台帳へ登録」。３組以上・未来日の予約だけを自動抽出します。</div>
     <div id="newBox">
       <div class="dropzone" id="dropZone" ondragover="dzOver(event)" ondragleave="dzLeave(event)" ondrop="dzDrop(event)">
         <div class="dz-cta">
@@ -164,12 +164,10 @@
           </div>
           <div class="dz-file" id="dzFile"></div>
         </div>
-        <textarea class="ta" id="ta" placeholder="ここに直接CSVを貼り付けることもできます（Ctrl+V）"></textarea>
+        <textarea class="ta" id="ta" placeholder="ここに直接CSVを貼り付けることもできます（Ctrl+V）" onpaste="setTimeout(extract,0)"></textarea>
       </div>
       <div class="row">
-        <button class="btn b-gray" onclick="pasteSample()">サンプルを貼り付け（デモ）</button>
-        <button class="btn b-blue" id="bExtract" onclick="extract()">① 抽出して確認</button>
-        <button class="btn b-green" id="bReg" onclick="register()" disabled>② 台帳へ登録</button>
+        <button class="btn b-green" id="bReg" onclick="register()" disabled>台帳へ登録</button>
       </div>
     </div>
     <div class="msg" id="impMsg"></div>
@@ -922,13 +920,6 @@ function saveSettings(){
   document.getElementById('setMsg').innerHTML='<span style="color:#1a7f37;font-weight:700">保存しました（①〜④の予定日を再計算）。一覧へ戻ると反映されています</span>';
   toast('設定を保存しました'); markDirty(); render();
 }
-const sample=`ゴルフ場名,データ種別,プレー日,コース,スタート時間,代表者名(漢字),代表者名(カナ),組数,人数,連絡先電話番号,携帯電話番号,FAX番号,予約チャネル,予約受付日時,受付者,受付者ロール
-泉佐野カントリークラブ,一般予約,2026-08-04 00:00,稲倉,07:15:00,新規 太郎,ｼﾝｷ,3組,9人,'072xxxxxxx,'090xxxxxxx,',AGWeb,2026-06-01 09:20,受付,管理者
-泉佐野カントリークラブ,一般予約,2026-09-12 00:00,犬鳴,08:30:00,体験 五郎,ﾀｲｹﾝ,5組,20人,'072xxxxxxx,'090xxxxxxx,',電話,2026-06-02 10:05,受付,一般
-泉佐野カントリークラブ,一般予約,2026-07-05 00:00,稲倉,10:30:00,個人 一人,ｺｼﾞﾝ,1組,4人,'072xxxxxxx,'072xxxxxxx,',AGWeb,2026-06-01 08:11,受付,管理者
-泉佐野カントリークラブ,一般予約,2026-05-30 00:00,犬鳴,07:30:00,過去 三郎,ｶｺ,3組,12人,'072xxxxxxx,'090xxxxxxx,',AGWeb,2026-05-20 10:00,受付,管理者
-泉佐野カントリークラブ,一般予約,2026-10-01 00:00,大阪湾,07:52:00,抽出 花子,ﾁｭｳｼｭﾂ,4組,16人,'072xxxxxxx,'090xxxxxxx,',GORA,2026-06-03 08:11,受付,管理者`;
-function pasteSample(){document.getElementById('ta').value=sample;document.getElementById('impMsg').textContent='サンプルを貼り付けました。「① 抽出して確認」を押してください';}
 function dzOver(e){e.preventDefault();document.getElementById('dropZone').classList.add('over');if(e.dataTransfer)e.dataTransfer.dropEffect='copy';}
 function dzLeave(e){if(e.target.id==='dropZone')document.getElementById('dropZone').classList.remove('over');}
 function dzDrop(e){
@@ -1022,11 +1013,11 @@ function extract(){
   document.getElementById('impMsg').innerHTML=
     `抽出 <b>${uniq.length}</b> 件（3組以上・未来日・重複除外後）／ うち新規 <b>${fresh.length}</b> 件`
     +`<br><span style="color:#9ca3af;font-size:12px">読込${total}行 → 3組以上${ge3} → 未来日${future} → 重複/既存除外 ${uniq.length-fresh.length}件（既存台帳と重複 ${dupExisting}件）</span>`
-    +(fresh.length?`<br>『② 台帳へ登録』を押してください`:`<br><span style="color:#b35900">新規はありません（全て登録済み or 条件外）</span>`);
+    +(fresh.length?`<br>内容を確認して『台帳へ登録』を押してください`:`<br><span style="color:#b35900">新規はありません（全て登録済み or 条件外）</span>`);
   document.getElementById('bReg').disabled=fresh.length===0;
 }
 function register(){
-  if(!_pendingImport.length){document.getElementById('impMsg').textContent='先に「① 抽出して確認」を押してください';return;}
+  if(!_pendingImport.length){document.getElementById('impMsg').textContent='先にCSVを取り込んでください（ドロップ・ファイル選択・貼り付け）';return;}
   const n=_pendingImport.length;
   _pendingImport.forEach(r=>rows.push(r));
   recompute();             // ①〜④予定日を計算
