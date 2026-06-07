@@ -217,10 +217,10 @@
     <div class="onecard" style="max-width:680px">
       <div class="orow"><div class="ok">「今日やること」に表示するコンタクト<span class="note">（事業所ごと。②は既定オフ）</span></div>
         <span class="sel-wrap" style="gap:12px">
-          <label class="ttlab"><input type="checkbox" id="tt0" checked> ①受付翌日</label>
-          <label class="ttlab"><input type="checkbox" id="tt1"> ②60日前</label>
-          <label class="ttlab"><input type="checkbox" id="tt2" checked> ③35日前</label>
-          <label class="ttlab"><input type="checkbox" id="tt3" checked> ④18日前</label>
+          <label class="ttlab"><input type="checkbox" id="tt0" checked> <span id="ttl0">①受付翌日</span></label>
+          <label class="ttlab"><input type="checkbox" id="tt1"> <span id="ttl1">②60日前</span></label>
+          <label class="ttlab"><input type="checkbox" id="tt2" checked> <span id="ttl2">③35日前</span></label>
+          <label class="ttlab"><input type="checkbox" id="tt3" checked> <span id="ttl3">④18日前</span></label>
         </span></div>
       <div class="orow"><div class="ok">組数確定したら「今日やること」から外す<span class="note">（オフにすると確定後も追跡を続けます）</span></div>
         <span class="sel-wrap"><label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:700"><input type="checkbox" id="setExKakutei" checked> 外す</label></span></div>
@@ -652,6 +652,7 @@ function dayLabel(i){ return i===0 ? (o1===1?"受付翌日":"受付"+o1+"日後"
 function rebuildLabels(){
   for(let i=0;i<4;i++) lbl[i]=CIRC[i]+dayLabel(i);
   ['cf0','cf1','cf2','cf3'].forEach((id,i)=>{ const el=document.getElementById(id); if(el){ el.textContent=dayLabel(i); el.title=lbl[i]+'の対応だけ表示'; } });
+  [0,1,2,3].forEach(i=>{ const el=document.getElementById('ttl'+i); if(el) el.textContent=lbl[i]; });  // 設定のチェックボックス表示も連動
 }
 let excludeKakutei=true;    // 組数確定〇で「今日やること」から除外する（設定で切替）
 let todayTouch=[true,false,true,true]; // ①〜④を「今日やること」に表示するか（既定②オフ・事業所ごとに設定）
@@ -806,12 +807,12 @@ function renderDetail(){
    </div>
    <div class="sec">フォロー状況（ここで直接変更・修正できます）</div>
    <div class="grid">
-    <div class="fld"><div class="k">①受付翌日</div>${editCell(gi,0)}</div>
-    <div class="fld"><div class="k">②60日前</div>${editCell(gi,1)}</div>
-    <div class="fld"><div class="k">③35日前</div>${editCell(gi,2)}</div>
-    <div class="fld"><div class="k">④18日前</div>${editCell(gi,3)}</div>
+    <div class="fld"><div class="k">${lbl[0]}</div>${editCell(gi,0)}</div>
+    <div class="fld"><div class="k">${lbl[1]}</div>${editCell(gi,1)}</div>
+    <div class="fld"><div class="k">${lbl[2]}</div>${editCell(gi,2)}</div>
+    <div class="fld"><div class="k">${lbl[3]}</div>${editCell(gi,3)}</div>
    </div>
-   <div style="margin-top:10px"><button class="sb" onclick="skipToEarly(${gi})" title="メンバー・定例コンペ向け：①〜③を不要にして④だけ残します">④までスキップ（メンバー/定例コンペ）</button></div>
+   <div style="margin-top:10px"><button class="sb" onclick="skipToEarly(${gi})" title="メンバー・定例コンペ向け：①〜③を不要にして④だけ残します">${lbl[3]}までスキップ（メンバー/定例コンペ）</button></div>
    ${(r.s||[]).includes('不在')?`<div class="sec">次回連絡日（不在の再架電）</div>
    <div class="editcell"><span>${r.next?('設定：'+r.next+'（その日まで今日やることから外します）'):'未設定（不在は毎日「今日やること」に表示）'}</span><span class="sel-wrap"><input type="date" class="datein" value="${r.next?r.next.replace(/\//g,'-'):''}" onchange="setNext(${gi},this.value)"><button class="sb" onclick="setNext(${gi},'')">クリア</button></span></div>`:''}
    <div class="sec">メモ（連絡内容・申し送り）</div>
