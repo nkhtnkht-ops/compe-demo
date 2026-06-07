@@ -61,6 +61,12 @@
   .pill{font-size:12px;font-weight:480;padding:4px 10px;border-radius:50px;}
   .pill.green{background:#eafaf0;color:#1a7f37;} .pill.red{background:#fdecea;color:#b91c1c;}
   .empty{padding:30px;text-align:center;color:#9aa1aa;}
+  .connect-cta{padding:48px 24px;color:#374151;}
+  .connect-cta .cta-icon{font-size:40px;}
+  .connect-cta .cta-title{font-size:16px;font-weight:700;margin-top:10px;color:#111827;}
+  .connect-cta .cta-sub{font-size:12px;color:#6b7280;margin-top:6px;line-height:1.6;}
+  .connect-cta .cta-btn{margin-top:16px;font-size:14px;padding:10px 22px;}
+  .connect-cta .cta-note{font-size:11px;color:#9aa1aa;margin-top:12px;}
   .detail{flex:1.9;padding:20px 24px;overflow:auto;min-width:0;}
   .dh{display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:16px;}
   .dh .name{font-size:26px;font-weight:540;letter-spacing:-0.6px;}
@@ -767,6 +773,11 @@ function render(){
   document.getElementById('segAll').classList.toggle('on',showAll);
   document.getElementById('refBtn').classList.toggle('hidden',showAll);
   const list=document.getElementById('list'); list.innerHTML='';
+  // 未接続（FSA対応ブラウザでファイル未接続）なら、迷わないよう大きく案内
+  if(FSA_SUPPORTED && !fileHandle){
+    list.innerHTML='<div class="empty connect-cta"><div class="cta-icon">📂</div><div class="cta-title">台帳ファイルを開いてください</div><div class="cta-sub">毎朝、共有ドライブの台帳ファイルを1回選んでから使います</div><button class="btn b-blue cta-btn" onclick="onOpenFile()">台帳ファイルを開く</button><div class="cta-note">初めて使う／新しく作る場合は「設定」から</div></div>';
+    renderDetail();return;
+  }
   if(vis.length===0){list.innerHTML='<div class="empty">'+(searchQ.trim()?'「'+searchQ.trim()+'」に一致する予約はありません':(contactFilter!==''?(lbl[+contactFilter]+'の対応はありません'):(showAll?'データなし':'今日やることはありません')))+'</div>';renderDetail();return;}
   vis.forEach(r=>{
     const gi=rows.indexOf(r), a=actRound(r);
