@@ -15,7 +15,7 @@
   *:focus-visible{outline:2px dashed #000;outline-offset:2px;}
   body{margin:0;background:#ffffff;color:var(--ink);height:100vh;display:flex;flex-direction:column;overflow:hidden;}
   .demo-note{background:#fff;border-bottom:1px solid var(--line);color:#000;font-family:var(--mono);font-size:11px;letter-spacing:.5px;padding:8px 12px;text-align:center;flex-shrink:0;}
-  .app{width:100%;max-width:1280px;margin:0 auto;background:#fff;flex:1;min-height:0;display:flex;flex-direction:column;}
+  .app{width:100%;max-width:none;margin:0;background:#fff;flex:1;min-height:0;display:flex;flex-direction:column;}
   .appbar{background:#000;color:#fff;display:flex;align-items:center;gap:8px;padding:10px 16px;flex-wrap:wrap;flex-shrink:0;}
   .appbar .ttl{font-weight:540;font-size:17px;letter-spacing:-0.4px;}
   .appbar .sp{flex:1;}
@@ -302,6 +302,7 @@ let suspendDirty=false;            // 読み込み中などはdirtyにしない
 let updatedBy = localStorage.getItem('compe.updatedBy') || '';
 let dataLoadedFromFile=false;       // trueなら起動時のサンプルではなくJSONが正本
 let lastWrittenMtime=0;             // 自分が最後に書いた時のファイル更新時刻
+let needsReauth=false;              // 権限再付与が必要（ハンドルは有るが権限prompt）
 let externalChange=false;           // 他の人がファイルを更新したか
 let loadedUpdatedAt='', loadedUpdatedBy='';
 
@@ -542,7 +543,7 @@ async function onReauth(){
   if(!fileHandle){ onOpenFile(); return; }
   const perm = await ensurePermission(fileHandle,'readwrite');
   if(perm==='granted'){
-    showReauth(false);
+    showReauth(false); needsReauth=false;
     if(!dataLoadedFromFile){
       // ブラウザ再起動後の復帰：まだ読み込んでいない＝最新データを読み込む（空での上書きを防止）
       await loadFromHandle(fileHandle);
@@ -577,9 +578,10 @@ async function bootstrapFile(){
     if(q==='granted'){
       await loadFromHandle(h);
     } else {
-      fileHandle=h; fileName=h.name||'data.json'; dataLoadedFromFile=false;
-      setFileStatus('🔒 '+fileName+'：右上「権限再付与」を押してください','warn'); showReauth(true);
-      const dn=document.getElementById('demoNote'); if(dn){ dn.textContent='🔒 共有ファイルへの再接続が必要です。右上の「権限再付与」を押すと、前回のファイルにつながり最新データが読み込まれます'; dn.classList.remove('hidden'); }
+      fileHandle=h; fileName=h.name||'data.json'; dataLoadedFromFile=false; needsReauth=true;
+      setFileStatus('🔒 '+fileName+'：再接続が必要です','warn'); showReauth(true);
+      const dn=document.getElementById('demoNote'); if(dn){ dn.classList.add('hidden'); }
+      render();   // 中央に大きく「再接続する」ボタンを表示
     }
   }catch(e){ console.error(e); setFileStatus('⚠ 復元失敗（「開く」を押してください）','err'); }
 }
@@ -775,6 +777,15 @@ function render(){
   document.getElementById('refBtn').classList.toggle('hidden',showAll);
   const list=document.getElementById('list'); list.innerHTML='';
   // 未接続（FSA対応ブラウザでファイル未接続）なら、迷わないよう大きく案内
+  // 権限再付与が必要（ハンドルは有るが権限切れ）＝中央に大きく「再接続」ボタンを出して見落とし防止
+  if(FSA_SUPPORTED && fileHandle && needsReauth && !dataLoadedFromFile){
+    list.innerHTML='<div class="empty connect-cta"><div class="cta-icon">🔓</div>'
+      +'<div class="cta-title">前回の台帳に再接続します</div>'
+      +'<div class="cta-sub">下のボタンを押すと、前回のファイル（<b>'+esc(fileName||'台帳')+'</b>）に接続して<br>最新データを読み込みます。</div>'
+      +'<button class="btn b-blue cta-btn" onclick="onReauth()">再接続する（権限を許可）</button>'
+      +'<div class="cta-note">クリック後、ブラウザの「許可」を押してください</div></div>';
+    renderDetail();return;
+  }
   if(FSA_SUPPORTED && !fileHandle){
     const last=(()=>{ try{return localStorage.getItem('compe.lastFileName');}catch(_){return null;} })();
     const lastLine = last ? '<div class="cta-file">前回のファイル：<b>'+esc(last)+'</b></div>' : '';
