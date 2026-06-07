@@ -514,7 +514,7 @@ async function onNewFile(){
     fileHandle=h; fileName=h.name; dataLoadedFromFile=true;
     useRealToday();             // 新規台帳も当日基準
     // 空の正本を書き込む（現在のメモリrowsを正本にする選択肢もあるが、誤上書き防止で空配列で初期化）
-    rows = []; selIdx=0;
+    rows = []; selIdx=-1;
     document.getElementById('demoNote')?.classList.add('hidden');
     isDirty=true;
     await saveToFile();
@@ -665,7 +665,7 @@ let todayTouch=[true,true,true,true]; // ①〜④を「今日やること」に
 function recompute(){rows.forEach(r=>{const rc=pd(r.recv),pl=pd(r.play);r.d=[fmt(addDays(rc,o1)),fmt(addDays(pl,-o2)),fmt(addDays(pl,-o3)),fmt(addDays(pl,-o4))];});}
 // 本番：データはJSON台帳ファイルから読み込みます（未接続時は空）
 let rows=[];
-let showAll=false, selIdx=0, undoStack=[], sortKey='play', searchQ='', contactFilter='';
+let showAll=false, selIdx=-1, undoStack=[], sortKey='play', searchQ='', contactFilter='';  // selIdx=-1は未選択（初期は誰も選ばれていない）
 function actRound(r){ if((r.kumi||"")==="済"||r.kk==="キャンセル"||(excludeKakutei&&r.kk==="〇"))return -1; for(const i of [0,1,2,3]){if(!todayTouch[i])continue;const dt=pd(r.d[i]); if(dt&&dt<=TODAY&&(r.s[i]===""||r.s[i]==="不在"))return i;} return -1; }
 function nextFuture(r){ if((r.kumi||"")==="済"||r.kk==="キャンセル"||(excludeKakutei&&r.kk==="〇"))return -1; for(const i of [0,1,2,3]){if(!todayTouch[i])continue;const dt=pd(r.d[i]); if(dt&&dt>TODAY&&r.s[i]==="")return i;} return -1; }
 function isDeferred(r){ return !!r.next && pd(r.next)>TODAY && (r.s||[]).includes("不在"); }
@@ -919,7 +919,7 @@ function migrate(){
   const n=_migRows.length;
   rows = _migRows.map(r=>({...r, d:[...r.d], s:[...r.s]}));
   recompute();                       // ①〜④予定日を受付/プレー＋設定日数から計算
-  selIdx=0; _migRows=null;
+  selIdx=-1; _migRows=null;
   document.getElementById('bMig').disabled=true;
   document.getElementById('migMsg').innerHTML=`<span style="color:#1a7f37;font-weight:700">${n} 件を移行しました。「← 一覧へ戻る」で確認できます（自動保存）。</span>`;
   markDirty();
