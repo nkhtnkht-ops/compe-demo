@@ -178,7 +178,13 @@
   <div class="imp hidden" id="screenSettings">
     <div style="font-size:15px;font-weight:700;margin-bottom:10px">設定</div>
 
-    <div style="font-size:13px;font-weight:700;margin:4px 0 6px">初回起動時メニュー<span class="note" style="font-weight:400;color:#9ca3af">　初回セットアップ用（通常運用では使いません）</span></div>
+    <div style="font-size:13px;font-weight:700;margin:4px 0 6px">この端末の記録名<span class="note" style="font-weight:400;color:#9ca3af">　更新履歴に「最終更新：○○」と残ります（このPCだけに保存／共有PCは設置場所名がおすすめ）</span></div>
+    <div class="onecard" style="max-width:680px">
+      <div class="orow"><div class="ok">端末名・設置場所・使用者名</div>
+        <span class="sel-wrap"><input id="setUpdatedBy" placeholder="例：フロント／事務所／支配人" style="border:1px solid var(--line);border-radius:6px;padding:7px 10px;font-size:13px;width:240px"><button class="btn b-green" style="padding:7px 12px" onclick="saveUpdatedBy()">保存</button></span></div>
+    </div>
+
+    <div style="font-size:13px;font-weight:700;margin:16px 0 6px">初回起動時メニュー<span class="note" style="font-weight:400;color:#9ca3af">　初回セットアップ用（通常運用では使いません）</span></div>
     <div class="onecard" style="max-width:680px">
       <div class="orow">
         <div class="ok">① 新規台帳作成
@@ -465,9 +471,17 @@ function markDirty(){
 
 async function askUpdatedBy(){
   if(updatedBy)return updatedBy;
-  const v = prompt('あなたのお名前（変更履歴に記録します。あとで設定から変更可）','');
+  const v = prompt('この端末の記録名（端末名・設置場所・使用者名など。例：フロント／事務所／支配人）\n更新履歴に「最終更新：○○」と残ります。設定からいつでも変更できます。','');
   if(v && v.trim()){ updatedBy=v.trim(); localStorage.setItem('compe.updatedBy',updatedBy); }
   return updatedBy;
+}
+function saveUpdatedBy(){
+  const el=document.getElementById('setUpdatedBy'); if(!el)return;
+  const v=(el.value||'').trim();
+  updatedBy=v;
+  if(v) localStorage.setItem('compe.updatedBy',v); else localStorage.removeItem('compe.updatedBy');
+  if(typeof updateUpdatedChip==='function') updateUpdatedChip();
+  toast(v? '記録名を保存しました：'+v : '記録名を空にしました');
 }
 
 async function onOpenFile(){
@@ -811,6 +825,7 @@ function showScreen(name){
   ['modeSeg','undoBtn','toImport','toSettings','toSms'].forEach(id=>document.getElementById(id).classList.toggle('hidden',!main));
   document.getElementById('refBtn').classList.toggle('hidden',!main||showAll);
   document.getElementById('toMain').classList.toggle('hidden',main);
+  if(name==='settings'){ const sb=document.getElementById('setUpdatedBy'); if(sb) sb.value=updatedBy||''; }
 }
 function setImpMode(){
   // 日次CSV取込画面の初期化（移行UIは設定メニューへ集約済み）
