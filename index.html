@@ -90,6 +90,7 @@
   .tabb{border:1px solid #d4d4d4;background:#fff;color:#000;border-radius:50px;font-size:13px;font-weight:480;padding:8px 18px;cursor:pointer;}
   .tabb.on{background:#000;color:#fff;border-color:#000;}
   .numin{width:64px;border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:13px;text-align:right;}
+  .numin-sm{width:58px;padding:5px 8px;} .numedit{display:flex;align-items:center;gap:4px;}
   .imp{padding:16px 20px;flex:1;min-height:0;overflow:auto;} .imp .ta{width:100%;height:160px;border:1px solid var(--line);border-radius:8px;padding:12px;font-size:13px;font-family:var(--mono);background:#fff;}
   .dropzone{border:2px dashed #d4d4d4;border-radius:14px;padding:18px;background:#fafafa;transition:background .15s, border-color .15s;}
   .dropzone.over{border-color:#000;background:#f0f0f0;}
@@ -477,6 +478,7 @@ function scheduleSave(){
   saveTimer=setTimeout(saveToFile,1500);
 }
 function setMemo(gi,val){ if(rows[gi]){ rows[gi].memo=val; markDirty(); } }
+function setNum(gi,key,val){ if(!rows[gi])return; const n=parseInt(String(val).replace(/[^0-9]/g,''))||0; if((rows[gi][key]||0)===n)return; rows[gi][key]=n; markDirty(); render(); }
 function markDirty(){
   if(suspendDirty)return;
   isDirty=true;
@@ -837,7 +839,7 @@ function renderDetail(){
    <div class="dh"><span style="display:flex;align-items:center;gap:10px"><span class="name">${r.n}</span><button class="sb" onclick="copyText('${r.n}')">コピー</button></span><button class="delbtn" onclick="delRow(${gi})">削除</button></div>
    <div class="grid">
     <div class="fld"><div class="k">プレー日</div><div class="v">${r.play}（${r.wd}）</div></div>
-    <div class="fld"><div class="k">組数 / 人数</div><div class="v">${r.g}組 / ${r.p}人</div></div>
+    <div class="fld"><div class="k">組数 / 人数<span class="note">（変更があれば直せます）</span></div><div class="editcell"><span class="numedit"><input type="number" min="0" value="${r.g}" onchange="setNum(${gi},'g',this.value)" class="numin numin-sm">組 ／ <input type="number" min="0" value="${r.p}" onchange="setNum(${gi},'p',this.value)" class="numin numin-sm">人</span></div></div>
     <div class="fld"><div class="k">コース名</div><div class="v">${r.course}</div></div>
     <div class="fld"><div class="k">スタート時間</div><div class="v">${r.time||'—'}</div></div>
     <div class="fld"><div class="k">連絡先電話番号</div><div class="editcell"><span>${r.tel}</span><button class="sb" onclick="copyText('${r.tel}')">コピー</button></div></div>
