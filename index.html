@@ -65,6 +65,7 @@
   .connect-cta .cta-icon{font-size:40px;}
   .connect-cta .cta-title{font-size:16px;font-weight:700;margin-top:10px;color:#111827;}
   .connect-cta .cta-sub{font-size:12px;color:#6b7280;margin-top:6px;line-height:1.6;}
+  .connect-cta .cta-file{font-size:12px;color:#374151;margin-top:10px;background:#f3f4f6;border-radius:6px;padding:6px 12px;display:inline-block;}
   .connect-cta .cta-btn{margin-top:16px;font-size:14px;padding:10px 22px;}
   .connect-cta .cta-note{font-size:11px;color:#9aa1aa;margin-top:12px;}
   .detail{flex:1.9;padding:20px 24px;overflow:auto;min-width:0;}
@@ -775,7 +776,14 @@ function render(){
   const list=document.getElementById('list'); list.innerHTML='';
   // 未接続（FSA対応ブラウザでファイル未接続）なら、迷わないよう大きく案内
   if(FSA_SUPPORTED && !fileHandle){
-    list.innerHTML='<div class="empty connect-cta"><div class="cta-icon">📂</div><div class="cta-title">台帳ファイルを開いてください</div><div class="cta-sub">毎朝、共有ドライブの台帳ファイルを1回選んでから使います</div><button class="btn b-blue cta-btn" onclick="onOpenFile()">台帳ファイルを開く</button><div class="cta-note">初めて使う／新しく作る場合は「設定」から</div></div>';
+    const last=(()=>{ try{return localStorage.getItem('compe.lastFileName');}catch(_){return null;} })();
+    const lastLine = last ? '<div class="cta-file">前回のファイル：<b>'+esc(last)+'</b></div>' : '';
+    list.innerHTML='<div class="empty connect-cta"><div class="cta-icon">📂</div>'
+      +'<div class="cta-title">台帳ファイル（JSON）を選んでください</div>'
+      +'<div class="cta-sub">共有ドライブの「◆予約チェック」フォルダにある<br>台帳ファイル（<b>○○○.json</b>）を選びます。毎朝、最初に1回だけ選びます。</div>'
+      +lastLine
+      +'<button class="btn b-blue cta-btn" onclick="onOpenFile()">JSONファイルを選ぶ</button>'
+      +'<div class="cta-note">初めて使う／新しく作る場合は「設定」の初回メニューから</div></div>';
     renderDetail();return;
   }
   if(vis.length===0){list.innerHTML='<div class="empty">'+(searchQ.trim()?'「'+searchQ.trim()+'」に一致する予約はありません':(contactFilter!==''?(lbl[+contactFilter]+'の対応はありません'):(showAll?'データなし':'今日やることはありません')))+'</div>';renderDetail();return;}
