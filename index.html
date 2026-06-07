@@ -216,10 +216,10 @@
     </div>
     <div style="font-size:13px;font-weight:700;margin:16px 0 6px">表示オプション</div>
     <div class="onecard" style="max-width:680px">
-      <div class="orow"><div class="ok">「今日やること」に表示するコンタクト<span class="note">（事業所ごと。②は既定オフ）</span></div>
+      <div class="orow"><div class="ok">「今日やること」に表示するコンタクト<span class="note">（事業所ごとに設定できます。既定はすべてオン）</span></div>
         <span class="sel-wrap" style="gap:12px">
           <label class="ttlab"><input type="checkbox" id="tt0" checked> <span id="ttl0">①受付翌日</span></label>
-          <label class="ttlab"><input type="checkbox" id="tt1"> <span id="ttl1">②60日前</span></label>
+          <label class="ttlab"><input type="checkbox" id="tt1" checked> <span id="ttl1">②60日前</span></label>
           <label class="ttlab"><input type="checkbox" id="tt2" checked> <span id="ttl2">③35日前</span></label>
           <label class="ttlab"><input type="checkbox" id="tt3" checked> <span id="ttl3">④18日前</span></label>
         </span></div>
@@ -656,7 +656,7 @@ function rebuildLabels(){
   [0,1,2,3].forEach(i=>{ const el=document.getElementById('ttl'+i); if(el) el.textContent=lbl[i]; });  // 設定のチェックボックス表示も連動
 }
 let excludeKakutei=true;    // 組数確定〇で「今日やること」から除外する（設定で切替）
-let todayTouch=[true,false,true,true]; // ①〜④を「今日やること」に表示するか（既定②オフ・事業所ごとに設定）
+let todayTouch=[true,true,true,true]; // ①〜④を「今日やること」に表示するか（既定すべてオン・事業所ごとに設定）
 function recompute(){rows.forEach(r=>{const rc=pd(r.recv),pl=pd(r.play);r.d=[fmt(addDays(rc,o1)),fmt(addDays(pl,-o2)),fmt(addDays(pl,-o3)),fmt(addDays(pl,-o4))];});}
 // 本番：データはJSON台帳ファイルから読み込みます（未接続時は空）
 let rows=[];
