@@ -279,7 +279,7 @@
 const SCHEMA_VERSION=1;
 let TODAY=new Date(2026,5,3);   // デモ基準日。実ファイル接続時は useRealToday() で当日へ切替
 function useRealToday(){ const n=new Date(); TODAY=new Date(n.getFullYear(),n.getMonth(),n.getDate()); }
-const lbl=["①受付翌日","②60日前","③35日前","④18日前"];
+let lbl=["①受付翌日","②60日前","③35日前","④18日前"];  // 設定(o1〜o4)に応じてrebuildLabels()で動的更新
 
 // ===== File System Access API + IndexedDB（ファイルハンドル永続化） =====
 const FSA_SUPPORTED = !!(window.showOpenFilePicker && window.showSaveFilePicker);
@@ -383,6 +383,7 @@ function applyJson(data){
   if(document.getElementById('so4'))document.getElementById('so4').value=o4;
   rows = Array.isArray(data.rows) ? data.rows.map(r=>({s:["","","",""],d:["","","",""],...r})) : [];
   rows.forEach(r=>{ delete r._touch; if(!Array.isArray(r.s))r.s=["","","",""]; if(!Array.isArray(r.d))r.d=["","","",""]; });
+  rebuildLabels();
   recompute();
 }
 
@@ -645,6 +646,13 @@ function pd(s){const m=s&&s.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);retur
 function fmt(d){return d?d.getFullYear()+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getDate()).padStart(2,'0'):'';}
 function addDays(d,n){if(!d)return null;const x=new Date(d);x.setDate(x.getDate()+n);return x;}
 let o1=1,o2=60,o3=35,o4=18; // ①受付+o1日 / ②③④はプレー日のo2,o3,o4日前（事業所ごとに設定変更）
+// コンタクトの日数ラベル。設定変更時に表示も自動で変わる
+const CIRC=["①","②","③","④"];
+function dayLabel(i){ return i===0 ? (o1===1?"受付翌日":"受付"+o1+"日後") : [0,o2,o3,o4][i]+"日前"; }
+function rebuildLabels(){
+  for(let i=0;i<4;i++) lbl[i]=CIRC[i]+dayLabel(i);
+  ['cf0','cf1','cf2','cf3'].forEach((id,i)=>{ const el=document.getElementById(id); if(el){ el.textContent=dayLabel(i); el.title=lbl[i]+'の対応だけ表示'; } });
+}
 let excludeKakutei=true;    // 組数確定〇で「今日やること」から除外する（設定で切替）
 let todayTouch=[true,false,true,true]; // ①〜④を「今日やること」に表示するか（既定②オフ・事業所ごとに設定）
 function recompute(){rows.forEach(r=>{const rc=pd(r.recv),pl=pd(r.play);r.d=[fmt(addDays(rc,o1)),fmt(addDays(pl,-o2)),fmt(addDays(pl,-o3)),fmt(addDays(pl,-o4))];});}
@@ -916,8 +924,9 @@ function saveSettings(){
   o3=+document.getElementById('so3').value||0; o4=+document.getElementById('so4').value||0;
   excludeKakutei=document.getElementById('setExKakutei').checked;
   todayTouch=[0,1,2,3].map(i=>document.getElementById('tt'+i).checked);
+  rebuildLabels();
   recompute();
-  document.getElementById('setMsg').innerHTML='<span style="color:#1a7f37;font-weight:700">保存しました（①〜④の予定日を再計算）。一覧へ戻ると反映されています</span>';
+  document.getElementById('setMsg').innerHTML='<span style="color:#1a7f37;font-weight:700">保存しました（①〜④の予定日とラベルを再計算）。一覧へ戻ると反映されています</span>';
   toast('設定を保存しました'); markDirty(); render();
 }
 function dzOver(e){e.preventDefault();document.getElementById('dropZone').classList.add('over');if(e.dataTransfer)e.dataTransfer.dropEffect='copy';}
@@ -1029,7 +1038,7 @@ function register(){
   toast(n+' 件を登録しました');
   render();
 }
-recompute(); setImpMode('new'); render();
+rebuildLabels(); recompute(); setImpMode('new'); render();
 </script>
 </body>
 </html>
