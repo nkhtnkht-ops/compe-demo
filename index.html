@@ -552,6 +552,7 @@ async function onReauth(){
 
 async function bootstrapFile(){
   if(!FSA_SUPPORTED){ setFileStatus('⚠ 非対応ブラウザ（メモリ動作）','warn'); return; }
+  try{ if(navigator.storage&&navigator.storage.persist){ await navigator.storage.persist(); } }catch(_){}  // ブラウザにデータ保持を要求（自動消去対策・終了時クリア設定は別途IT対応）
   try{
     const h = await idbGet(HANDLE_KEY);
     if(!h){
