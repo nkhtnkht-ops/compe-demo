@@ -595,7 +595,7 @@ async function bootstrapFile(){
       if(last){
         // 前回は接続できていたのにハンドルが消えている＝このPCは終了時にサイトデータを消す設定の可能性
         setFileStatus('未接続：右上「開く」で前回のファイルを選び直してください','warn');
-        const dn=document.getElementById('demoNote'); if(dn){ dn.textContent='右上の「開く」から前回のファイル（'+last+'）を選び直してください。※このPCはブラウザ終了時に接続情報が消えるため、起動のたびに選び直しが必要な場合があります（IT設定で改善可）'; dn.classList.remove('hidden'); }
+        const dn=document.getElementById('demoNote'); if(dn){ dn.textContent='右上の「開く」から前回のファイル（'+last+'）を選び直してください。'; dn.classList.remove('hidden'); }
       } else {
         setFileStatus('未接続（「開く」/ 設定で新規作成）','warn');
       }
