@@ -462,7 +462,8 @@ async function loadFromHandle(handle){
 
 async function saveToFile(){
   if(!fileHandle){ return; }
-  if(!dataLoadedFromFile){ return; }   // ★未読込の状態でファイルを上書きしない（再接続前のCSV取込等での全消し事故を防止）
+  // ★未読込かつ空(0件)の状態でファイルを上書きしない（全消し事故防止）。データがある正当な保存は通す
+  if(!dataLoadedFromFile && rows.length===0){ setFileStatus('🔒 未接続：先に「開く」で台帳を読み込んでください','warn'); return; }
   if(isSaving){ markDirty(); return; }  // 競合時は次回キックで
   // ★件数が大きく減る保存は確認（誤操作・バグでの全消し最終防波堤）
   if(lastKnownCount>=20 && rows.length < lastKnownCount/2){
@@ -1017,6 +1018,7 @@ function migrate(){
   const n=_migRows.length;
   rows = _migRows.map(r=>({...r, d:[...r.d], s:[...r.s]}));
   recompute();                       // ①〜④予定日を受付/プレー＋設定日数から計算
+  dataLoadedFromFile=true; needsReauth=false; lastKnownCount=rows.length;  // 移行データは正本＝保存可能に
   selIdx=-1; _migRows=null;
   document.getElementById('bMig').disabled=true;
   document.getElementById('migMsg').innerHTML=`<span style="color:#1a7f37;font-weight:700">${n} 件を移行しました。「← 一覧へ戻る」で確認できます（自動保存）。</span>`;
