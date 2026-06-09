@@ -824,7 +824,7 @@ function inTodayView(r){return isToday(r)||r._touch;}
 function daysFrom(s){ const d=pd(s); return d?Math.round((d-TODAY)/86400000):0; } // 正=未来, 負=過去
 function mdOf(s){ return (s||'').replace(/^\d{4}\//,''); }
 function onSearch(v){ searchQ=v; render(); }
-function needsContact(r,i){ if((r.kumi||"")==="済"||r.kk==="キャンセル"||(excludeKakutei&&r.kk==="〇"))return false; const dt=pd(r.d[i]); return !!dt && dt<=TODAY && (r.s[i]===""||r.s[i]==="不在"); }
+function needsContact(r,i){ if((r.kumi||"")==="済"||r.kk==="キャンセル"||(excludeKakutei&&r.kk==="〇")||isDeferred(r))return false; const dt=pd(r.d[i]); return !!dt && dt<=TODAY && (r.s[i]===""||r.s[i]==="不在"); }
 function setContact(f){ contactFilter=f; [['','cfAll'],['0','cf0'],['1','cf1'],['2','cf2'],['3','cf3']].forEach(([v,id])=>{const el=document.getElementById(id);if(el)el.classList.toggle('on',contactFilter===v);}); render(); }
 function visibleRows(){ const q=searchQ.trim(); if(q){const lq=q.toLowerCase(); return rows.filter(r=>(r.n||'').toLowerCase().includes(lq));} if(contactFilter!==''){ const idx=+contactFilter; return rows.filter(r=>needsContact(r,idx)); } return showAll?rows:rows.filter(inTodayView); }
 
