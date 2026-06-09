@@ -322,7 +322,8 @@ const IDB_NAME='compe-yoyaku', IDB_STORE='kv', HANDLE_KEY='fileHandle';
 let fileHandle=null, fileName='', isDirty=false, saveTimer=null, isSaving=false;
 let suspendDirty=false;            // 読み込み中などはdirtyにしない
 let updatedBy = localStorage.getItem('compe.updatedBy') || '';
-let dataLoadedFromFile=false;       // trueなら起動時のサンプルではなくJSONが正本
+let dataLoadedFromFile=false;       // trueなら起動時のサンプルではなくJSONが正本（＝この値がfalseの間は絶対に保存しない＝未読込での上書き事故防止）
+let lastKnownCount=-1;              // 直近で読込/保存した件数。激減保存の検知用
 let lastWrittenMtime=0;             // 自分が最後に書いた時のファイル更新時刻
 let needsReauth=false;              // 権限再付与が必要（ハンドルは有るが権限prompt）
 let externalChange=false;           // 他の人がファイルを更新したか
@@ -434,6 +435,7 @@ async function loadFromHandle(handle){
     fileName = handle.name || file.name || 'data.json';
     try{ localStorage.setItem('compe.lastFileName', fileName); }catch(_){}  // 再選択案内用に前回名を記憶
     dataLoadedFromFile = true;
+    lastKnownCount = rows.length;   // 読み込んだ件数を基準に
     needsReauth = false;        // 接続成功＝再付与バナー解除
     isDirty = false;
     lastWrittenMtime = file.lastModified;
@@ -460,7 +462,13 @@ async function loadFromHandle(handle){
 
 async function saveToFile(){
   if(!fileHandle){ return; }
+  if(!dataLoadedFromFile){ return; }   // ★未読込の状態でファイルを上書きしない（再接続前のCSV取込等での全消し事故を防止）
   if(isSaving){ markDirty(); return; }  // 競合時は次回キックで
+  // ★件数が大きく減る保存は確認（誤操作・バグでの全消し最終防波堤）
+  if(lastKnownCount>=20 && rows.length < lastKnownCount/2){
+    const ok=confirm('⚠ 台帳の件数が大きく減ろうとしています（'+lastKnownCount+'件 → '+rows.length+'件）。\n\nこのまま保存すると元のデータが上書きされます。\n[OK]保存する / [キャンセル]保存しない（データを守る）');
+    if(!ok){ isDirty=false; setFileStatus('⚠ 保存を中止しました（件数激減のため）','warn'); return; }
+  }
   isSaving=true;
   try{
     const perm = await ensurePermission(fileHandle,'readwrite');
@@ -481,6 +489,7 @@ async function saveToFile(){
     await w.write(new Blob([JSON.stringify(json,null,2)],{type:'application/json'}));
     await w.close();
     isDirty=false;
+    lastKnownCount = rows.length;   // 保存できた件数を基準に更新
     try{ lastWrittenMtime = (await fileHandle.getFile()).lastModified; }catch(_){ lastWrittenMtime = Date.now(); }
     updateUpdatedChip();
     setFileStatus(''+fileName+'（保存済 '+new Date().toLocaleTimeString('ja-JP')+'）','ok');
@@ -573,6 +582,8 @@ async function onReauth(){
     showReauth(false); needsReauth=false;
     if(!dataLoadedFromFile){
       // ブラウザ再起動後の復帰：まだ読み込んでいない＝最新データを読み込む（空での上書きを防止）
+      if(saveTimer){clearTimeout(saveTimer);saveTimer=null;}  // ★保留中の保存をキャンセル（未読込データでの上書きレースを防ぐ）
+      isDirty=false;
       await loadFromHandle(fileHandle);
     } else if(isDirty){
       // セッション中の権限切れからの復帰：保留していた変更を保存
@@ -1120,6 +1131,11 @@ function extract(){
   document.getElementById('bReg').disabled=fresh.length===0;
 }
 function register(){
+  // ★未接続/未読込のまま取り込むと、再接続時に少数の取込分で台帳が全消しされる事故になる。先に接続を必須化
+  if(FSA_SUPPORTED && (!fileHandle || !dataLoadedFromFile)){
+    document.getElementById('impMsg').innerHTML='<span style="color:#b91c1c;font-weight:700">先に台帳ファイルに接続してください。</span><br>上部の「再接続する」または「開く」で台帳を開いてから取り込みます（接続前に取り込むとデータが失われます）。';
+    return;
+  }
   if(!_pendingImport.length){document.getElementById('impMsg').textContent='先にCSVを取り込んでください（ドロップ・ファイル選択・貼り付け）';return;}
   const n=_pendingImport.length;
   _pendingImport.forEach(r=>rows.push(r));
