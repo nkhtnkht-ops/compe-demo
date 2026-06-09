@@ -118,7 +118,7 @@
   .imp .row{margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;} .imp .msg{margin-top:14px;font-size:14px;min-height:22px;}
   .btn{border:0;border-radius:50px;color:#fff;font-weight:480;font-size:13px;padding:9px 16px;cursor:pointer;} .b-gray{background:#6b7280;}.b-blue{background:#000;}.b-green{background:#13652b;} .btn:disabled{opacity:.4;}
   .hidden{display:none!important;}
-  .filestat{display:inline-flex;align-items:center;gap:6px;background:transparent;color:rgba(255,255,255,.82);font-size:12px;font-weight:400;padding:0 6px;max-width:260px;overflow:hidden;white-space:nowrap;cursor:default;}
+  .filestat{display:inline-flex;align-items:center;gap:6px;background:transparent;color:rgba(255,255,255,.82);font-size:12px;font-weight:400;padding:0 6px;max-width:260px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:default;}
   .filestat::before{content:"";width:7px;height:7px;border-radius:50%;background:#cfcfcf;flex-shrink:0;}
   .filestat.ok::before{background:#2a9d54;} .filestat.warn::before{background:#e0a000;} .filestat.err::before{background:#e0483d;}
   .infobar{display:flex;align-items:center;gap:10px;padding:7px 16px;background:#fafafa;border-bottom:1px solid var(--line);font-size:12px;color:#000;flex-shrink:0;}
@@ -475,17 +475,17 @@ async function loadFromHandle(handle){
 async function saveToFile(){
   if(!fileHandle){ return; }
   // ★未読込かつ空(0件)の状態でファイルを上書きしない（全消し事故防止）。データがある正当な保存は通す
-  if(!dataLoadedFromFile && rows.length===0){ setFileStatus('🔒 未接続：先に「開く」で台帳を読み込んでください','warn'); return; }
+  if(!dataLoadedFromFile && rows.length===0){ setFileStatus('🔒 未接続','warn'); return; }
   if(isSaving){ markDirty(); return; }  // 競合時は次回キックで
   // ★件数が大きく減る保存は確認（誤操作・バグでの全消し最終防波堤）
   if(lastKnownCount>=20 && rows.length < lastKnownCount/2){
     const ok=confirm('⚠ 台帳の件数が大きく減ろうとしています（'+lastKnownCount+'件 → '+rows.length+'件）。\n\nこのまま保存すると元のデータが上書きされます。\n[OK]保存する / [キャンセル]保存しない（データを守る）');
-    if(!ok){ isDirty=false; setFileStatus('⚠ 保存を中止しました（件数激減のため）','warn'); return; }
+    if(!ok){ isDirty=false; setFileStatus('⚠ 保存を中止','warn'); return; }
   }
   isSaving=true;
   try{
     const perm = await ensurePermission(fileHandle,'readwrite');
-    if(perm!=='granted'){ setFileStatus('🔒 権限切れ：再付与してください','err'); showReauth(true); needsReauth=true; render(); return; }
+    if(perm!=='granted'){ setFileStatus('🔒 権限切れ','err'); showReauth(true); needsReauth=true; render(); return; }
     // 他者更新の検知：自分の最終書込より新しければ上書き確認
     try{
       const cur = await fileHandle.getFile();
@@ -665,7 +665,7 @@ async function onReauth(){
       setFileStatus(''+fileName+'（同期OK）','ok');
     }
   } else {
-    setFileStatus('🔒 権限が許可されませんでした。もう一度「権限再付与」を押してください','err');
+    setFileStatus('🔒 許可されませんでした','err');
   }
 }
 
@@ -679,7 +679,7 @@ async function bootstrapFile(){
       const last = (()=>{ try{return localStorage.getItem('compe.lastFileName');}catch(_){return null;} })();
       if(last){
         // 前回は接続できていたのにハンドルが消えている＝このPCは終了時にサイトデータを消す設定の可能性
-        setFileStatus('未接続：右上「開く」で前回のファイルを選び直してください','warn');
+        setFileStatus('未接続','warn');
         const dn=document.getElementById('demoNote'); if(dn){ dn.textContent='右上の「開く」から前回のファイル（'+last+'）を選び直してください。'; dn.classList.remove('hidden'); }
       } else {
         setFileStatus('未接続（「開く」/ 設定で新規作成）','warn');
@@ -691,7 +691,7 @@ async function bootstrapFile(){
       await loadFromHandle(h);
     } else {
       fileHandle=h; fileName=h.name||'data.json'; dataLoadedFromFile=false; needsReauth=true;
-      setFileStatus('🔒 '+fileName+'：再接続が必要です','warn'); showReauth(true);
+      setFileStatus('🔒 再接続が必要','warn'); showReauth(true);
       const dn=document.getElementById('demoNote'); if(dn){ dn.classList.add('hidden'); }
       render();   // 中央に大きく「再接続する」ボタンを表示
     }
