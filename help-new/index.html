@@ -1,0 +1,1623 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>予約チェック管理 使い方ガイド</title>
+<link rel="icon" href="../favicon.ico" sizes="any">
+<link rel="icon" href="../icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<meta name="theme-color" content="#111827">
+<meta name="description" content="ゴルフコンペ予約のフォロー連絡を、スタッフがやり漏れなく進めるための予約チェック管理 使い方ガイド。">
+<style>
+:root {
+  --ink: #000;
+  --paper: #fff;
+  --line: #e8e8e8;
+  --soft: #f7f7f7;
+  --soft-2: #fafafa;
+  --muted: #6b7280;
+  --muted-2: #9aa1aa;
+  --orange: #b35900;
+  --orange-bg: #fdf0dd;
+  --red: #b91c1c;
+  --red-bg: #fdecea;
+  --green: #13652b;
+  --green-bg: #e7f6ec;
+  --mono: "SF Mono", Menlo, ui-monospace, monospace;
+  --display: "SF Pro Display", "SF Pro Text", system-ui, -apple-system, "Helvetica Neue", "Hiragino Sans", "Noto Sans JP", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  font-family: var(--display);
+  font-feature-settings: "kern" 1;
+  letter-spacing: -0.14px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+*:focus-visible {
+  outline: 2px dashed var(--ink);
+  outline-offset: 2px;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-weight: 330;
+  line-height: 1.75;
+}
+
+a {
+  color: inherit;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: #000;
+  color: #fff;
+  border-bottom: 1px solid #000;
+}
+
+.brand {
+  font-size: 17px;
+  font-weight: 540;
+  letter-spacing: -0.4px;
+  white-space: nowrap;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.nav::-webkit-scrollbar {
+  display: none;
+}
+
+.pill-link,
+.button,
+.ghost-button,
+.mini-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50px;
+  border: 1px solid #000;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 480;
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.pill-link {
+  border-color: rgba(255,255,255,.22);
+  background: rgba(255,255,255,.16);
+  color: #fff;
+  padding: 8px 14px;
+}
+
+.pill-link:hover {
+  background: rgba(255,255,255,.26);
+}
+
+.button {
+  min-height: 42px;
+  padding: 12px 20px;
+  background: #000;
+  color: #fff;
+}
+
+.button:hover {
+  background: #232323;
+}
+
+.ghost-button {
+  min-height: 42px;
+  padding: 12px 20px;
+  background: #fff;
+  color: #000;
+}
+
+.ghost-button:hover {
+  background: #f4f4f5;
+}
+
+.wrap {
+  width: min(1120px, calc(100% - 32px));
+  margin: 0 auto;
+}
+
+.hero {
+  position: relative;
+  width: 100vw;
+  min-height: min(680px, calc(100vh - 130px));
+  margin-left: calc(50% - 50vw);
+  display: flex;
+  align-items: center;
+  padding-block: 64px 76px;
+  padding-inline: max(16px, calc((100vw - 1120px) / 2));
+  border-bottom: 1px solid var(--line);
+  overflow: hidden;
+}
+
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(255,255,255,.96), rgba(255,255,255,.74) 46%, rgba(255,255,255,.12)), url("../help/assets/hero-abstract-ledger.png") center / cover no-repeat;
+  filter: grayscale(1);
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+  width: min(1040px, 100%);
+}
+
+.eyebrow,
+.section-label,
+.card-label,
+.step-kicker {
+  font-family: var(--mono);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: .75px;
+  text-transform: uppercase;
+}
+
+.hero h1 {
+  max-width: 720px;
+  margin: 12px 0 14px;
+  font-size: clamp(42px, 7vw, 82px);
+  line-height: .96;
+  letter-spacing: -2.4px;
+  font-weight: 430;
+  word-break: keep-all;
+}
+
+.hero h1 span {
+  display: block;
+}
+
+.lead {
+  max-width: 1040px;
+  margin: 0;
+  color: #1f2937;
+  font-size: clamp(17px, 2vw, 21px);
+  letter-spacing: -0.35px;
+  line-height: 1.8;
+}
+
+.hero .lead {
+  white-space: nowrap;
+  font-size: min(21px, calc((100vw - 32px) / 42));
+}
+
+.hero-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 26px;
+}
+
+.hero-note {
+  margin-top: 20px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.hero-panel {
+  align-self: stretch;
+  min-height: 560px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  overflow: hidden;
+  box-shadow: 0 12px 36px rgba(0,0,0,.04);
+}
+
+.appbar-mock {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 54px;
+  padding: 10px 14px;
+  background: #000;
+  color: #fff;
+}
+
+.appbar-title {
+  font-size: 15px;
+  font-weight: 540;
+  letter-spacing: -0.35px;
+}
+
+.seg {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  margin-left: auto;
+  background: rgba(255,255,255,.16);
+  border-radius: 50px;
+}
+
+.seg span {
+  padding: 7px 12px;
+  border-radius: 50px;
+  color: rgba(255,255,255,.8);
+  font-size: 12px;
+  font-weight: 480;
+  line-height: 1;
+}
+
+.seg .on {
+  background: #fff;
+  color: #000;
+}
+
+.panel-body {
+  display: grid;
+  grid-template-columns: .92fr 1.08fr;
+  min-height: 0;
+  flex: 1;
+}
+
+.mock-list {
+  border-right: 1px solid var(--line);
+}
+
+.mock-toolbar {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.search-line {
+  flex: 1;
+  height: 28px;
+  border: 1px solid #d4d4d4;
+  border-radius: 50px;
+  background: #fff;
+}
+
+.mock-card {
+  padding: 14px;
+  border-bottom: 1px solid var(--line);
+  border-left: 3px solid transparent;
+}
+
+.mock-card.active {
+  background: #f4f4f5;
+  border-left-color: #000;
+}
+
+.mock-card strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 540;
+  letter-spacing: -0.3px;
+}
+
+.mock-card small {
+  display: block;
+  margin-top: 3px;
+  color: #4b5563;
+  font-size: 12px;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  margin-top: 8px;
+  padding: 3px 9px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 480;
+  line-height: 1.45;
+}
+
+.status.need { color: var(--orange); background: var(--orange-bg); }
+.status.late { color: #fff; background: #d1453b; }
+.status.carry { color: #9a1d14; background: #fbe3e0; }
+.status.done { color: var(--green); background: var(--green-bg); }
+.status.soon { color: #3f4753; background: #eef0f2; }
+
+.mock-detail {
+  padding: 18px;
+  overflow: hidden;
+}
+
+.detail-name {
+  padding-bottom: 13px;
+  border-bottom: 1px solid var(--line);
+  font-size: 25px;
+  font-weight: 540;
+  letter-spacing: -0.65px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 13px 16px;
+  margin-top: 14px;
+}
+
+.field {
+  min-height: 60px;
+}
+
+.field .key {
+  margin-bottom: 4px;
+  font-family: var(--mono);
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+}
+
+.field .val,
+.edit-row {
+  min-height: 34px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  font-size: 13px;
+}
+
+.contact-box {
+  margin-top: 16px;
+  padding: 4px 13px;
+  background: #fafafa;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.edit-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 9px 0;
+}
+
+.state-buttons {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.mini-pill {
+  min-height: 27px;
+  padding: 5px 10px;
+  background: #fff;
+  border-color: #d4d4d4;
+  color: #000;
+  font-size: 12px;
+}
+
+.mini-pill.green { color: #1a7f37; border-color: #1a7f37; }
+.mini-pill.orange { color: var(--orange); border-color: var(--orange); }
+.mini-pill.gray { color: #6b7280; border-color: #6b7280; }
+
+section {
+  padding: 74px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.section-head {
+  display: grid;
+  grid-template-columns: .38fr 1fr;
+  gap: 36px;
+  align-items: start;
+  margin-bottom: 26px;
+}
+
+h2 {
+  margin: 0;
+  font-size: clamp(30px, 4vw, 52px);
+  line-height: 1.08;
+  letter-spacing: -1.35px;
+  font-weight: 430;
+}
+
+h3 {
+  margin: 0 0 8px;
+  font-size: 20px;
+  line-height: 1.35;
+  letter-spacing: -0.45px;
+  font-weight: 520;
+}
+
+p {
+  margin: 0;
+}
+
+.body-copy {
+  color: #1f2937;
+  font-size: 16px;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.025);
+}
+
+.card p,
+.card li {
+  color: #1f2937;
+  font-size: 15px;
+}
+
+.plain-list,
+.check-list {
+  display: grid;
+  gap: 10px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.plain-list li,
+.check-list li {
+  padding-left: 18px;
+  position: relative;
+}
+
+.plain-list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: .72em;
+  width: 6px;
+  height: 1px;
+  background: #000;
+}
+
+.check-list li::before {
+  content: "〇";
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: var(--green);
+  font-weight: 540;
+}
+
+.steps {
+  display: grid;
+  gap: 12px;
+  counter-reset: step;
+}
+
+.step {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 16px;
+  align-items: start;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.step::before {
+  counter-increment: step;
+  content: counter(step, decimal-leading-zero);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border: 1px solid #000;
+  border-radius: 50%;
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: .4px;
+}
+
+.visual-guide {
+  display: grid;
+  grid-template-columns: 1.1fr .9fr;
+  gap: 18px;
+  align-items: stretch;
+}
+
+.callout {
+  border: 1px dashed #000;
+  border-radius: 8px;
+  padding: 18px;
+  background: #fff;
+}
+
+.callout strong {
+  font-weight: 540;
+}
+
+.save-diagram {
+  display: grid;
+  grid-template-columns: 1fr 72px 1fr 72px 1fr;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 18px;
+}
+
+.diagram-node {
+  min-height: 150px;
+  display: grid;
+  align-content: center;
+  gap: 8px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.diagram-node.dark {
+  background: #000;
+  color: #fff;
+  border-color: #000;
+}
+
+.diagram-node .node-label {
+  font-family: var(--mono);
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: .7px;
+  text-transform: uppercase;
+}
+
+.diagram-node.dark .node-label {
+  color: rgba(255,255,255,.66);
+}
+
+.diagram-node strong {
+  display: block;
+  font-size: 20px;
+  line-height: 1.3;
+  font-weight: 520;
+  letter-spacing: -0.35px;
+}
+
+.diagram-node p {
+  color: #4b5563;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.diagram-node.dark p {
+  color: rgba(255,255,255,.72);
+}
+
+.diagram-arrow {
+  position: relative;
+  height: 1px;
+  background: #000;
+}
+
+.diagram-arrow::after {
+  content: "";
+  position: absolute;
+  right: -1px;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-top: 1px solid #000;
+  border-right: 1px solid #000;
+  transform: translateY(-50%) rotate(45deg);
+  background: #fff;
+}
+
+.diagram-arrow span {
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  transform: translateX(-50%);
+  padding: 2px 6px;
+  background: #fff;
+  font-family: var(--mono);
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: .5px;
+  white-space: nowrap;
+}
+
+.csv-mock {
+  display: grid;
+  gap: 18px;
+}
+
+.csv-drop {
+  min-height: 250px;
+  padding: 24px;
+  border: 1px solid #d4d4d4;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--muted);
+  font-size: 16px;
+  font-weight: 520;
+}
+
+.csv-actions {
+  display: grid;
+  grid-template-columns: 1.2fr .74fr .86fr;
+  gap: 10px;
+}
+
+.csv-button {
+  min-height: 54px;
+  padding: 12px 18px;
+  border: 0;
+  border-radius: 50px;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 540;
+  text-align: center;
+}
+
+.csv-button.gray {
+  background: #6b7280;
+}
+
+.csv-button.black {
+  background: #000;
+}
+
+.csv-button.green {
+  background: #9fbba6;
+}
+
+.flow-note {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.reference-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.op-card {
+  display: grid;
+  gap: 10px;
+  min-height: 220px;
+}
+
+.op-pair {
+  display: grid;
+  gap: 7px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.op-pair b {
+  font-weight: 540;
+}
+
+.tag-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 4px 10px;
+  border: 1px solid #d4d4d4;
+  border-radius: 50px;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 480;
+}
+
+.tag.black {
+  background: #000;
+  color: #fff;
+  border-color: #000;
+}
+
+.status-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.status-table th,
+.status-table td {
+  padding: 12px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+  font-size: 14px;
+}
+
+.status-table th {
+  font-family: var(--mono);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+  background: #fafafa;
+}
+
+.status-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.feedback-form {
+  display: grid;
+  gap: 14px;
+}
+
+.feedback-options {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.feedback-options label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 8px 13px;
+  border: 1px solid #d4d4d4;
+  border-radius: 50px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 480;
+  cursor: pointer;
+}
+
+.feedback-options input {
+  accent-color: #000;
+}
+
+.feedback-field {
+  display: grid;
+  gap: 6px;
+}
+
+.feedback-field label {
+  font-family: var(--mono);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+}
+
+.feedback-input,
+.feedback-textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: #000;
+  font-size: 15px;
+  font-weight: 360;
+}
+
+.feedback-input {
+  min-height: 42px;
+  padding: 10px 12px;
+}
+
+.feedback-textarea {
+  min-height: 190px;
+  padding: 12px;
+  resize: vertical;
+}
+
+.feedback-status {
+  min-height: 22px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.feedback-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.feedback-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.feedback-item {
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.feedback-item-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .55px;
+  text-transform: uppercase;
+}
+
+.feedback-item strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 15px;
+  font-weight: 540;
+}
+
+.feedback-item p {
+  color: #1f2937;
+  font-size: 14px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.trouble {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.footer {
+  padding: 36px 0 44px;
+  background: #000;
+  color: #fff;
+}
+
+.footer-inner {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.footer .pill-link {
+  border-color: rgba(255,255,255,.28);
+}
+
+.small {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.footer .small {
+  color: rgba(255,255,255,.7);
+}
+
+@media (max-width: 960px) {
+  .topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .nav {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .section-head,
+  .visual-guide {
+    grid-template-columns: 1fr;
+  }
+
+  .hero {
+    min-height: auto;
+    padding-top: 38px;
+  }
+
+  .hero-panel {
+    min-height: 520px;
+  }
+
+  .grid-3,
+  .trouble {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .wrap {
+    width: min(100% - 22px, 1120px);
+  }
+
+  section {
+    padding: 54px 0;
+  }
+
+  .hero h1 {
+    letter-spacing: -1.6px;
+  }
+
+  .hero {
+    min-height: calc(100vh - 150px);
+    align-items: flex-start;
+    padding-top: 40px;
+  }
+
+  .hero::before {
+    background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(255,255,255,.88) 44%, rgba(255,255,255,.32)), url("../help/assets/hero-abstract-ledger.png") center bottom / cover no-repeat;
+  }
+
+  .csv-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .save-diagram {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .diagram-node {
+    min-height: 0;
+  }
+
+  .diagram-arrow {
+    width: 150px;
+    height: 34px;
+    margin: 0 auto;
+    background: transparent;
+  }
+
+  .diagram-arrow::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: #000;
+    transform: translateX(-50%);
+  }
+
+  .diagram-arrow::after {
+    right: 50%;
+    top: auto;
+    bottom: -1px;
+    transform: translateX(50%) rotate(135deg);
+  }
+
+  .diagram-arrow span {
+    left: 50%;
+    bottom: 9px;
+    transform: translateX(calc(-50% + 44px));
+  }
+
+  .hero-panel {
+    min-height: 0;
+  }
+
+  .panel-body,
+  .grid-2,
+  .reference-grid,
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mock-detail {
+    display: none;
+  }
+
+  .mock-list {
+    border-right: 0;
+  }
+
+  .step {
+    grid-template-columns: 1fr;
+  }
+
+  .card {
+    padding: 17px;
+  }
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">予約チェック管理</div>
+  <nav class="nav" aria-label="ページ内メニュー">
+    <a class="pill-link" href="#daily">毎日の使い方</a>
+    <a class="pill-link" href="#screen">画面の見方</a>
+    <a class="pill-link" href="#contacts">連絡のタイミング</a>
+    <a class="pill-link" href="#operations">よく使う操作</a>
+    <a class="pill-link" href="#sms">SMS配信</a>
+    <a class="pill-link" href="#start">最初の準備</a>
+    <a class="pill-link" href="#saving">保存とバックアップ</a>
+    <a class="pill-link" href="#feedback">ご意見</a>
+  </nav>
+</header>
+
+<main>
+  <div class="wrap">
+    <section class="hero" id="top">
+      <div class="hero-content">
+        <div class="eyebrow">Staff Guide / Golf Competition Booking</div>
+        <h1><span>予約チェック管理</span><span>かんたん使い方</span></h1>
+        <p class="lead">コンペ予約のフォロー連絡を、やり漏れなく進めるためのアプリです。</p>
+        <div class="hero-actions">
+          <a class="button" href="../" target="_blank" rel="noopener">アプリを開く</a>
+          <a class="ghost-button" href="#daily">毎日の使い方を見る</a>
+        </div>
+        <p class="hero-note">Chrome または Edge で開いてください。編集はすべて自動で保存されます。</p>
+      </div>
+    </section>
+  </div>
+
+  <section id="overview">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-label">3 Steps</div>
+        <div>
+          <h2>まずは、これだけ</h2>
+          <p class="body-copy">毎日の作業は、大きく3つだけ。細かい操作は、後のページでゆっくり覚えれば大丈夫です。</p>
+        </div>
+      </div>
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-label">Step 1</div>
+          <h3>① 取り込む</h3>
+          <p>その日の「予約受付一覧」を枠にドラッグ。新しい予約が台帳に入ります。</p>
+          <div class="csv-drop" style="min-height:96px;padding:16px;font-size:14px;display:grid;place-items:center;text-align:center;margin-top:12px;">予約受付一覧を<br>ここにドラッグ</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Step 2</div>
+          <h3>② 連絡する</h3>
+          <p>「今日やること」に出た予約へ連絡し、結果を付けます。</p>
+          <div class="tag-row" style="margin-top:14px;"><span class="mini-pill green">〇 連絡済</span><span class="mini-pill orange">不在</span><span class="mini-pill gray">不要</span></div>
+        </div>
+        <div class="card">
+          <div class="card-label">Step 3</div>
+          <h3>③ 整理する</h3>
+          <p>終わったら「⟳ 更新（整理）」。済んだ予約が一覧から消えて、すっきりします。</p>
+          <div class="tag-row" style="margin-top:14px;"><span class="tag black">⟳ 更新（整理）</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="daily">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-label">Daily Operation</div>
+        <div>
+          <h2>毎日の使い方</h2>
+          <p class="body-copy">毎日の流れは「取り込む → 連絡する → 整理する」の3つだけです。</p>
+        </div>
+      </div>
+      <div class="visual-guide">
+        <div class="card csv-mock">
+          <div>
+            <h3>① 取り込む</h3>
+            <p class="flow-note">予約システムから出した「予約受付一覧」を、枠の中へドラッグ（またはコピー貼り付け）。自動で中身を読み取り、「○件・新規○件」と表示されます。確認して「台帳へ登録」を押すだけです。</p>
+          </div>
+          <div class="csv-drop">予約受付一覧をここにドラッグ</div>
+          <div class="csv-actions">
+            <div class="csv-button green">台帳へ登録</div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>② 連絡する　③ 整理する</h3>
+          <ul class="plain-list">
+            <li>上の「今日やること」を開くと、今日連絡する予約だけが並びます。</li>
+            <li>連絡したら、その予約に <b>〇</b>（連絡済）／<b>不在</b>／<b>不要</b> を付けます。</li>
+            <li>付けてもすぐには消えません。確認しながら進められます。</li>
+            <li>ひと区切りついたら <b>⟳ 更新（整理）</b> を押すと、済んだ予約が一覧から外れます。</li>
+          </ul>
+          <div class="contact-box" style="margin-top:16px;">
+            <div class="edit-row"><span>連絡の結果</span><span class="state-buttons"><span class="mini-pill green">〇</span><span class="mini-pill orange">不在</span><span class="mini-pill gray">不要</span></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="contacts">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-label">Contact 01-04</div>
+        <div>
+          <h2>連絡のタイミング（コンタクト①〜④）</h2>
+          <p class="body-copy">1件の予約に対して、4回の連絡タイミングがあります。アプリでは「コンタクト①〜④」と呼びます。</p>
+          <div class="tag-row"><span class="tag">① 受付の翌日</span><span class="tag">② 60日前</span><span class="tag">③ 35日前</span><span class="tag">④ 18日前</span></div>
+          <p class="flow-note">※ 日数は設定で事業所ごとに変えられます。変えると画面の表示も自動で合わせて変わります。</p>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>状態の意味</h3>
+          <table class="status-table">
+            <tr><th>表示</th><th>意味</th></tr>
+            <tr><td><span class="tag">〇</span></td><td>連絡済です。</td></tr>
+            <tr><td><span class="tag">不在</span></td><td>つながらず、繰越します。</td></tr>
+            <tr><td><span class="tag">不要</span></td><td>その回の連絡は不要です。</td></tr>
+            <tr><td><span class="tag">空</span></td><td>まだ未対応です。</td></tr>
+          </table>
+        </div>
+        <div class="card">
+          <h3>ほかに記録すること</h3>
+          <ul class="plain-list">
+            <li>組数確定は、〇 or キャンセルで記録します。</li>
+            <li>組合せ入力は、済/未で記録します。</li>
+            <li>組合せ入力が済むと追跡終了です。</li>
+          </ul>
+          <div class="tag-row">
+            <span class="status need">要対応</span>
+            <span class="status carry">繰越</span>
+            <span class="status done">完了</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="screen">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-label">Screen</div>
+        <div>
+          <h2>画面の見方</h2>
+          <p class="body-copy">画面は3つに分かれています。上＝切り替え、左＝予約の一覧、右＝選んだ予約の詳細です。</p>
+        </div>
+      </div>
+      <div class="visual-guide">
+        <div class="card">
+          <div class="hero-panel" style="min-height: 430px; box-shadow: none;">
+            <div class="appbar-mock">
+              <span class="appbar-title">予約チェック管理</span>
+              <span class="seg"><span class="on">今日やること</span><span>全件</span></span>
+            </div>
+            <div class="panel-body">
+              <div class="mock-list">
+                <div class="mock-toolbar"><span>並び：</span><span class="tag black">プレー日順</span><span class="tag">受付日順</span></div>
+                <div class="mock-card active"><strong>氏名</strong><small>日付・曜日 / コース・時間・組数</small><span class="status need">状態バッジ</span></div>
+                <div class="mock-card"><strong>カード</strong><small>予約ごとの要点だけを見る場所</small><span class="status soon">あと3日</span></div>
+              </div>
+              <div class="mock-detail">
+                <div class="detail-name">詳細パネル</div>
+                <div class="contact-box">
+                  <div class="edit-row"><span>コンタクト①</span><span class="state-buttons"><span class="mini-pill green">〇</span><span class="mini-pill orange">不在</span><span class="mini-pill gray">不要</span></span></div>
+                  <div class="edit-row"><span>組数確定</span><span class="state-buttons"><span class="mini-pill green">〇</span><span class="mini-pill gray">キャンセル</span></span></div>
+                  <div class="edit-row"><span>組合せ入力</span><span class="state-buttons"><span class="mini-pill green">済</span><span class="mini-pill gray">未</span></span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>見るところ</h3>
+          <ul class="plain-list">
+            <li><b>上の切り替え</b>：「今日やること」＝連絡が必要な予約だけ。「全件」＝すべての予約。</li>
+            <li><b>左の一覧</b>：予約が1件ずつカードで並びます。タップで右に詳細が出ます。</li>
+            <li><b>右の詳細</b>：その予約に連絡の結果を付ける場所です。</li>
+            <li>並び順は「プレー日順／受付日順」で切り替えられます。</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="operations">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-label">Operations</div>
+        <div>
+          <h2>よく使う操作</h2>
+          <p class="body-copy">「こんな時に使う」→「やり方」の順で書いています。必要になった時だけ見れば大丈夫です。</p>
+        </div>
+      </div>
+      <div class="reference-grid">
+        <div class="card op-card">
+          <h3>連絡の結果を付ける</h3>
+          <div class="op-pair"><p><b>こんな時：</b>幹事へ連絡したあと、結果を残したい時。</p><p><b>やり方：</b>予約に 〇／不在／不要 を選びます。すぐには消えず、「更新（整理）」を押すまで一覧に残ります。</p></div>
+        </div>
+        <div class="card op-card">
+          <h3>名前でさがす</h3>
+          <div class="op-pair"><p><b>こんな時：</b>特定の予約をすぐ見つけたい時。</p><p><b>やり方：</b>上の検索ボックスに名前を入れると、その予約に移動します。</p></div>
+        </div>
+        <div class="card op-card">
+          <h3>連絡タイミングで絞り込む</h3>
+          <div class="op-pair"><p><b>こんな時：</b>「受付の翌日ぶんだけ」「35日前ぶんだけ」など、同じ回をまとめて連絡したい時。</p><p><b>やり方：</b>「全部／受付翌日／60日前／35日前／18日前」から選ぶと、その回の予約だけが並びます。</p></div>
+        </div>
+        <div class="card op-card">
+          <h3>急ぎかどうかを見分ける</h3>
+          <div class="op-pair"><p><b>こんな時：</b>すぐ連絡すべきか、後でよいかを知りたい時。</p><p><b>やり方：</b>予約に付く色つきの札（バッジ）で分かります。</p></div>
+          <div class="tag-row"><span class="status late">遅延2日</span><span class="status need">本日</span><span class="status soon">あと3日</span><span class="status carry">繰越</span></div>
+        </div>
+        <div class="card op-card">
+          <h3>不在のとき、次に電話する日を決める</h3>
+          <div class="op-pair"><p><b>こんな時：</b>つながらなかった予約を、指定した日にまた出したい時。</p><p><b>やり方：</b>不在の予約に「次に電話する日」を設定します。その日まで一覧から外れ、当日にまた出てきます。</p></div>
+        </div>
+        <div class="card op-card">
+          <h3>④まで一気に飛ばす</h3>
+          <div class="op-pair"><p><b>こんな時：</b>メンバーや定例コンペなど、前半の連絡がいらない時。</p><p><b>やり方：</b>①〜③をまとめて「不要」にして、④だけ残します。</p></div>
+        </div>
+        <div class="card op-card">
+          <h3>元に戻す</h3>
+          <div class="op-pair"><p><b>こんな時：</b>直前に付けた結果を取り消したい時。</p><p><b>やり方：</b>「元に戻す」を押すと、1つずつ取り消せます（「更新（整理）」を押すまで有効）。</p></div>
+        </div>
+        <div class="card op-card">
+          <h3>⟳ 更新（整理）</h3>
+          <div class="op-pair"><p><b>こんな時：</b>済んだ予約を今日の一覧から外したい時。</p><p><b>やり方：</b>「⟳ 更新（整理）」を押すと、済んだ予約が「今日やること」から外れます。</p></div>
+        </div>
+        <div class="card op-card">
+          <h3>Excelで控えを出す</h3>
+          <div class="op-pair"><p><b>こんな時：</b>今の台帳をExcelの控えとして残したい時。</p><p><b>やり方：</b>「Excel書き出し」を押すと、Excelファイルで保存できます。あとで取り込み直すこともできます。</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="settings">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-label">Settings</div>
+        <div>
+          <h2>設定</h2>
+          <p class="body-copy">ふだんは触りません。事業所ごとのルール決めや、最初の準備のときだけ開きます。</p>
+        </div>
+      </div>
+      <div class="grid-3">
+        <div class="card">
+          <h3>この端末の記録名</h3>
+          <p>最初の1回だけ「どのPCか」を聞かれます（例：フロント／事務所）。誰が更新したか分かるように、更新履歴に残ります。</p>
+          <ul class="plain-list">
+            <li>このPCだけに保存され、次からは聞かれません。</li>
+            <li>共有PCは、個人名より「フロント」などの場所名がおすすめです。</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>コンタクトの日数</h3>
+          <p>①〜④の連絡タイミング（日数）を、事業所ごとに変えられます。変えると画面の表示も自動で合います。</p>
+          <div class="tag-row"><span class="tag">①受付翌日</span><span class="tag">②60日前</span><span class="tag">③35日前</span><span class="tag">④18日前</span></div>
+        </div>
+        <div class="card">
+          <h3>表示の調整</h3>
+          <ul class="plain-list">
+            <li>「今日やること」に出すコンタクト①〜④を、それぞれ表示する／しないで選べます。</li>
+            <li>組数が確定したら自動で一覧から外す、なども選べます。</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="sms">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-label">SMS List</div>
+        <div>
+          <h2>SMSの配信リストを作る</h2>
+          <p class="body-copy">台帳から「この人たちに送りたい」を絞り込んで、SMS配信サービス（SMSLINK）に取り込める名簿を書き出します。たとえば「外部予約サイト経由の幹事さんに、次回は公式予約をご案内」といった使い方ができます。</p>
+        </div>
+      </div>
+      <div class="grid-3">
+        <div class="card">
+          <h3>① 送る相手を絞る</h3>
+          <ul class="plain-list">
+            <li>予約の経路（外部予約サイト／自社予約・電話）で選びます。</li>
+            <li>プレー日の期間、キャンセル除外、未来の予約の除外。</li>
+            <li>「○回以上来た幹事だけ」など、回数でも絞れます。</li>
+            <li>海外のお客様を外す設定もできます。</li>
+            <li>携帯番号（070/080/090）がある人だけが対象です。</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>② 名簿に入る項目</h3>
+          <p>Excelで開ける名簿ファイルとして書き出します。</p>
+          <div class="tag-row"><span class="tag">携帯番号</span><span class="tag">氏名</span><span class="tag">姓</span><span class="tag">最終プレー日</span><span class="tag">コース</span><span class="tag">経路</span><span class="tag">予約回数</span></div>
+        </div>
+        <div class="card">
+          <h3>③ 書き出す手順</h3>
+          <ul class="plain-list">
+            <li>上の「SMS配信リスト」を開く。</li>
+            <li>条件を選び「件数を確認」で何人になるか見る。</li>
+            <li>「SMSLINK用に書き出し」で保存。</li>
+          </ul>
+        </div>
+      </div>
+      <div class="grid-2" style="margin-top: 14px;">
+        <div class="card">
+          <h3>「○○様」と名前を入れて送る</h3>
+          <ul class="plain-list">
+            <li>SMSLINKに名簿をアップロードし、「携帯番号」の列を選びます。</li>
+            <li>本文を作るとき「姓」を選ぶと、一人ひとりの名前が自動で入ります。</li>
+            <li>例：「中村様 いつもご利用ありがとうございます…」のように届きます。</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>同じ人は1件にまとめます</h3>
+          <ul class="plain-list">
+            <li>同じ携帯番号は1件にまとめ、いちばん新しいプレー日を使います。</li>
+            <li>まとめた回数は「予約回数」に入るので、常連の幹事さんが分かります。</li>
+          </ul>
+        </div>
+      </div>
+      <div class="trouble" style="margin-top: 14px;">
+        <div class="callout"><strong>送る前に確認を</strong><br>これらの連絡先は、予約・お客様対応のためにお預かりしたものです。販促のSMSに使うときは、目的やお客様の同意の範囲を確認してから配信してください。</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="start">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-label">Start</div>
+        <div>
+          <h2>最初の準備（1回だけ）</h2>
+          <p class="body-copy">使い始めるときに、1回だけ行う作業です。今まで使っていたExcel台帳を、そのままアプリに取り込めます。一度終われば、あとは毎日の使い方だけでOKです。</p>
+        </div>
+      </div>
+      <div class="callout" style="margin-bottom: 14px;"><strong>用意するもの</strong><br>今まで使っていたExcel台帳のファイル（1つ）。これを取り込むと、予約がすべてアプリに入ります。</div>
+      <div class="steps">
+        <div class="step">
+          <div>
+            <div class="step-kicker">Initial 01</div>
+            <h3>アプリを開く</h3>
+            <p>Chrome または Edge で「アプリを開く」を押します。</p>
+          </div>
+        </div>
+        <div class="step">
+          <div>
+            <div class="step-kicker">Initial 02</div>
+            <h3>台帳ファイルの置き場所を作る</h3>
+            <p>「設定」→「① 新規台帳作成」で、共有フォルダの中に保存先のファイルを1つ作ります。</p>
+          </div>
+        </div>
+        <div class="step">
+          <div>
+            <div class="step-kicker">Initial 03</div>
+            <h3>Excelを取り込む</h3>
+            <p>「② 既存台帳移行取り込み」で、今までのExcel台帳を選びます。中身が表示されるので確認します。</p>
+          </div>
+        </div>
+        <div class="step">
+          <div>
+            <div class="step-kicker">Initial 04</div>
+            <h3>取り込みを実行する</h3>
+            <p>「台帳へ移行」を押すと、予約がすべてアプリに入ります。「← 一覧へ戻る」で予約が並んでいれば成功です。</p>
+          </div>
+        </div>
+        <div class="step">
+          <div>
+            <div class="step-kicker">Initial 05</div>
+            <h3>準備完了</h3>
+            <p>画面の上に作ったファイル名が出ていれば準備完了です。あとの編集は自動で保存されます。<br>※ 次の日からは、「権限再付与」ボタンが出たら1回押すだけ。出ない時は同じ台帳ファイルを選び直します。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="saving">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-label">Files & Save</div>
+        <div>
+          <h2>保存とバックアップ</h2>
+          <p class="body-copy">お客様の情報は、インターネット上には保存されません。事業所の共有フォルダにある「台帳ファイル」に、その場で直接保存されます。</p>
+        </div>
+      </div>
+      <div class="save-diagram" aria-label="データ保存の流れ">
+        <div class="diagram-node">
+          <div class="node-label">App</div>
+          <strong>アプリ画面</strong>
+          <p>画面を映すだけ。ここにはデータを残しません。</p>
+        </div>
+        <div class="diagram-arrow"><span>表示</span></div>
+        <div class="diagram-node dark">
+          <div class="node-label">Browser</div>
+          <strong>Chrome / Edge</strong>
+          <p>選んだ台帳ファイルを開いて、編集をその場で書き込みます。</p>
+        </div>
+        <div class="diagram-arrow"><span>保存</span></div>
+        <div class="diagram-node">
+          <div class="node-label">File</div>
+          <strong>台帳ファイル</strong>
+          <p>共有フォルダの中にある、本物のデータ。これが正本です。</p>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>毎日の始め方・困ったとき</h3>
+          <ul class="plain-list">
+            <li>朝アプリを開いて「台帳ファイルを選んでください」と出たら、中央のボタンから共有フォルダの台帳ファイルを選びます（前回のファイル名が出ます）。</li>
+            <li>「権限再付与」ボタンが出たら、1回押すだけで前回の台帳につながります。</li>
+            <li>PCによっては毎朝選び直しが必要なことがあります（故障ではありません。データは消えていません）。</li>
+            <li>みんなで同じ共有フォルダの台帳を使えます。上のファイル名で、正しい台帳につながっているか確認しましょう。</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>「未接続」と出たら</h3>
+          <p>台帳ファイルにまだつながっていない、という意味です。あわてず、中央のボタンから共有フォルダの台帳ファイルを選び直してください。それだけでつながります。</p>
+          <div class="contact-box" style="margin-top:14px;">
+            <div class="edit-row"><span>状態の例</span><span class="state-buttons"><span class="mini-pill gray">未接続</span><span class="mini-pill orange">権限再付与</span><span class="mini-pill green">保存済み</span></span></div>
+          </div>
+        </div>
+      </div>
+      <div class="grid-2" style="margin-top: 14px;">
+        <div class="card">
+          <h3>自動バックアップ（最初に1回だけ設定）</h3>
+          <p>設定しておくと、保存のたびに日付つきの控えが共有フォルダへ自動で残ります。万一データが消えても、ここから戻せます。</p>
+          <ul class="plain-list">
+            <li>「設定」→「自動バックアップ」→「フォルダを選ぶ」を押します。</li>
+            <li>台帳と同じ共有フォルダを選び、「許可」します。</li>
+            <li>あとは自動。日付つきの控えが1日1本ずつ、直近2週間分残ります。</li>
+            <li>「今すぐバックアップ」を押せば、その場でも控えを作れます。</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>もしデータが消えたら</h3>
+          <ul class="plain-list">
+            <li>自動バックアップを設定していれば、共有フォルダの日付つきの控えから戻せます（操作が不安なときは管理担当へ連絡を）。</li>
+            <li>控えが無くても、Excel台帳から取り込み直せば元に戻せます。</li>
+            <li>ふだんから「Excelで控えを出す」も併用すると安心です。</li>
+          </ul>
+        </div>
+      </div>
+      <div class="trouble" style="margin-top: 14px;">
+        <div class="callout"><strong>ネットに預けていません</strong><br>お客様の氏名・電話番号などは、インターネット上のサーバーには保存しません。共有フォルダの台帳ファイルだけにあります。</div>
+        <div class="callout"><strong>控えは2種類</strong><br>「自動バックアップ」で日付つきの控えが自動で残ります。さらに「Excelで控えを出す」でExcelの控えも作れます。</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="feedback">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-label">Feedback</div>
+        <div>
+          <h2>気づいたことを送る</h2>
+          <p class="body-copy">使ってみて「こうだったらいいな」「これがうまくいかない」があれば、かんたんに送れます。入力して「メールを作成」を押すと、宛先と本文が入ったメール画面が開きます。</p>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>報告内容を入力</h3>
+          <form class="feedback-form" onsubmit="return false;">
+            <div class="feedback-options" aria-label="種別">
+              <label><input type="radio" name="feedbackType" value="要望" checked> 要望</label>
+              <label><input type="radio" name="feedbackType" value="不具合"> 不具合</label>
+              <label><input type="radio" name="feedbackType" value="質問"> 質問</label>
+            </div>
+            <div class="feedback-field">
+              <label for="feedbackScreen">画面・操作</label>
+              <input class="feedback-input" id="feedbackScreen" type="text" placeholder="例）日次CSV取込、今日やること、Excel書き出し">
+            </div>
+            <div class="feedback-field">
+              <label for="feedbackBody">内容</label>
+              <textarea class="feedback-textarea" id="feedbackBody" placeholder="例）どの操作をした時に、何が起きたか。こうなると助かる、という要望でもOKです。"></textarea>
+            </div>
+            <div class="feedback-actions">
+              <button class="button" type="button" onclick="createFeedbackEmail()">メールを作成</button>
+              <button class="ghost-button" type="button" onclick="copyFeedback()">内容をコピー</button>
+            </div>
+            <div class="feedback-status" id="feedbackStatus" role="status"></div>
+          </form>
+        </div>
+        <div class="card">
+          <h3>送信先</h3>
+          <p class="small">宛先：keiji.nakahata@accordiagolf.com</p>
+          <ul class="plain-list" style="margin-top: 14px;">
+            <li>どの画面で起きたか。</li>
+            <li>どのボタンや操作をしたか。</li>
+            <li>期待していた動きと、実際の動き。</li>
+            <li>急ぎかどうか。</li>
+            <li>不具合の場合は、分かれば予約者名や日付も添えます。</li>
+          </ul>
+          <div class="callout" style="margin-top: 14px;"><strong>送信前に確認</strong><br>「メールを作成」を押すだけでは送信されません。開いたメール画面で内容を確認してから送信してください。</div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="wrap footer-inner">
+    <div>
+      <div class="brand">予約チェック管理 使い方ガイド</div>
+      <div class="small">スタッフ向け・ゴルフコンペ予約フォロー連絡の管理ガイド</div>
+    </div>
+    <div class="hero-actions" style="margin: 0;">
+      <a class="pill-link" href="../" target="_blank" rel="noopener">アプリを開く</a>
+      <a class="pill-link" href="https://github.com/nkhtnkht-ops/yoyaku-check" target="_blank" rel="noopener">リポジトリ</a>
+    </div>
+  </div>
+</footer>
+<script>
+function getFeedbackPayload(){
+  const type = document.querySelector('input[name="feedbackType"]:checked')?.value || '要望';
+  const screen = document.getElementById('feedbackScreen')?.value.trim() || '未記入';
+  const body = document.getElementById('feedbackBody')?.value.trim() || '未記入';
+  return { type, screen, body };
+}
+
+function formatFeedbackText(item){
+  return `【予約チェック管理 フィードバック】\n種別：${item.type}\n画面・操作：${item.screen}\n内容：\n${item.body}`;
+}
+
+function createFeedbackEmail(){
+  const payload = getFeedbackPayload();
+  const status = document.getElementById('feedbackStatus');
+  if (payload.body === '未記入') {
+    status.textContent = '内容を入力してからメールを作成してください。';
+    return;
+  }
+  const to = 'keiji.nakahata@accordiagolf.com';
+  const subject = `予約チェック管理フィードバック（${payload.type}）`;
+  const body = formatFeedbackText(payload);
+  window.location.href = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  status.textContent = 'メール作成画面を開きました。内容を確認して送信してください。';
+}
+
+function copyFeedback(){
+  const text = formatFeedbackText(getFeedbackPayload());
+  const status = document.getElementById('feedbackStatus');
+  navigator.clipboard.writeText(text).then(() => {
+    status.textContent = 'コピーしました。担当者への連絡に貼り付けて共有してください。';
+  }).catch(() => {
+    status.textContent = 'コピーできませんでした。入力内容を選択してコピーしてください。';
+  });
+}
+</script>
+</body>
+</html>
