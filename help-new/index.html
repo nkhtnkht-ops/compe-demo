@@ -364,6 +364,65 @@ a {
   text-transform: uppercase;
 }
 
+.regnum {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 3;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #d1453b;
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,.28);
+}
+
+.regnum.inbar {
+  position: static;
+  width: 22px;
+  height: 22px;
+  font-size: 12px;
+  box-shadow: none;
+  margin-left: 8px;
+}
+
+.numlist {
+  display: grid;
+  gap: 12px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.numlist li {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  color: #1f2937;
+  font-size: 15px;
+}
+
+.numlist .n {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #d1453b;
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .detail-name {
   padding-bottom: 13px;
   border-bottom: 1px solid var(--line);
@@ -1508,18 +1567,40 @@ p {
             <h3>一覧にもどって、今日連絡する予約を見る</h3>
             <p class="wnote"><b>← 一覧へ戻る</b> を押すと、「今日やること」に今日連絡する予約が並びます。左の予約を1件押すと、右に詳細が出ます。</p>
             <div class="shot">
-              <div class="shot-bar">
-                <span class="shot-ttl">予約チェック管理</span>
-                <span class="rseg"><span class="on">今日やること</span><span>全件</span></span>
-                <span class="rbtn white target">← 一覧へ戻る<span class="tnum">5</span></span>
-              </div>
-              <div class="shot-split">
-                <div class="col-l">
-                  <div class="rcard sel"><div class="rn">山田 太郎</div><div class="rm">6/12(木) ／ 西コース 8:30 ・3組</div><span class="status need" style="margin-top:8px;">本日</span></div>
-                  <div class="rcard"><div class="rn">鈴木 一郎</div><div class="rm">6/14(土) ／ 東コース 9:00 ・4組</div><span class="status soon" style="margin-top:8px;">あと3日</span></div>
+              <div class="hero-panel" style="min-height: 430px; box-shadow: none; border: 0; border-radius: 0;">
+                <div class="appbar-mock">
+                  <span class="appbar-title">予約チェック管理</span>
+                  <span class="seg"><span class="on">今日やること</span><span>全件</span></span>
+                  <span class="rbtn white target" style="margin-left:8px;">← 一覧へ戻る<span class="tnum">5</span></span>
                 </div>
-                <div class="col-r">
-                  <div style="font-size:12px;color:#6b7280;">右に出る詳細で、連絡の結果を付けます ↓</div>
+                <div class="panel-body">
+                  <div class="mock-list">
+                    <div class="mock-toolbar"><span>並び：</span><span class="tag black">プレー日順</span><span class="tag">受付日順</span></div>
+                    <div class="mock-card active"><strong>山田 太郎</strong><small>6/12(木) ／ 西コース 8:30 ・3組</small><span class="status need">本日</span></div>
+                    <div class="mock-card"><strong>鈴木 一郎</strong><small>6/14(土) ／ 東コース 9:00 ・4組</small><span class="status soon">あと3日</span></div>
+                  </div>
+                  <div class="mock-detail">
+                    <div class="detail-name">山田 太郎</div>
+                    <div class="detail-grid">
+                      <div class="field"><div class="key">プレー日</div><div class="val">2026-06-12 （木）</div></div>
+                      <div class="field"><div class="key">組数 / 人数</div><div class="val">3 組 / 12 人</div></div>
+                      <div class="field"><div class="key">コース名</div><div class="val">西コース</div></div>
+                      <div class="field"><div class="key">スタート時間</div><div class="val">08:30</div></div>
+                      <div class="field"><div class="key">携帯電話番号</div><div class="val">090-1234-5678</div></div>
+                      <div class="field"><div class="key">いまの対応状況</div><div class="val" style="color:#b35900;font-weight:600;">要対応：①受付の翌日</div></div>
+                    </div>
+                    <div class="mock-sec">確定・キャンセル・組合せ</div>
+                    <div class="contact-box">
+                      <div class="edit-row"><span>組数確定／キャンセル</span><span class="state-buttons"><span class="mini-pill gray">未</span><span class="mini-pill green">確定〇</span><span class="mini-pill gray">キャンセル</span></span></div>
+                      <div class="edit-row"><span>組合せ入力</span><span class="state-buttons"><span class="mini-pill gray">未</span><span class="mini-pill green">入力済</span></span></div>
+                    </div>
+                    <div class="mock-sec">フォロー状況（①〜④）</div>
+                    <div class="contact-box">
+                      <div class="edit-row"><span>① 受付の翌日</span><span class="state-buttons"><span class="mini-pill green">〇</span><span class="mini-pill orange">不在</span><span class="mini-pill gray">不要</span></span></div>
+                      <div class="edit-row"><span>③ 35日前</span><span class="state-buttons"><span class="mini-pill green">〇</span><span class="mini-pill orange">不在</span><span class="mini-pill gray">不要</span></span></div>
+                    </div>
+                    <div class="field" style="margin-top:16px;"><div class="key">メモ（連絡内容・申し送り）</div><div class="val" style="min-height:52px;">6/3 田中様へ連絡、3組で確定見込み。次回6/15に再確認。</div></div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1570,20 +1651,22 @@ p {
           <p class="body-copy">画面は3つに分かれています。上＝切り替え、左＝予約の一覧、右＝選んだ予約の詳細です。</p>
         </div>
       </div>
-      <div class="visual-guide">
-        <div class="card">
-          <div class="hero-panel" style="min-height: 430px; box-shadow: none;">
+      <div class="card" style="padding: 0; overflow: hidden;">
+          <div class="hero-panel" style="min-height: 430px; box-shadow: none; border: 0; border-radius: 0;">
             <div class="appbar-mock">
               <span class="appbar-title">予約チェック管理</span>
               <span class="seg"><span class="on">今日やること</span><span>全件</span></span>
+              <span class="regnum inbar">1</span>
             </div>
             <div class="panel-body">
-              <div class="mock-list">
+              <div class="mock-list" style="position: relative;">
+                <span class="regnum">2</span>
                 <div class="mock-toolbar"><span>並び：</span><span class="tag black">プレー日順</span><span class="tag">受付日順</span></div>
                 <div class="mock-card active"><strong>山田 太郎</strong><small>6/12(木) ／ 西コース 8:30 ・3組</small><span class="status need">本日</span></div>
                 <div class="mock-card"><strong>鈴木 一郎</strong><small>6/14(土) ／ 東コース 9:00 ・4組</small><span class="status soon">あと3日</span></div>
               </div>
-              <div class="mock-detail">
+              <div class="mock-detail" style="position: relative;">
+                <span class="regnum">3</span>
                 <div class="detail-name">山田 太郎</div>
                 <div class="detail-grid">
                   <div class="field"><div class="key">プレー日</div><div class="val">2026-06-12 （木）</div></div>
@@ -1608,16 +1691,11 @@ p {
             </div>
           </div>
         </div>
-        <div class="card">
-          <h3>見るところ</h3>
-          <ul class="plain-list">
-            <li><b>上の切り替え</b>：「今日やること」＝連絡が必要な予約だけ。「全件」＝すべての予約。</li>
-            <li><b>左の一覧</b>：予約が1件ずつカードで並びます。タップで右に詳細が出ます。</li>
-            <li><b>右の詳細</b>：その予約に連絡の結果を付ける場所です。</li>
-            <li>並び順は「プレー日順／受付日順」で切り替えられます。</li>
-          </ul>
-        </div>
-      </div>
+        <ol class="numlist">
+          <li><span class="n">1</span><div><b>上の切り替え</b>：「今日やること」＝連絡が必要な予約だけ。「全件」＝すべての予約が見られます。</div></li>
+          <li><span class="n">2</span><div><b>左の一覧</b>：予約が1件ずつカードで並びます。押すと、右にその予約の詳細が出ます。並び順は「プレー日順／受付日順」で切り替えられます。</div></li>
+          <li><span class="n">3</span><div><b>右の詳細</b>：選んだ予約の中身を見て、連絡の結果（〇／不在／不要）や、組数確定・組合せ入力・メモを付ける場所です。</div></li>
+        </ol>
     </div>
   </section>
 
