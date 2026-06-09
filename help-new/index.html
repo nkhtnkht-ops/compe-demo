@@ -1070,6 +1070,93 @@ p {
     padding: 17px;
   }
 }
+
+/* ===== 注釈付き擬似スクショ（操作ガイド） ===== */
+.walk { display: grid; gap: 18px; counter-reset: wstep; }
+.wstep {
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  gap: 16px;
+  align-items: start;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(0,0,0,.025);
+}
+.wstep::before {
+  counter-increment: wstep;
+  content: counter(wstep);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: #d1453b; color: #fff;
+  font-family: var(--mono); font-size: 17px; font-weight: 600;
+}
+.wstep h3 { margin: 2px 0 4px; }
+.wstep .wnote { color: var(--muted); font-size: 14px; margin-bottom: 4px; }
+.shot {
+  margin-top: 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  overflow: hidden;
+  box-shadow: 0 6px 18px rgba(0,0,0,.06);
+}
+.shot-bar {
+  display: flex; align-items: center; gap: 7px; flex-wrap: wrap;
+  background: #000; color: #fff; padding: 10px 13px;
+}
+.shot-ttl { font-size: 14px; font-weight: 600; letter-spacing: -.3px; margin-right: 2px; }
+.rseg { display: inline-flex; gap: 2px; background: rgba(255,255,255,.16); border-radius: 50px; padding: 3px; }
+.rseg span { padding: 6px 12px; border-radius: 50px; font-size: 12px; font-weight: 500; color: rgba(255,255,255,.82); }
+.rseg .on { background: #fff; color: #000; }
+.rbtn {
+  display: inline-flex; align-items: center; gap: 5px;
+  border: 0; border-radius: 50px; font-size: 12px; font-weight: 500;
+  padding: 7px 12px; background: rgba(255,255,255,.16); color: #fff; white-space: nowrap;
+}
+.rbtn.white { background: #fff; color: #000; }
+.shot-body { padding: 18px; background: #fff; }
+.rdrop {
+  border: 2px dashed #c9c9c9; border-radius: 14px; background: #fafafa;
+  padding: 28px 18px; text-align: center;
+}
+.rdrop .rt { font-size: 15px; font-weight: 600; }
+.rdrop .rs { margin-top: 10px; color: var(--muted); font-size: 12px; display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; }
+.rbtn-blue { background: #000; color: #fff; border: 0; border-radius: 50px; padding: 8px 14px; font-size: 12px; font-weight: 500; display: inline-flex; }
+.rbtn-green { background: #13652b; color: #fff; border: 0; border-radius: 50px; padding: 11px 20px; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+.shot-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 14px; }
+.shot-msg { margin-top: 12px; color: #13652b; font-size: 13px; font-weight: 600; }
+.shot-split { display: grid; grid-template-columns: 1fr 1fr; }
+.shot-split .col-l { border-right: 1px solid var(--line); padding: 14px; }
+.shot-split .col-r { padding: 14px; }
+.rcard { border: 1px solid var(--line); border-radius: 9px; padding: 12px; }
+.rcard + .rcard { margin-top: 10px; }
+.rcard.sel { border-color: #000; background: #f4f4f5; }
+.rcard .rn { font-size: 15px; font-weight: 600; }
+.rcard .rm { color: #4b5563; font-size: 12px; margin-top: 2px; }
+.redit { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 9px 11px; border: 1px solid var(--line); border-radius: 8px; margin-top: 8px; font-size: 13px; }
+.rpill { display: inline-flex; align-items: center; min-height: 26px; padding: 5px 10px; border: 1px solid #d4d4d4; border-radius: 50px; background: #fff; font-size: 12px; font-weight: 500; margin-left: 4px; }
+.rpill.green { color: #1a7f37; border-color: #1a7f37; }
+.rpill.orange { color: var(--orange); border-color: var(--orange); }
+.rpill.gray { color: #6b7280; }
+.target { position: relative; box-shadow: 0 0 0 3px #d1453b, 0 0 0 6px rgba(209,69,59,.25); z-index: 1; }
+.tnum { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; margin-left: 5px; border-radius: 50%; background: #d1453b; color: #fff; font-size: 11px; font-weight: 700; font-family: var(--mono); }
+.cue {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: #d1453b; color: #fff; font-size: 12px; font-weight: 600;
+  padding: 5px 11px; border-radius: 8px; margin-left: 8px; white-space: nowrap;
+}
+.cue.below { margin: 12px 0 0; }
+@media (max-width: 720px) {
+  .wstep { grid-template-columns: 36px 1fr; gap: 12px; padding: 16px; }
+  .wstep::before { width: 30px; height: 30px; font-size: 14px; }
+  .shot-split { grid-template-columns: 1fr; }
+  .shot-split .col-l { border-right: 0; border-bottom: 1px solid var(--line); }
+}
 </style>
 </head>
 <body>
@@ -1141,32 +1228,116 @@ p {
         <div class="section-label">Daily Operation</div>
         <div>
           <h2>毎日の使い方</h2>
-          <p class="body-copy">毎日の流れは「取り込む → 連絡する → 整理する」の3つだけです。</p>
+          <p class="body-copy">画面の<span style="color:#d1453b;font-weight:600;">赤いまる</span>のところを、上から順に押していくだけです。下の番号と画面を見ながら進めてください。</p>
         </div>
       </div>
-      <div class="visual-guide">
-        <div class="card csv-mock">
+      <div class="walk">
+
+        <div class="wstep">
           <div>
-            <h3>① 取り込む</h3>
-            <p class="flow-note">予約システムから出した「予約受付一覧」を、枠の中へドラッグ（またはコピー貼り付け）。自動で中身を読み取り、「○件・新規○件」と表示されます。確認して「台帳へ登録」を押すだけです。</p>
-          </div>
-          <div class="csv-drop">予約受付一覧をここにドラッグ</div>
-          <div class="csv-actions">
-            <div class="csv-button green">台帳へ登録</div>
-          </div>
-        </div>
-        <div class="card">
-          <h3>② 連絡する　③ 整理する</h3>
-          <ul class="plain-list">
-            <li>上の「今日やること」を開くと、今日連絡する予約だけが並びます。</li>
-            <li>連絡したら、その予約に <b>〇</b>（連絡済）／<b>不在</b>／<b>不要</b> を付けます。</li>
-            <li>付けてもすぐには消えません。確認しながら進められます。</li>
-            <li>ひと区切りついたら <b>⟳ 更新（整理）</b> を押すと、済んだ予約が一覧から外れます。</li>
-          </ul>
-          <div class="contact-box" style="margin-top:16px;">
-            <div class="edit-row"><span>連絡の結果</span><span class="state-buttons"><span class="mini-pill green">〇</span><span class="mini-pill orange">不在</span><span class="mini-pill gray">不要</span></span></div>
+            <h3>その日の「予約受付一覧」を取り込む準備</h3>
+            <p class="wnote">画面いちばん上の黒いバーにある <b>＋ CSV取込</b> を押します。</p>
+            <div class="shot">
+              <div class="shot-bar">
+                <span class="shot-ttl">予約チェック管理</span>
+                <span class="rseg"><span class="on">今日やること</span><span>全件</span></span>
+                <span class="rbtn white">⟳ 更新（整理）</span>
+                <span class="rbtn target">＋ CSV取込<span class="tnum">1</span></span>
+                <span class="rbtn">設定</span>
+                <span class="rbtn">SMS配信リスト</span>
+              </div>
+            </div>
           </div>
         </div>
+
+        <div class="wstep">
+          <div>
+            <h3>予約のファイルを枠に入れる</h3>
+            <p class="wnote">予約システムから出した「予約受付一覧」のファイルを、点線の枠の中へ<b>ドラッグ</b>します。むずかしければ <b>ファイルを選択</b> を押して選んでもOKです。</p>
+            <div class="shot">
+              <div class="shot-body">
+                <div class="rdrop">
+                  <div class="rt target" style="display:inline-block;padding:6px 12px;border-radius:8px;">予約受付一覧CSVファイルをここにドロップ<span class="tnum">2</span></div>
+                  <div class="rs">
+                    <span class="rbtn-blue">ファイルを選択</span>
+                    <span>または下のエリアに貼り付け（Ctrl+V）</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="wstep">
+          <div>
+            <h3>件数を確かめて「台帳へ登録」</h3>
+            <p class="wnote">「○件・新規○件」と自動で表示されます。中身を見て、緑の <b>台帳へ登録</b> を押します。（３組以上・これからの予約だけが自動で選ばれます）</p>
+            <div class="shot">
+              <div class="shot-body">
+                <p style="font-size:13px;color:#1f2937;margin:0;">抽出 <b>12</b> 件 ／ 新規 <b>8</b> 件　— 内容を確認して『台帳へ登録』を押してください</p>
+                <div class="shot-row">
+                  <span class="rbtn-green target">台帳へ登録<span class="tnum">3</span></span>
+                </div>
+                <div class="shot-msg">8 件を台帳に登録しました（自動保存）。『一覧へ戻る』で確認できます</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="wstep">
+          <div>
+            <h3>一覧にもどって、今日連絡する予約を見る</h3>
+            <p class="wnote"><b>← 一覧へ戻る</b> を押すと、「今日やること」に今日連絡する予約が並びます。左の予約を1件押すと、右に詳細が出ます。</p>
+            <div class="shot">
+              <div class="shot-bar">
+                <span class="shot-ttl">予約チェック管理</span>
+                <span class="rseg"><span class="on">今日やること</span><span>全件</span></span>
+                <span class="rbtn white target">← 一覧へ戻る<span class="tnum">4</span></span>
+              </div>
+              <div class="shot-split">
+                <div class="col-l">
+                  <div class="rcard sel"><div class="rn">山田 太郎</div><div class="rm">6/12(木) ／ 西コース 8:30 ・3組</div><span class="status need" style="margin-top:8px;">本日</span></div>
+                  <div class="rcard"><div class="rn">鈴木 一郎</div><div class="rm">6/14(土) ／ 東コース 9:00 ・4組</div><span class="status soon" style="margin-top:8px;">あと3日</span></div>
+                </div>
+                <div class="col-r">
+                  <div style="font-size:12px;color:#6b7280;">右に出る詳細で、連絡の結果を付けます ↓</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="wstep">
+          <div>
+            <h3>連絡したら、結果を押す</h3>
+            <p class="wnote">右の詳細で、その回（コンタクト①〜④）の <b>〇</b>（連絡できた）／<b>不在</b>（つながらない）／<b>不要</b>（連絡いらない）を押します。すぐには消えないので、安心して進められます。</p>
+            <div class="shot">
+              <div class="shot-body">
+                <div style="font-size:17px;font-weight:600;border-bottom:1px solid var(--line);padding-bottom:10px;">山田 太郎</div>
+                <div class="redit"><span>コンタクト①（受付の翌日）</span><span><span class="rpill green target">〇<span class="tnum">5</span></span><span class="rpill orange">不在</span><span class="rpill gray">不要</span></span></div>
+                <div class="redit"><span>組数確定</span><span><span class="rpill green">〇</span><span class="rpill gray">キャンセル</span></span></div>
+                <div class="redit"><span>組合せ入力</span><span><span class="rpill green">済</span><span class="rpill gray">未</span></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="wstep">
+          <div>
+            <h3>ひと区切りで「⟳ 更新（整理）」</h3>
+            <p class="wnote">連絡が一段落したら、上の <b>⟳ 更新（整理）</b> を押します。済んだ予約が「今日やること」から外れて、一覧がすっきりします。これで今日の作業は完了です。</p>
+            <div class="shot">
+              <div class="shot-bar">
+                <span class="shot-ttl">予約チェック管理</span>
+                <span class="rseg"><span class="on">今日やること</span><span>全件</span></span>
+                <span class="rbtn white target">⟳ 更新（整理）<span class="tnum">6</span></span>
+                <span class="rbtn">＋ CSV取込</span>
+                <span class="rbtn">設定</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   </section>
