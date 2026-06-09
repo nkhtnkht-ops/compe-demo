@@ -1540,10 +1540,30 @@ p {
           </ul>
         </div>
       </div>
+      <div class="grid-2" style="margin-top: 14px;">
+        <div class="card">
+          <h3>自動バックアップ（最初に設定）</h3>
+          <p>保存のたびに、台帳と同じ共有フォルダへ日付付きの控えを自動で作ります。万一データが消えても、ここから戻せます。</p>
+          <ul class="plain-list">
+            <li>設定 → 「自動バックアップ」 → 「フォルダを選ぶ」を押します。</li>
+            <li>台帳と同じ共有フォルダ（◆予約チェック等）を選び、「許可」します。</li>
+            <li>以後は保存のたびに <b>○○○_backup_YYYY-MM-DD.json</b> が自動作成されます（1日1本／直近14日分を保持）。</li>
+            <li>「今すぐバックアップ」ボタンで手動でも作成できます。</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>もし台帳のデータが消えたら</h3>
+          <ul class="plain-list">
+            <li>自動バックアップを設定していれば、共有フォルダ内の <b>○○○_backup_日付.json</b> を、台帳ファイル名に直してアプリで開けば戻せます。</li>
+            <li>バックアップが無い場合は、設定 → 既存台帳移行取り込み で現行Excel台帳から作り直せます（本数は復旧します）。</li>
+            <li>Excel書き出しで、いつでも .xlsx の控えも作れます。</li>
+          </ul>
+        </div>
+      </div>
       <div class="trouble" style="margin-top: 14px;">
         <div class="callout"><strong>未接続表示の意味</strong><br>台帳ファイルにつながっていない状態です。中央の「JSONファイルを選ぶ」から、共有ドライブの台帳ファイル（○○○.json）を選んでください。初めて使う場合は、設定の初回メニューで作成・移行します。</div>
         <div class="callout"><strong>WEB保存ではありません</strong><br>顧客データはWEB上のサーバーへ預けません。利用者が選んだ台帳ファイルを、ブラウザが直接読み書きします。</div>
-        <div class="callout"><strong>バックアップ</strong><br>Excel書き出しで現在の台帳を.xlsxにできます。再取込可能で、組合せ入力も保持されます。</div>
+        <div class="callout"><strong>バックアップ</strong><br>設定の「自動バックアップ」で、保存のたびに日付付きの控えが共有フォルダに自動作成されます。加えてExcel書き出しで.xlsxの控えも作れます。</div>
       </div>
     </div>
   </section>
