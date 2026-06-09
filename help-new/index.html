@@ -355,6 +355,15 @@ a {
   overflow: hidden;
 }
 
+.mock-sec {
+  margin: 16px 0 8px;
+  font-family: var(--mono);
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+}
+
 .detail-name {
   padding-bottom: 13px;
   border-bottom: 1px solid var(--line);
@@ -1571,16 +1580,30 @@ p {
             <div class="panel-body">
               <div class="mock-list">
                 <div class="mock-toolbar"><span>並び：</span><span class="tag black">プレー日順</span><span class="tag">受付日順</span></div>
-                <div class="mock-card active"><strong>氏名</strong><small>日付・曜日 / コース・時間・組数</small><span class="status need">状態バッジ</span></div>
-                <div class="mock-card"><strong>カード</strong><small>予約ごとの要点だけを見る場所</small><span class="status soon">あと3日</span></div>
+                <div class="mock-card active"><strong>山田 太郎</strong><small>6/12(木) ／ 西コース 8:30 ・3組</small><span class="status need">本日</span></div>
+                <div class="mock-card"><strong>鈴木 一郎</strong><small>6/14(土) ／ 東コース 9:00 ・4組</small><span class="status soon">あと3日</span></div>
               </div>
               <div class="mock-detail">
-                <div class="detail-name">詳細パネル</div>
-                <div class="contact-box">
-                  <div class="edit-row"><span>コンタクト①</span><span class="state-buttons"><span class="mini-pill green">〇</span><span class="mini-pill orange">不在</span><span class="mini-pill gray">不要</span></span></div>
-                  <div class="edit-row"><span>組数確定</span><span class="state-buttons"><span class="mini-pill green">〇</span><span class="mini-pill gray">キャンセル</span></span></div>
-                  <div class="edit-row"><span>組合せ入力</span><span class="state-buttons"><span class="mini-pill green">済</span><span class="mini-pill gray">未</span></span></div>
+                <div class="detail-name">山田 太郎</div>
+                <div class="detail-grid">
+                  <div class="field"><div class="key">プレー日</div><div class="val">2026-06-12 （木）</div></div>
+                  <div class="field"><div class="key">組数 / 人数</div><div class="val">3 組 / 12 人</div></div>
+                  <div class="field"><div class="key">コース名</div><div class="val">西コース</div></div>
+                  <div class="field"><div class="key">スタート時間</div><div class="val">08:30</div></div>
+                  <div class="field"><div class="key">携帯電話番号</div><div class="val">090-1234-5678</div></div>
+                  <div class="field"><div class="key">いまの対応状況</div><div class="val" style="color:#b35900;font-weight:600;">要対応：①受付の翌日</div></div>
                 </div>
+                <div class="mock-sec">確定・キャンセル・組合せ</div>
+                <div class="contact-box">
+                  <div class="edit-row"><span>組数確定／キャンセル</span><span class="state-buttons"><span class="mini-pill gray">未</span><span class="mini-pill green">確定〇</span><span class="mini-pill gray">キャンセル</span></span></div>
+                  <div class="edit-row"><span>組合せ入力</span><span class="state-buttons"><span class="mini-pill gray">未</span><span class="mini-pill green">入力済</span></span></div>
+                </div>
+                <div class="mock-sec">フォロー状況（①〜④）</div>
+                <div class="contact-box">
+                  <div class="edit-row"><span>① 受付の翌日</span><span class="state-buttons"><span class="mini-pill green">〇</span><span class="mini-pill orange">不在</span><span class="mini-pill gray">不要</span></span></div>
+                  <div class="edit-row"><span>③ 35日前</span><span class="state-buttons"><span class="mini-pill green">〇</span><span class="mini-pill orange">不在</span><span class="mini-pill gray">不要</span></span></div>
+                </div>
+                <div class="field" style="margin-top:16px;"><div class="key">メモ（連絡内容・申し送り）</div><div class="val" style="min-height:52px;">6/3 田中様へ連絡、3組で確定見込み。次回6/15に再確認。</div></div>
               </div>
             </div>
           </div>
