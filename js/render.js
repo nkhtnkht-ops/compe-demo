@@ -296,11 +296,7 @@ export function render() {
       ctrl = `<span class="pill green">完了</span>`;
     } else {
       const cur = r.s[a];
-      ctrl = `<div class="sel-wrap" onclick="event.stopPropagation()">
-      <button class="sb done ${cur === "〇" ? "on-done" : ""}" onclick="setS(${gi},${a},'〇')">〇</button>
-      <button class="sb zai ${cur === "不在" ? "on-zai" : ""}" onclick="setS(${gi},${a},'不在')">不在</button>
-      <button class="sb fuyo ${cur === "不要" ? "on-fuyo" : ""}" onclick="setS(${gi},${a},'不要')">不要</button>
-      ${cur ? `<button class="sb undo" onclick="setS(${gi},${a},'')">取消</button>` : ``}</div>`;
+      ctrl = `<div class="sel-wrap" onclick="event.stopPropagation()">${statusButtons(gi, a, cur)}</div>`;
     }
     const div = document.createElement("div");
     div.className = "gi" + (gi === state.selIdx ? " sel" : "");
@@ -317,6 +313,28 @@ export function render() {
   renderDetail();
   renderStrip();
 }
+/**
+ * ステータスボタン HTML（〇/不在/不要 + 取消 or 空）を生成する共通ヘルパー。
+ * @param {number} gi - 行インデックス
+ * @param {number} i  - コンタクト番号（0〜3）
+ * @param {string} cur - 現在のステータス値
+ * @param {object} opts - { alwaysUndo: boolean } true なら「空」ボタンを常に表示（editCell 用）
+ *                                              false なら cur が空でない場合のみ「取消」を表示（render 用）
+ */
+function statusButtons(gi, i, cur, { alwaysUndo = false } = {}) {
+  const undoBtn = alwaysUndo
+    ? `<button class="sb undo" onclick="setS(${gi},${i},'')">空</button>`
+    : cur
+      ? `<button class="sb undo" onclick="setS(${gi},${i},'')">取消</button>`
+      : "";
+  return (
+    `<button class="sb done ${cur === "〇" ? "on-done" : ""}" onclick="setS(${gi},${i},'〇')">〇</button>` +
+    `<button class="sb zai ${cur === "不在" ? "on-zai" : ""}" onclick="setS(${gi},${i},'不在')">不在</button>` +
+    `<button class="sb fuyo ${cur === "不要" ? "on-fuyo" : ""}" onclick="setS(${gi},${i},'不要')">不要</button>` +
+    undoBtn
+  );
+}
+
 export function editCell(gi, i) {
   const r = state.rows[gi],
     v = r.s[i];
@@ -328,11 +346,7 @@ export function editCell(gi, i) {
         : v === ST.FUYO
           ? '<span style="color:#6b7280;font-weight:700">不要</span>'
           : '<span style="color:#374151">' + r.d[i] + "（予定）</span>";
-  return `<div class="editcell"><span>${disp}</span><span class="sel-wrap">
-    <button class="sb done ${v === "〇" ? "on-done" : ""}" onclick="setS(${gi},${i},'〇')">〇</button>
-    <button class="sb zai ${v === "不在" ? "on-zai" : ""}" onclick="setS(${gi},${i},'不在')">不在</button>
-    <button class="sb fuyo ${v === "不要" ? "on-fuyo" : ""}" onclick="setS(${gi},${i},'不要')">不要</button>
-    <button class="sb undo" onclick="setS(${gi},${i},'')">空</button></span></div>`;
+  return `<div class="editcell"><span>${disp}</span><span class="sel-wrap">${statusButtons(gi, i, v, { alwaysUndo: true })}</span></div>`;
 }
 export function renderDetail() {
   const d = document.getElementById("detail");

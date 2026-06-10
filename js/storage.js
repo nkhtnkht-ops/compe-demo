@@ -186,10 +186,7 @@ export function applyJson(data) {
     const el = document.getElementById("tt" + i);
     if (el) el.checked = state.todayTouch[i];
   });
-  if (s.courseName && document.getElementById("setCourse"))
-    document.getElementById("setCourse").value = s.courseName;
-  if (s.listName && document.getElementById("setList"))
-    document.getElementById("setList").value = s.listName;
+  // s.courseName / s.listName は buildJson に含まれず対応 DOM も存在しないため参照しない（Phase 2 で削除）
   if (document.getElementById("so1")) document.getElementById("so1").value = state.o1;
   if (document.getElementById("so2")) document.getElementById("so2").value = state.o2;
   if (document.getElementById("so3")) document.getElementById("so3").value = state.o3;

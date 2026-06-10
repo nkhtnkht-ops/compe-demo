@@ -181,10 +181,6 @@ function refreshList() {
   toast("一覧を整理しました（解決済みを除外）");
   render();
 }
-function toggleMode() {
-  state.showAll = !state.showAll;
-  render();
-}
 function setMode(all) {
   state.showAll = all;
   render();
@@ -269,7 +265,6 @@ Object.assign(window, {
   renderStats,
   // 一覧操作（main.js）
   setMode,
-  toggleMode,
   refreshList,
   undoLast,
   setSort,
@@ -321,5 +316,5 @@ Object.defineProperty(window, "TODAY", {
 // ===== 初期化 =====
 rebuildLabels();
 recompute();
-setImpMode("new");
+setImpMode();
 render();
