@@ -61,6 +61,17 @@
   .pill{font-size:12px;font-weight:480;padding:4px 10px;border-radius:50px;}
   .pill.green{background:#eafaf0;color:#1a7f37;} .pill.red{background:#fdecea;color:#b91c1c;}
   .empty{padding:30px;text-align:center;color:#9aa1aa;}
+  .stats-year{margin-bottom:26px;}
+  .stats-year h3{font-size:15px;font-weight:700;margin:0 0 8px;letter-spacing:-0.2px;}
+  .stbl{border-collapse:collapse;width:100%;max-width:840px;font-size:13px;}
+  .stbl th,.stbl td{border:1px solid var(--line);padding:7px 12px;text-align:right;white-space:nowrap;}
+  .stbl th{background:#fafafa;font-weight:600;color:#374151;font-size:12px;text-align:right;}
+  .stbl th:first-child,.stbl td:first-child{text-align:left;}
+  .stbl tbody tr:hover{background:#fafafa;}
+  .stbl tr.total td{border-top:2px solid #000;font-weight:700;background:#f4f4f5;}
+  .stbl .delta{font-family:var(--mono);font-size:11px;color:#6b7280;margin-left:4px;}
+  .stbl .delta.up{color:#13652b;} .stbl .delta.down{color:#9a1d14;}
+  .stats-unknown{margin-top:10px;font-size:12px;color:#6b7280;}
   .reauth-banner{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;background:#fde68a;border-bottom:1px solid #f59e0b;color:#7c2d12;font-size:14px;font-weight:700;padding:10px 16px;flex-shrink:0;}
   .reauth-banner-btn{border:0;background:#111827;color:#fff;border-radius:8px;font-size:14px;font-weight:700;padding:8px 18px;cursor:pointer;}
   .reauth-banner-btn:hover{background:#000;}
@@ -144,6 +155,7 @@
     <button class="nav" id="toImport" onclick="showScreen('import')">＋ CSV取込</button>
     <button class="nav" id="toSettings" onclick="showScreen('settings')">設定</button>
     <button class="nav" id="toSms" onclick="showScreen('sms')">SMS配信リスト</button>
+    <button class="nav" id="toStats" onclick="showScreen('stats')">集計</button>
     <a class="nav" id="toHelp" href="help/" target="_blank" rel="noopener">使い方</a>
     <button class="nav hidden" id="toMain" onclick="showScreen('main')">← 一覧へ戻る</button>
     <span class="sp"></span>
@@ -315,6 +327,12 @@
     </div>
     <div class="msg" id="smsMsg"></div>
     <p style="color:#9aa1aa;font-size:12px;margin-top:8px">出力列：携帯番号／氏名／姓／最終プレー日／コース／経路／予約回数。SMSLINKの一括配信でアップロードし、本文に <b>{{姓}}様</b> を差し込めば「中村様」のように送れます（氏名を使えばフルネーム）。携帯番号(070/080/090)がある人のみが対象です。</p>
+  </div>
+
+  <div class="imp hidden" id="screenStats">
+    <div style="font-size:15px;font-weight:700;margin-bottom:6px">月別集計<span class="note" style="font-weight:400">　プレー日の年月単位で集計します</span></div>
+    <div class="note" style="margin-bottom:14px;line-height:1.7">件数・組数・人数はキャンセルを除いた予約で集計します。キャンセル件数は別列に表示します。同じ月の前年データが台帳にあれば、前年対比（件数・人数）を自動で表示します。</div>
+    <div id="statsBody"></div>
   </div>
 </div>
 <div id="toast"></div>
@@ -799,6 +817,86 @@ setInterval(()=>{ if(!document.hidden) checkExternal(); }, 20000);
 window.addEventListener('load', ()=>{ bootstrapFile(); updateUpdatedChip(); });
 window.addEventListener('beforeunload', (e)=>{ if(isDirty && fileHandle){ e.preventDefault(); e.returnValue=''; } });
 function pd(s){const m=s&&s.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);return m?new Date(+m[1],+m[2]-1,+m[3]):null;}
+// ===== 月別集計（純粋関数：DOM非依存。Phase1で js/domain.js へ移せる形） =====
+// 入力: rows（台帳行の配列。r.play=プレー日, r.g=組数, r.p=人数, r.kk=確定/キャンセル）
+// 出力: { years:[{ year, months:[{month,compe,groups,people,cancel}], total:{...},
+//           prevByMonth:{月->前年{compe,people}}, hasPrev:bool }...(降順)],
+//         unknown:number(プレー日不明件数) }
+// 集計規則: 件数/組数/人数は kk!=='キャンセル' の行のみ。cancel は kk==='キャンセル' の行数。
+//   g,p は文字列の可能性があるため Number()。NaN は 0 扱い。
+//   prevByMonth は「前年同月の実データが存在する場合のみ」値を持つ（増減算出用）。
+function aggregateMonthly(rows){
+  const num=v=>{const n=Number(v);return Number.isFinite(n)?n:0;};
+  const byYear={};            // year -> month(1..12) -> {compe,groups,people,cancel}
+  let unknown=0;
+  (rows||[]).forEach(r=>{
+    const dt=pd(r&&r.play);   // 既存 pd() を再利用（新しい日付処理は書かない）
+    if(!dt){unknown++;return;}
+    const y=dt.getFullYear(), m=dt.getMonth()+1;
+    (byYear[y]=byYear[y]||{});
+    const cell=byYear[y][m]=byYear[y][m]||{compe:0,groups:0,people:0,cancel:0};
+    if(r.kk==='キャンセル'){ cell.cancel++; }
+    else { cell.compe++; cell.groups+=num(r.g); cell.people+=num(r.p); }
+  });
+  const years=Object.keys(byYear).map(Number).sort((a,b)=>b-a).map(year=>{
+    const mo=byYear[year];
+    const months=Object.keys(mo).map(Number).sort((a,b)=>a-b).map(month=>({
+      month, compe:mo[month].compe, groups:mo[month].groups,
+      people:mo[month].people, cancel:mo[month].cancel
+    }));
+    const total=months.reduce((t,m)=>({
+      compe:t.compe+m.compe, groups:t.groups+m.groups,
+      people:t.people+m.people, cancel:t.cancel+m.cancel
+    }),{compe:0,groups:0,people:0,cancel:0});
+    // 前年同月の実データ（キャンセル除外集計）
+    const prevMo=byYear[year-1]||{};
+    const prevByMonth={}; let hasPrev=false;
+    Object.keys(prevMo).map(Number).forEach(month=>{
+      const c=prevMo[month];
+      if(c.compe>0||c.people>0){ prevByMonth[month]={compe:c.compe,people:c.people}; hasPrev=true; }
+    });
+    return {year,months,total,prevByMonth,hasPrev};
+  });
+  return {years,unknown};
+}
+function renderStats(){
+  const host=document.getElementById('statsBody'); if(!host)return;
+  const {years,unknown}=aggregateMonthly(rows);
+  let html='';
+  if(!years.length){
+    html='<div class="empty" style="text-align:left;padding:20px 0">集計できるプレー日のデータがありません。</div>';
+  }
+  years.forEach(y=>{
+    const showPrev=y.hasPrev;
+    html+='<div class="stats-year"><h3>'+y.year+'年</h3><table class="stbl"><thead><tr>'
+      +'<th>月</th><th>コンペ件数</th><th>組数</th><th>人数</th><th>キャンセル件数</th>'
+      +(showPrev?'<th>前年件数</th><th>前年人数</th>':'')
+      +'</tr></thead><tbody>';
+    y.months.forEach(m=>{
+      const prev=y.prevByMonth[m.month];
+      html+='<tr><td>'+m.month+'月</td><td>'+m.compe+'</td><td>'+m.groups+'</td><td>'+m.people+'</td><td>'+m.cancel+'</td>';
+      if(showPrev){
+        if(prev){
+          html+='<td>'+prev.compe+statDelta(m.compe-prev.compe)+'</td>'
+               +'<td>'+prev.people+statDelta(m.people-prev.people)+'</td>';
+        } else { html+='<td>—</td><td>—</td>'; }
+      }
+      html+='</tr>';
+    });
+    html+='<tr class="total"><td>年間合計</td><td>'+y.total.compe+'</td><td>'+y.total.groups
+      +'</td><td>'+y.total.people+'</td><td>'+y.total.cancel+'</td>'
+      +(showPrev?'<td></td><td></td>':'')+'</tr>';
+    html+='</tbody></table></div>';
+  });
+  if(unknown>0){ html+='<div class="stats-unknown">プレー日不明：'+unknown+'件</div>'; }
+  host.innerHTML=html;
+}
+// 増減バッジ（+n / −n。0 は表示しない）
+function statDelta(diff){
+  if(!diff)return '';
+  const up=diff>0;
+  return '<span class="delta '+(up?'up':'down')+'">'+(up?'+'+diff:'−'+Math.abs(diff))+'</span>';
+}
 function fmt(d){return d?d.getFullYear()+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getDate()).padStart(2,'0'):'';}
 function addDays(d,n){if(!d)return null;const x=new Date(d);x.setDate(x.getDate()+n);return x;}
 let o1=1,o2=60,o3=35,o4=18; // ①受付+o1日 / ②③④はプレー日のo2,o3,o4日前（事業所ごとに設定変更）
@@ -1007,10 +1105,12 @@ function showScreen(name){
   document.getElementById('screenImport').classList.toggle('hidden',name!=='import');
   document.getElementById('screenSettings').classList.toggle('hidden',name!=='settings');
   document.getElementById('screenSms').classList.toggle('hidden',name!=='sms');
-  ['modeSeg','undoBtn','toImport','toSettings','toSms'].forEach(id=>document.getElementById(id).classList.toggle('hidden',!main));
+  document.getElementById('screenStats').classList.toggle('hidden',name!=='stats');
+  ['modeSeg','undoBtn','toImport','toSettings','toSms','toStats'].forEach(id=>document.getElementById(id).classList.toggle('hidden',!main));
   document.getElementById('refBtn').classList.toggle('hidden',!main||showAll);
   document.getElementById('toMain').classList.toggle('hidden',main);
   if(name==='settings'){ const sb=document.getElementById('setUpdatedBy'); if(sb) sb.value=updatedBy||''; updateBackupStatus(); }
+  if(name==='stats'){ renderStats(); }
 }
 function setImpMode(){
   // 日次CSV取込画面の初期化（移行UIは設定メニューへ集約済み）
