@@ -4,9 +4,7 @@ import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const FIXTURE = JSON.parse(
-  readFileSync(join(__dirname, "../fixtures/dummy-ledger.json"), "utf-8")
-);
+const FIXTURE = JSON.parse(readFileSync(join(__dirname, "../fixtures/dummy-ledger.json"), "utf-8"));
 
 /**
  * FSA（File System Access API）をページロード前に無効化するヘルパー。

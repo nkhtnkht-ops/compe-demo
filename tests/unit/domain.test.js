@@ -180,7 +180,12 @@ describe("needsContact（指定コンタクトが本日要対応か）", () => {
   });
   it("isDeferred な行は全コンタクトで false", () => {
     state.rows = [
-      mkRow({ recv: "2026/05/01", play: "2026/07/10", s: ["不在", "", "", ""], next: "2026/06/20" }),
+      mkRow({
+        recv: "2026/05/01",
+        play: "2026/07/10",
+        s: ["不在", "", "", ""],
+        next: "2026/06/20",
+      }),
     ];
     recompute();
     expect(needsContact(state.rows[0], 0)).toBe(false);
@@ -211,7 +216,13 @@ describe("visibleRows（一覧の可視行フィルタ）", () => {
   it("showAll=false（今日やること）は要対応 or _touch の行のみ", () => {
     const a = mkRow({ n: "要対応", recv: "2026/05/01", play: "2026/07/10" });
     const b = mkRow({ n: "完了", recv: "2026/05/01", play: "2026/07/10", kumi: "済" });
-    const c = mkRow({ n: "操作直後", recv: "2026/05/01", play: "2026/07/10", kumi: "済", _touch: true });
+    const c = mkRow({
+      n: "操作直後",
+      recv: "2026/05/01",
+      play: "2026/07/10",
+      kumi: "済",
+      _touch: true,
+    });
     state.rows = [a, b, c];
     recompute();
     state.showAll = false;

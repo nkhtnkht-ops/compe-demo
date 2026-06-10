@@ -17,11 +17,7 @@ export function recompute() {
 }
 
 export function actRound(r) {
-  if (
-    (r.kumi || "") === "済" ||
-    r.kk === "キャンセル" ||
-    (state.excludeKakutei && r.kk === "〇")
-  )
+  if ((r.kumi || "") === "済" || r.kk === "キャンセル" || (state.excludeKakutei && r.kk === "〇"))
     return -1;
   for (const i of [0, 1, 2, 3]) {
     if (!state.todayTouch[i]) continue;
@@ -32,11 +28,7 @@ export function actRound(r) {
 }
 
 export function nextFuture(r) {
-  if (
-    (r.kumi || "") === "済" ||
-    r.kk === "キャンセル" ||
-    (state.excludeKakutei && r.kk === "〇")
-  )
+  if ((r.kumi || "") === "済" || r.kk === "キャンセル" || (state.excludeKakutei && r.kk === "〇"))
     return -1;
   for (const i of [0, 1, 2, 3]) {
     if (!state.todayTouch[i]) continue;

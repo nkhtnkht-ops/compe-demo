@@ -6,14 +6,7 @@
 // ロジックは1文字も変更しない。
 import { state, FSA_SUPPORTED } from "./state.js";
 import { pd } from "./dateutil.js";
-import {
-  actRound,
-  nextFuture,
-  daysFrom,
-  mdOf,
-  visibleRows,
-  aggregateMonthly,
-} from "./domain.js";
+import { actRound, nextFuture, daysFrom, mdOf, visibleRows, aggregateMonthly } from "./domain.js";
 
 // コンタクトの日数ラベル。設定変更時に表示も自動で変わる
 const CIRC = ["①", "②", "③", "④"];
@@ -45,7 +38,7 @@ export function routeSelect(gi, cur) {
   return (
     '<select onchange="setText(' +
     gi +
-    ",'route',this.value)\" class=\"numin\" style=\"width:auto;text-align:left\">" +
+    ',\'route\',this.value)" class="numin" style="width:auto;text-align:left">' +
     opts
       .map((o) => "<option" + (o === cur ? " selected" : "") + ">" + esc(o) + "</option>")
       .join("") +
@@ -67,7 +60,7 @@ export function renderStats() {
     html +=
       '<div class="stats-year"><h3>' +
       y.year +
-      "年</h3><table class=\"stbl\"><thead><tr>" +
+      '年</h3><table class="stbl"><thead><tr>' +
       "<th>月</th><th>コンペ件数</th><th>組数</th><th>人数</th><th>キャンセル件数</th>" +
       (showPrev ? "<th>前年件数</th><th>前年人数</th>" : "") +
       "</tr></thead><tbody>";
@@ -160,7 +153,7 @@ export function renderStrip() {
   });
   html +=
     '<span class="strip-sp"></span>' +
-    "<button class=\"strip-link\" onclick=\"showScreen('stats')\">詳細 →</button>";
+    '<button class="strip-link" onclick="showScreen(\'stats\')">詳細 →</button>';
   host.innerHTML = html;
 }
 // 増減バッジ（+n / −n。0 は表示しない）

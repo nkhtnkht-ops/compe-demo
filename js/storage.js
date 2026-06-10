@@ -202,9 +202,7 @@ export async function loadFromHandle(handle) {
   try {
     const file = await handle.getFile();
     const text = await file.text();
-    const data = text.trim()
-      ? JSON.parse(text)
-      : { schemaVersion: SCHEMA_VERSION, rows: [] };
+    const data = text.trim() ? JSON.parse(text) : { schemaVersion: SCHEMA_VERSION, rows: [] };
     applyJson(data);
     state.fileHandle = handle;
     state.fileName = handle.name || file.name || "data.json";
@@ -315,9 +313,7 @@ export async function saveToFile() {
     state.loadedUpdatedAt = json.meta.updatedAt;
     state.loadedUpdatedBy = json.meta.updatedBy;
     const w = await state.fileHandle.createWritable();
-    await w.write(
-      new Blob([JSON.stringify(json, null, 2)], { type: "application/json" })
-    );
+    await w.write(new Blob([JSON.stringify(json, null, 2)], { type: "application/json" }));
     await w.close();
     state.isDirty = false;
     state.lastKnownCount = state.rows.length; // 保存できた件数を基準に更新
@@ -377,9 +373,7 @@ async function writeBackup(force) {
     const name = backupBaseName() + "_backup_" + todayStr() + ".json";
     const fh = await state.backupDirHandle.getFileHandle(name, { create: true });
     const w = await fh.createWritable();
-    await w.write(
-      new Blob([JSON.stringify(buildJson(), null, 2)], { type: "application/json" })
-    );
+    await w.write(new Blob([JSON.stringify(buildJson(), null, 2)], { type: "application/json" }));
     await w.close();
     state.lastBackupTime = Date.now();
     localStorage.setItem(
@@ -440,9 +434,7 @@ export async function onSetBackupDir() {
     const ok = await writeBackup(true); // 設定直後に1本作る
     updateBackupStatus();
     toast(
-      ok
-        ? "バックアップ先を設定し、今のデータを1本保存しました"
-        : "バックアップ先を設定しました"
+      ok ? "バックアップ先を設定し、今のデータを1本保存しました" : "バックアップ先を設定しました"
     );
   } catch (e) {
     if (e.name !== "AbortError") {
@@ -495,9 +487,7 @@ export function saveUpdatedBy() {
 
 export async function onOpenFile() {
   if (!FSA_SUPPORTED) {
-    alert(
-      "このブラウザはFile System Access API非対応です（Chrome/Edgeで開いてください）"
-    );
+    alert("このブラウザはFile System Access API非対応です（Chrome/Edgeで開いてください）");
     return;
   }
   try {
@@ -523,9 +513,7 @@ export async function onOpenFile() {
 
 export async function onNewFile() {
   if (!FSA_SUPPORTED) {
-    alert(
-      "このブラウザはFile System Access API非対応です（Chrome/Edgeで開いてください）"
-    );
+    alert("このブラウザはFile System Access API非対応です（Chrome/Edgeで開いてください）");
     return;
   }
   try {
@@ -617,8 +605,7 @@ export async function bootstrapFile() {
         setFileStatus("未接続", "warn");
         const dn = document.getElementById("demoNote");
         if (dn) {
-          dn.textContent =
-            "右上の「開く」から前回のファイル（" + last + "）を選び直してください。";
+          dn.textContent = "右上の「開く」から前回のファイル（" + last + "）を選び直してください。";
           dn.classList.remove("hidden");
         }
       } else {
@@ -648,21 +635,25 @@ export async function bootstrapFile() {
   }
 }
 
-// 他者更新の検知：タブに戻った時＋20秒ごと
-document.addEventListener("visibilitychange", () => {
-  if (!document.hidden) checkExternal();
-});
-setInterval(() => {
-  if (!document.hidden) checkExternal();
-}, 20000);
+// ブラウザ時のみ起動時の常駐リスナーを登録（ユニットテストの import 時 no-op）。
+// 登録内容・タイミングはブラウザでは従来と同一。
+if (typeof document !== "undefined" && typeof window !== "undefined") {
+  // 他者更新の検知：タブに戻った時＋20秒ごと
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) checkExternal();
+  });
+  setInterval(() => {
+    if (!document.hidden) checkExternal();
+  }, 20000);
 
-window.addEventListener("load", () => {
-  bootstrapFile();
-  updateUpdatedChip();
-});
-window.addEventListener("beforeunload", (e) => {
-  if (state.isDirty && state.fileHandle) {
-    e.preventDefault();
-    e.returnValue = "";
-  }
-});
+  window.addEventListener("load", () => {
+    bootstrapFile();
+    updateUpdatedChip();
+  });
+  window.addEventListener("beforeunload", (e) => {
+    if (state.isDirty && state.fileHandle) {
+      e.preventDefault();
+      e.returnValue = "";
+    }
+  });
+}

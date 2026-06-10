@@ -4,8 +4,8 @@
   "scripts": {
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "lint": "eslint tests/",
-    "fmt": "prettier --write tests/"
+    "lint": "eslint js/ tests/",
+    "fmt": "prettier --write js/ tests/"
   },
   "devDependencies": {
     "@playwright/test": "^1.49.0",

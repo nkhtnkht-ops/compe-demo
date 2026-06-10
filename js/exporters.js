@@ -1,10 +1,10 @@
-// SMS配信リスト／Excel書き出しのデータ整形ロジック。
-// Phase 1 ステップ3では state + dateutil にのみ依存する抽出／集計部を移設する。
-// （exportExcel / smsExport / smsResult / smsPreview の DOM 出力と XLSX/cptable 参照は
-//  toast 等の render 依存解決後にステップ5で exporters へ集約する。）
+// SMS配信リスト／Excel書き出し（データ整形＋CSV/Excel 出力）。
+// render.js の依存解決後に、DOM 出力と XLSX/cptable 参照を伴う
+// exportExcel / smsResult / smsPreview / smsExport もここへ集約した。
 // XLSX / cptable は従来通り window グローバル参照のまま。ロジックは不変。
 import { state } from "./state.js";
 import { pd } from "./dateutil.js";
+import { toast } from "./render.js";
 
 export function smsNormPhone(s) {
   return (s || "").replace(/[^0-9]/g, "");
@@ -84,4 +84,133 @@ export function smsAggregate(list, dedupe) {
     }
   });
   return [...map.values()];
+}
+
+export function smsResult() {
+  const list = smsFilteredRows();
+  let agg = smsAggregate(list, document.getElementById("smsDedupe").checked);
+  const minV = Math.max(1, parseInt(document.getElementById("smsMinVisits").value) || 1);
+  if (minV > 1) agg = agg.filter((e) => e.cnt >= minV);
+  return { list, agg, minV };
+}
+export function smsPreview() {
+  const { list, agg, minV } = smsResult();
+  const extra = minV > 1 ? `・予約${minV}回以上` : "";
+  document.getElementById("smsMsg").innerHTML =
+    `該当 <b>${list.length}</b> 件 ／ 配信先（ユニーク携帯${extra}） <b>${agg.length}</b> 件`;
+  return agg;
+}
+export function smsExport() {
+  if (typeof XLSX === "undefined") {
+    toast("CSV機能の読み込みに失敗しました");
+    return;
+  }
+  const { agg } = smsResult();
+  if (!agg.length) {
+    document.getElementById("smsMsg").innerHTML =
+      '<span style="color:#b35900">該当する配信先がありません（携帯番号070/080/090がある人・条件一致が必要）</span>';
+    return;
+  }
+  const aoa = [["携帯番号", "氏名", "姓", "最終プレー日", "コース", "経路", "予約回数"]];
+  agg.forEach((e) => aoa.push([e.mob, e.n, smsSurname(e.n), e.play, e.course, e.route, e.cnt]));
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  const csv = XLSX.utils.sheet_to_csv(ws); // UTF-8文字列
+  let bytes,
+    enc = "Shift-JIS";
+  try {
+    bytes = new Uint8Array(cptable.utils.encode(932, csv));
+  } catch (e) {
+    // 真のShift-JIS
+    console.warn("sjis encode failed, fallback utf8", e);
+    bytes = new TextEncoder().encode(csv);
+    enc = "UTF-8";
+  }
+  const blob = new Blob([bytes], { type: "text/csv" });
+  const n = new Date();
+  const ymd =
+    n.getFullYear() +
+    String(n.getMonth() + 1).padStart(2, "0") +
+    String(n.getDate()).padStart(2, "0");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "SMS配信リスト_" + ymd + ".csv";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  document.getElementById("smsMsg").innerHTML =
+    `<span style="color:#1a7f37;font-weight:700">${agg.length} 件を書き出しました（SMSLINK用CSV・${enc}）</span>`;
+  toast(agg.length + " 件のSMS配信リストを書き出しました");
+}
+
+export function exportExcel() {
+  if (typeof XLSX === "undefined") {
+    toast("Excel機能の読み込みに失敗しました");
+    return;
+  }
+  if (!state.rows.length) {
+    toast("書き出すデータがありません");
+    return;
+  }
+  const head = [
+    "抽出日",
+    "受付日",
+    "プレー日",
+    "曜日",
+    "代表者氏名",
+    "連絡先電話番号",
+    "携帯電話番号",
+    "コース名",
+    "時間",
+    "組数",
+    "人数",
+    "経路",
+    "連絡可能時間帯",
+    "①予約1日後",
+    "②60日前",
+    "③35日前",
+    "④18日前",
+    "出欠締切日",
+    "組数確定",
+    "備考",
+    "組合せ入力",
+  ];
+  const aoa = [["予約チェック台帳（HTMLツール書き出し）"], head];
+  state.rows.forEach((r) => {
+    const s = r.s || ["", "", "", ""],
+      d = r.d || ["", "", "", ""];
+    aoa.push([
+      "",
+      r.recv || "",
+      r.play || "",
+      r.wd || "",
+      r.n || "",
+      r.tel || "",
+      r.mob || "",
+      r.course || "",
+      r.time || "",
+      r.g || "",
+      r.p || "",
+      r.route || "",
+      "",
+      s[0] || d[0] || "",
+      s[1] || d[1] || "",
+      s[2] || d[2] || "",
+      s[3] || d[3] || "",
+      "",
+      r.kk || "",
+      r.memo || "",
+      r.kumi || "",
+    ]);
+  });
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "予約チェック進捗確認シート");
+  const n = new Date();
+  const ymd =
+    n.getFullYear() +
+    String(n.getMonth() + 1).padStart(2, "0") +
+    String(n.getDate()).padStart(2, "0");
+  XLSX.writeFile(wb, "予約チェック_backup_" + ymd + ".xlsx");
+  toast("Excelを書き出しました（" + state.rows.length + "件）");
 }

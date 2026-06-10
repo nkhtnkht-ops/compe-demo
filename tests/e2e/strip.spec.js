@@ -157,9 +157,7 @@ test("「詳細 →」クリックで集計画面に遷移する", async ({ page
   await expect(page.locator("#screenMain")).toHaveClass(/hidden/);
 });
 
-test("ストリップはメイン画面でのみ表示される（stats画面では隠れる）", async ({
-  page,
-}) => {
+test("ストリップはメイン画面でのみ表示される（stats画面では隠れる）", async ({ page }) => {
   await openMain(page, FIX_STRIP);
 
   // メイン画面では strip が含まれる screenMain が表示されている
@@ -176,9 +174,7 @@ test("ストリップはメイン画面でのみ表示される（stats画面で
 // 年またぎ表示のテスト（TODAY=2026/11 を想定した仮設シナリオ）
 // ============================================================
 
-test("年またぎ月には年プレフィックスが付く（11月基準なら 27/1月・27/2月）", async ({
-  page,
-}) => {
+test("年またぎ月には年プレフィックスが付く（11月基準なら 27/1月・27/2月）", async ({ page }) => {
   await disableFSA(page);
   await page.goto("/index.html");
   await page.waitForLoadState("networkidle");
@@ -204,9 +200,7 @@ test("年またぎ月には年プレフィックスが付く（11月基準なら
 // 報告用スクリーンショット
 // ============================================================
 
-test("ストリップを含むメイン画面のスクリーンショットを保存", async ({
-  page,
-}) => {
+test("ストリップを含むメイン画面のスクリーンショットを保存", async ({ page }) => {
   await openMain(page, FIX_STRIP);
   await page.screenshot({
     path: "test-results/strip-screen.png",

@@ -1,15 +1,7 @@
 // dateutil.js の特性化テスト（現挙動をそのまま固定する）。
 // Phase 1 では統合・修正をしないため、既知の重複実装・癖もこのテストで現状を正とする。
 import { describe, it, expect } from "vitest";
-import {
-  pd,
-  fmt,
-  addDays,
-  parseDate,
-  fmtSlash,
-  xdate,
-  xtime,
-} from "../../js/dateutil.js";
+import { pd, fmt, addDays, parseDate, fmtSlash, xdate, xtime } from "../../js/dateutil.js";
 
 describe("pd（日付パース）", () => {
   it("YYYY/MM/DD をローカル Date に変換する", () => {

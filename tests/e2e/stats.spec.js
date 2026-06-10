@@ -49,11 +49,7 @@ const FIX_A = {
 //   → 前年対比 件数 +1、人数 +15
 const FIX_B = {
   schemaVersion: 1,
-  rows: [
-    row("2025/03/10", 2, 10),
-    row("2026/03/10", 3, 20),
-    row("2026/03/20", 1, 5),
-  ],
+  rows: [row("2025/03/10", 2, 10), row("2026/03/10", 3, 20), row("2026/03/20", 1, 5)],
 };
 
 // ---- フィクスチャ C: play が空の行を含む ----
@@ -66,9 +62,7 @@ const FIX_C = {
   ],
 };
 
-test("フィクスチャA: 月別の件数/組数/人数/キャンセル数が正しい", async ({
-  page,
-}) => {
+test("フィクスチャA: 月別の件数/組数/人数/キャンセル数が正しい", async ({ page }) => {
   await openStats(page, FIX_A);
 
   const tbl = page.locator(".stbl");

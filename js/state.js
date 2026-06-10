@@ -27,8 +27,7 @@ export const state = {
   isSaving: false,
   suspendDirty: false, // 読み込み中などはdirtyにしない
   // localStorage はブラウザでは常に存在。ユニットテスト（node, DOM無し）での読込のみ防御
-  updatedBy:
-    (typeof localStorage !== "undefined" && localStorage.getItem("compe.updatedBy")) || "",
+  updatedBy: (typeof localStorage !== "undefined" && localStorage.getItem("compe.updatedBy")) || "",
   dataLoadedFromFile: false, // trueならJSONが正本（falseの間は絶対に保存しない＝未読込での上書き事故防止）
   lastKnownCount: -1, // 直近で読込/保存した件数。激減保存の検知用
   lastWrittenMtime: 0, // 自分が最後に書いた時のファイル更新時刻
