@@ -1,7 +1,11 @@
-// 日付系ユーティリティ（Phase 1 では純粋な移動のみ。統合・改名・修正は Phase 2 の仕事）。
-// 元 index.html の pd / fmt / fmtSlash / parseDate / todayStr / addDays / xdate / xtime を
-// ロジック1文字変えずに移設した。重複実装（pd と parseDate, fmt と fmtSlash と xdate 等）も
-// 現状のまま温存する。
+// 日付系ユーティリティ（Phase 2 で統合済み）。
+// pd      : 文字列 → Date（YYYY/MM/DD または YYYY-MM-DD。1桁月日も可。不正は null）
+// fmt     : Date → "YYYY/MM/DD"（Phase 1 では fmtSlash という別名が存在したが統合）
+// addDays : Date + N日 → Date（元を破壊しない）
+// todayStr: 今日の "YYYY-MM-DD"（storage のバックアップファイル名用）
+// todayYmd: 今日の "YYYYMMDD"（ファイルダウンロード名用。exporters の ymd インライン置換）
+// xdate   : Excel セル値（Date | 文字列 | null）→ "YYYY/MM/DD" または ""（移行用）
+// xtime   : Excel セル値 → "HH:MM" または trim 文字列（移行用）
 
 export function pd(s) {
   const m = s && s.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
@@ -36,19 +40,14 @@ export function todayStr() {
   );
 }
 
-export function parseDate(s) {
-  const m = (s || "").match(/(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
-  return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null;
-}
-
-export function fmtSlash(d) {
-  return d
-    ? d.getFullYear() +
-        "/" +
-        String(d.getMonth() + 1).padStart(2, "0") +
-        "/" +
-        String(d.getDate()).padStart(2, "0")
-    : "";
+/** ファイル名用 YYYYMMDD（現在日時）。exporters の ymd インライン生成を置換。 */
+export function todayYmd() {
+  const n = new Date();
+  return (
+    n.getFullYear() +
+    String(n.getMonth() + 1).padStart(2, "0") +
+    String(n.getDate()).padStart(2, "0")
+  );
 }
 
 export function xdate(v) {

@@ -3,7 +3,7 @@
 // readCsvFile/onCsvFile/onXlsxPicked/migrate/dz*/setImpMode）もここへ集約した。
 // ロジックは1文字も変えない。XLSX は従来通り window グローバル参照。
 import { state, FSA_SUPPORTED } from "./state.js";
-import { parseDate, fmtSlash, xdate, xtime } from "./dateutil.js";
+import { pd, fmt, xdate, xtime } from "./dateutil.js";
 import { recompute } from "./domain.js";
 import { render, toast } from "./render.js";
 import { markDirty } from "./storage.js";
@@ -37,22 +37,22 @@ export function cleanName(s) {
 
 // CSV行を rows[] スキーマのオブジェクトへ。列順: 0場名1種別2プレー日3コース4時間5氏名6カナ7組数8人数9連絡先10携帯11FAX12経路13受付日時...
 export function parseRow(c) {
-  const playDt = parseDate(c[2]);
-  const recvDt = parseDate(c[13]);
+  const playDt = pd(c[2]);
+  const recvDt = pd(c[13]);
   const g = parseInt((c[7] || "").replace(/[^0-9]/g, "")) || 0;
   const p = parseInt((c[8] || "").replace(/[^0-9]/g, "")) || 0;
   const name = cleanName(c[5]);
   const tm = cellClean(c[4]).match(/(\d{1,2}):(\d{2})/) || [];
   return {
     n: name,
-    play: fmtSlash(playDt),
+    play: fmt(playDt),
     wd: playDt ? WD[playDt.getDay()] : "",
     course: cellClean(c[3]),
     time: tm.length ? tm[1].padStart(2, "0") + ":" + tm[2] : "",
     g,
     p,
     route: normRoute(c[12]),
-    recv: fmtSlash(recvDt),
+    recv: fmt(recvDt),
     d: ["", "", "", ""],
     s: ["", "", "", ""],
     kk: "",

@@ -3,7 +3,7 @@
 // exportExcel / smsResult / smsPreview / smsExport もここへ集約した。
 // XLSX / cptable は従来通り window グローバル参照のまま。ロジックは不変。
 import { state } from "./state.js";
-import { pd } from "./dateutil.js";
+import { pd, todayYmd } from "./dateutil.js";
 import { toast } from "./render.js";
 
 export function smsNormPhone(s) {
@@ -126,14 +126,9 @@ export function smsExport() {
     enc = "UTF-8";
   }
   const blob = new Blob([bytes], { type: "text/csv" });
-  const n = new Date();
-  const ymd =
-    n.getFullYear() +
-    String(n.getMonth() + 1).padStart(2, "0") +
-    String(n.getDate()).padStart(2, "0");
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = "SMS配信リスト_" + ymd + ".csv";
+  a.download = "SMS配信リスト_" + todayYmd() + ".csv";
   document.body.appendChild(a);
   a.click();
   a.remove();
@@ -206,11 +201,6 @@ export function exportExcel() {
   const ws = XLSX.utils.aoa_to_sheet(aoa);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "予約チェック進捗確認シート");
-  const n = new Date();
-  const ymd =
-    n.getFullYear() +
-    String(n.getMonth() + 1).padStart(2, "0") +
-    String(n.getDate()).padStart(2, "0");
-  XLSX.writeFile(wb, "予約チェック_backup_" + ymd + ".xlsx");
+  XLSX.writeFile(wb, "予約チェック_backup_" + todayYmd() + ".xlsx");
   toast("Excelを書き出しました（" + state.rows.length + "件）");
 }

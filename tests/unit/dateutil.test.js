@@ -1,7 +1,7 @@
-// dateutil.js の特性化テスト（現挙動をそのまま固定する）。
-// Phase 1 では統合・修正をしないため、既知の重複実装・癖もこのテストで現状を正とする。
+// dateutil.js の特性化テスト（Phase 2 統合後）。
+// pd = parseDate（統合済み）、fmt = fmtSlash（統合済み）、todayYmd 追加。
 import { describe, it, expect } from "vitest";
-import { pd, fmt, addDays, parseDate, fmtSlash, xdate, xtime } from "../../js/dateutil.js";
+import { pd, fmt, addDays, todayYmd, xdate, xtime } from "../../js/dateutil.js";
 
 describe("pd（日付パース）", () => {
   it("YYYY/MM/DD をローカル Date に変換する", () => {
@@ -65,14 +65,23 @@ describe("addDays（日付加算）", () => {
   });
 });
 
-describe("parseDate / fmtSlash（pd / fmt と同一ロジックの重複実装。現状を固定）", () => {
-  it("parseDate は pd と同じ結果を返す", () => {
-    const a = parseDate("2026/06/03");
-    expect(a.getFullYear()).toBe(2026);
-    expect(a.getDate()).toBe(3);
+describe("todayYmd（ファイル名用 YYYYMMDD）", () => {
+  it("今日の日付を 8桁数字文字列で返す", () => {
+    const ymd = todayYmd();
+    expect(ymd).toMatch(/^\d{8}$/);
+    const n = new Date();
+    const expected =
+      n.getFullYear() +
+      String(n.getMonth() + 1).padStart(2, "0") +
+      String(n.getDate()).padStart(2, "0");
+    expect(ymd).toBe(expected);
   });
-  it("fmtSlash は fmt と同じ結果を返す", () => {
-    expect(fmtSlash(new Date(2026, 0, 5))).toBe("2026/01/05");
+  it("pd + fmt + todayYmd の出力形式が整合する（YYYY/MM/DD vs YYYYMMDD）", () => {
+    // fmt は YYYY/MM/DD、todayYmd は YYYYMMDD。スラッシュを除いて対応関係を検証
+    const d = new Date(2026, 0, 5);
+    expect(fmt(d).replace(/\//g, "")).toBe("20260105");
+    // todayYmd は現在時刻に依存するため桁数と数値性だけ確認（上のケースで値一致済み）
+    expect(Number(todayYmd())).toBeGreaterThan(20000000);
   });
 });
 
