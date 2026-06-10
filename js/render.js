@@ -7,6 +7,7 @@
 import { state, FSA_SUPPORTED } from "./state.js";
 import { pd } from "./dateutil.js";
 import { actRound, nextFuture, daysFrom, mdOf, visibleRows, aggregateMonthly } from "./domain.js";
+import { ST, KK, KUMI, TOAST_DURATION_MS } from "./constants.js";
 
 // コンタクトの日数ラベル。設定変更時に表示も自動で変わる
 const CIRC = ["①", "②", "③", "④"];
@@ -252,13 +253,13 @@ export function render() {
       a = actRound(r);
     let due, cls;
     if (a < 0) {
-      if (r.kk === "キャンセル") {
+      if (r.kk === KK.CANCEL) {
         due = "✕ キャンセル";
         cls = "carry";
-      } else if ((r.kumi || "") === "済") {
+      } else if ((r.kumi || "") === KUMI.ZUMI) {
         due = "✓ 完了（組合せ入力済）";
         cls = "done";
-      } else if (state.excludeKakutei && r.kk === "〇") {
+      } else if (state.excludeKakutei && r.kk === KK.MARU) {
         due = "✓ 組数確定済";
         cls = "done";
       } else {
@@ -271,7 +272,7 @@ export function render() {
           cls = "done";
         }
       }
-    } else if (r.s[a] === "不在") {
+    } else if (r.s[a] === ST.FUZAI) {
       if (r.next && pd(r.next) > state.TODAY) {
         due = "休止中：次回 " + mdOf(r.next) + "（あと" + daysFrom(r.next) + "日・不在）";
         cls = "soon";
@@ -320,11 +321,11 @@ export function editCell(gi, i) {
   const r = state.rows[gi],
     v = r.s[i];
   const disp =
-    v === "〇"
+    v === ST.MARU
       ? '<span class="pill green">〇</span>'
-      : v === "不在"
+      : v === ST.FUZAI
         ? '<span class="pill red">不在</span>'
-        : v === "不要"
+        : v === ST.FUYO
           ? '<span style="color:#6b7280;font-weight:700">不要</span>'
           : '<span style="color:#374151">' + r.d[i] + "（予定）</span>";
   return `<div class="editcell"><span>${disp}</span><span class="sel-wrap">
@@ -344,7 +345,7 @@ export function renderDetail() {
     a = actRound(r);
   let head;
   if (a < 0) head = '<div class="v green">対応完了（要対応なし）</div>';
-  else if (r.s[a] === "不在")
+  else if (r.s[a] === ST.FUZAI)
     head = '<div class="v red">繰越（前回不在）：' + state.lbl[a] + "</div>";
   else
     head =
@@ -399,7 +400,7 @@ export function renderDetail() {
    </div>
    <div style="margin-top:10px"><button class="sb" onclick="skipToEarly(${gi})" title="メンバー・定例コンペ向け：①〜③を不要にして④だけ残します">${state.lbl[3]}までスキップ（メンバー/定例コンペ）</button></div>
    ${
-     (r.s || []).includes("不在")
+     (r.s || []).includes(ST.FUZAI)
        ? `<div class="sec">次回連絡日（不在の再架電）</div>
    <div class="editcell"><span>${r.next ? "設定：" + r.next + "（その日まで今日やることから外します）" : "未設定（不在は毎日「今日やること」に表示）"}</span><span class="sel-wrap"><input type="date" class="datein" value="${r.next ? r.next.replace(/\//g, "-") : ""}" onchange="setNext(${gi},this.value)"><button class="sb" onclick="setNext(${gi},'')">クリア</button></span></div>`
        : ""
@@ -420,7 +421,7 @@ export function toast(m) {
   t.textContent = m;
   t.classList.add("show");
   clearTimeout(t._t);
-  t._t = setTimeout(() => t.classList.remove("show"), 1900);
+  t._t = setTimeout(() => t.classList.remove("show"), TOAST_DURATION_MS);
 }
 export function copyText(t) {
   if (navigator.clipboard && navigator.clipboard.writeText) {

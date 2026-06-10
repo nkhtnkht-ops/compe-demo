@@ -3,6 +3,7 @@
 // 画面遷移・設定保存」のみ。取込/移行/書き出しは importers.js / exporters.js、
 // 永続化は storage.js、描画は render.js に集約済み。ロジックは Phase 1 を通じて不変。
 import { state } from "./state.js";
+import { ST } from "./constants.js";
 import { recompute } from "./domain.js";
 import {
   WD,
@@ -106,7 +107,7 @@ function setS(gi, i, val, quiet) {
   document.getElementById("undoBtn").disabled = false;
   if (!quiet) {
     if (val === "") toast(state.lbl[i] + "を空に戻しました");
-    else if (val === "不在") toast(state.lbl[i] + "＝不在（繰越で残ります）");
+    else if (val === ST.FUZAI) toast(state.lbl[i] + "＝不在（繰越で残ります）");
     else toast(state.lbl[i] + "＝" + val + "（更新するまで一覧に残ります）");
   }
   markDirty();
@@ -127,14 +128,14 @@ function setF(gi, key, val, jp) {
 function skipToEarly(gi) {
   const r = state.rows[gi];
   const prev = [r.s[0], r.s[1], r.s[2]];
-  if (prev.every((v) => v === "不要")) {
+  if (prev.every((v) => v === ST.FUYO)) {
     toast("①〜③は既にスキップ済みです");
     return;
   }
   state.undoStack.push({ gi, t: "s3", prev });
-  r.s[0] = "不要";
-  r.s[1] = "不要";
-  r.s[2] = "不要";
+  r.s[0] = ST.FUYO;
+  r.s[1] = ST.FUYO;
+  r.s[2] = ST.FUYO;
   r._touch = true;
   state.selIdx = gi;
   document.getElementById("undoBtn").disabled = false;

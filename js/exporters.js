@@ -4,6 +4,7 @@
 // XLSX / cptable は従来通り window グローバル参照のまま。ロジックは不変。
 import { state } from "./state.js";
 import { pd, todayYmd } from "./dateutil.js";
+import { KK, ST } from "./constants.js";
 import { toast } from "./render.js";
 
 export function smsNormPhone(s) {
@@ -28,8 +29,8 @@ export function smsFilteredRows() {
   const toD = pd((document.getElementById("smsTo").value || "").replace(/-/g, "/"));
   return state.rows.filter((r) => {
     if (routes.length && !routes.includes(r.route)) return false;
-    if (exclC && r.kk === "キャンセル") return false;
-    if (exclInb && (r.inbound === "〇" || /インバウンド/.test(r.memo || ""))) return false;
+    if (exclC && r.kk === KK.CANCEL) return false;
+    if (exclInb && (r.inbound === ST.MARU || /インバウンド/.test(r.memo || ""))) return false;
     if (exclFor && smsIsForeignName(r.n)) return false;
     const pl = pd(r.play);
     if (past && (!pl || pl > state.TODAY)) return false;

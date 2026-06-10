@@ -5,6 +5,7 @@
 import { state, FSA_SUPPORTED } from "./state.js";
 import { pd, fmt, xdate, xtime } from "./dateutil.js";
 import { recompute } from "./domain.js";
+import { ST, KK, KUMI, CSV_COL, XLS_COL } from "./constants.js";
 import { render, toast } from "./render.js";
 import { markDirty } from "./storage.js";
 
@@ -35,29 +36,29 @@ export function cleanName(s) {
     .trim();
 }
 
-// CSV行を rows[] スキーマのオブジェクトへ。列順: 0場名1種別2プレー日3コース4時間5氏名6カナ7組数8人数9連絡先10携帯11FAX12経路13受付日時...
+// CSV行を rows[] スキーマのオブジェクトへ。列マップは CSV_COL（constants.js）を参照。
 export function parseRow(c) {
-  const playDt = pd(c[2]);
-  const recvDt = pd(c[13]);
-  const g = parseInt((c[7] || "").replace(/[^0-9]/g, "")) || 0;
-  const p = parseInt((c[8] || "").replace(/[^0-9]/g, "")) || 0;
-  const name = cleanName(c[5]);
-  const tm = cellClean(c[4]).match(/(\d{1,2}):(\d{2})/) || [];
+  const playDt = pd(c[CSV_COL.PLAY]);
+  const recvDt = pd(c[CSV_COL.RECV]);
+  const g = parseInt((c[CSV_COL.GROUPS] || "").replace(/[^0-9]/g, "")) || 0;
+  const p = parseInt((c[CSV_COL.PEOPLE] || "").replace(/[^0-9]/g, "")) || 0;
+  const name = cleanName(c[CSV_COL.NAME]);
+  const tm = cellClean(c[CSV_COL.TIME]).match(/(\d{1,2}):(\d{2})/) || [];
   return {
     n: name,
     play: fmt(playDt),
     wd: playDt ? WD[playDt.getDay()] : "",
-    course: cellClean(c[3]),
+    course: cellClean(c[CSV_COL.COURSE]),
     time: tm.length ? tm[1].padStart(2, "0") + ":" + tm[2] : "",
     g,
     p,
-    route: normRoute(c[12]),
+    route: normRoute(c[CSV_COL.ROUTE]),
     recv: fmt(recvDt),
     d: ["", "", "", ""],
     s: ["", "", "", ""],
     kk: "",
-    tel: cellClean(c[9]),
-    mob: cellClean(c[10]),
+    tel: cellClean(c[CSV_COL.TEL]),
+    mob: cellClean(c[CSV_COL.MOB]),
     _playDt: playDt,
   };
 }
@@ -69,14 +70,14 @@ export function xclean(v) {
 }
 export function xstat(v) {
   const s = xclean(v);
-  return s === "〇" || s === "不在" || s === "不要" ? s : "";
+  return s === ST.MARU || s === ST.FUZAI || s === ST.FUYO ? s : "";
 }
 export function xkk(v) {
   const s = xclean(v);
-  return s === "〇" || s === "キャンセル" ? s : "";
+  return s === KK.MARU || s === KK.CANCEL ? s : "";
 }
 export function xkumi(v) {
-  return xclean(v) === "済" ? "済" : "";
+  return xclean(v) === KUMI.ZUMI ? KUMI.ZUMI : "";
 }
 export function xnum(v) {
   const n = parseInt(String(v == null ? "" : v).replace(/[^0-9]/g, ""));
@@ -137,29 +138,29 @@ export function onXlsxPicked(input) {
         // 3行目(index2)からデータ
         const r = aoa[i];
         if (!r) continue;
-        const name = xclean(r[4]);
+        const name = xclean(r[XLS_COL.NAME]);
         if (!name) continue;
-        const recv = xdate(r[1]),
-          play = xdate(r[2]);
-        const memoV = xclean(r[19]);
+        const recv = xdate(r[XLS_COL.RECV]),
+          play = xdate(r[XLS_COL.PLAY]);
+        const memoV = xclean(r[XLS_COL.MEMO]);
         out.push({
           n: name,
           play,
-          wd: xclean(r[3]),
-          course: xclean(r[7]),
-          time: xtime(r[8]),
-          g: xnum(r[9]),
-          p: xnum(r[10]),
-          route: xclean(r[11]),
+          wd: xclean(r[XLS_COL.WEEKDAY]),
+          course: xclean(r[XLS_COL.COURSE]),
+          time: xtime(r[XLS_COL.TIME]),
+          g: xnum(r[XLS_COL.GROUPS]),
+          p: xnum(r[XLS_COL.PEOPLE]),
+          route: xclean(r[XLS_COL.ROUTE]),
           recv,
           d: ["", "", "", ""],
-          s: [xstat(r[13]), xstat(r[14]), xstat(r[15]), xstat(r[16])],
-          kk: xkk(r[18]),
-          kumi: xkumi(r[20]),
+          s: [xstat(r[XLS_COL.S0]), xstat(r[XLS_COL.S1]), xstat(r[XLS_COL.S2]), xstat(r[XLS_COL.S3])],
+          kk: xkk(r[XLS_COL.KK]),
+          kumi: xkumi(r[XLS_COL.KUMI]),
           memo: memoV,
-          inbound: /インバウンド/.test(memoV) ? "〇" : "", // 備考に記載があれば自動でマーク
-          tel: xclean(r[5]),
-          mob: xclean(r[6]),
+          inbound: /インバウンド/.test(memoV) ? ST.MARU : "", // 備考に記載があれば自動でマーク
+          tel: xclean(r[XLS_COL.TEL]),
+          mob: xclean(r[XLS_COL.MOB]),
         });
       }
       if (!out.length) {
@@ -171,7 +172,7 @@ export function onXlsxPicked(input) {
       document.getElementById("xlsxName").textContent =
         "✅ " + f.name + "（シート「" + sheetName + "」）";
       document.getElementById("bMig").disabled = false;
-      const cancel = out.filter((x) => x.kk === "キャンセル").length;
+      const cancel = out.filter((x) => x.kk === KK.CANCEL).length;
       document.getElementById("migMsg").innerHTML =
         `<b>${out.length}</b> 件を読み込みました（うちキャンセル ${cancel} 件）。` +
         `①〜④の対応状況・組数確定・備考も引き継ぎます。` +

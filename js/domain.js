@@ -1,6 +1,7 @@
 // ドメインロジック（判定・予定日計算・可視行・月別集計）。
 import { state } from "./state.js";
 import { pd, fmt, addDays } from "./dateutil.js";
+import { ST, KK, KUMI } from "./constants.js";
 
 /**
  * 追跡終了条件の述語。
@@ -11,9 +12,9 @@ import { pd, fmt, addDays } from "./dateutil.js";
  */
 export function isTrackingEnded(r) {
   return (
-    (r.kumi || "") === "済" ||
-    r.kk === "キャンセル" ||
-    (state.excludeKakutei && r.kk === "〇")
+    (r.kumi || "") === KUMI.ZUMI ||
+    r.kk === KK.CANCEL ||
+    (state.excludeKakutei && r.kk === KK.MARU)
   );
 }
 
@@ -35,7 +36,7 @@ export function actRound(r) {
   for (const i of [0, 1, 2, 3]) {
     if (!state.todayTouch[i]) continue;
     const dt = pd(r.d[i]);
-    if (dt && dt <= state.TODAY && (r.s[i] === "" || r.s[i] === "不在")) return i;
+    if (dt && dt <= state.TODAY && (r.s[i] === "" || r.s[i] === ST.FUZAI)) return i;
   }
   return -1;
 }
@@ -51,7 +52,7 @@ export function nextFuture(r) {
 }
 
 export function isDeferred(r) {
-  return !!r.next && pd(r.next) > state.TODAY && (r.s || []).includes("不在");
+  return !!r.next && pd(r.next) > state.TODAY && (r.s || []).includes(ST.FUZAI);
 }
 
 export function isToday(r) {
@@ -74,7 +75,7 @@ export function mdOf(s) {
 export function needsContact(r, i) {
   if (isTrackingEnded(r) || isDeferred(r)) return false;
   const dt = pd(r.d[i]);
-  return !!dt && dt <= state.TODAY && (r.s[i] === "" || r.s[i] === "不在");
+  return !!dt && dt <= state.TODAY && (r.s[i] === "" || r.s[i] === ST.FUZAI);
 }
 
 export function visibleRows() {
@@ -117,7 +118,7 @@ export function aggregateMonthly(rows) {
       people: 0,
       cancel: 0,
     });
-    if (r.kk === "キャンセル") {
+    if (r.kk === KK.CANCEL) {
       cell.cancel++;
     } else {
       cell.compe++;

@@ -7,6 +7,15 @@ import { state, FSA_SUPPORTED } from "./state.js";
 import { todayStr } from "./dateutil.js";
 import { recompute } from "./domain.js";
 import { render, toast, rebuildLabels } from "./render.js";
+import {
+  EXTERNAL_CHANGE_BUFFER_MS,
+  BACKUP_INTERVAL_MS,
+  BACKUP_KEEP_COUNT,
+  EXTERNAL_CHECK_INTERVAL_MS,
+  RECENT_OP_WARN_MINS,
+  DRASTIC_REDUCE_MIN_COUNT,
+  DRASTIC_REDUCE_DENOM,
+} from "./constants.js";
 
 export const SCHEMA_VERSION = 1;
 
@@ -70,7 +79,7 @@ export async function checkExternal() {
   if (!state.fileHandle || state.isSaving || state.externalChange) return;
   try {
     const f = await state.fileHandle.getFile();
-    if (f.lastModified > state.lastWrittenMtime + 1500) {
+    if (f.lastModified > state.lastWrittenMtime + EXTERNAL_CHANGE_BUFFER_MS) {
       // 自分の最終書込より新しい＝他者が更新
       state.externalChange = true;
       showExtWarn(true);
@@ -234,7 +243,7 @@ export async function loadFromHandle(handle) {
       state.loadedUpdatedAt
     ) {
       const mins = (Date.now() - new Date(state.loadedUpdatedAt).getTime()) / 60000;
-      if (mins >= 0 && mins < 10) {
+      if (mins >= 0 && mins < RECENT_OP_WARN_MINS) {
         setTimeout(
           () =>
             toast(
@@ -267,7 +276,7 @@ export async function saveToFile() {
     return;
   } // 競合時は次回キックで
   // ★件数が大きく減る保存は確認（誤操作・バグでの全消し最終防波堤）
-  if (state.lastKnownCount >= 20 && state.rows.length < state.lastKnownCount / 2) {
+  if (state.lastKnownCount >= DRASTIC_REDUCE_MIN_COUNT && state.rows.length < state.lastKnownCount / DRASTIC_REDUCE_DENOM) {
     const ok = confirm(
       "⚠ 台帳の件数が大きく減ろうとしています（" +
         state.lastKnownCount +
@@ -294,7 +303,7 @@ export async function saveToFile() {
     // 他者更新の検知：自分の最終書込より新しければ上書き確認
     try {
       const cur = await state.fileHandle.getFile();
-      if (cur.lastModified > state.lastWrittenMtime + 1500) {
+      if (cur.lastModified > state.lastWrittenMtime + EXTERNAL_CHANGE_BUFFER_MS) {
         state.externalChange = true;
         showExtWarn(true);
         const ok = confirm(
@@ -343,7 +352,7 @@ export async function saveToFile() {
 function scheduleSave() {
   if (!state.fileHandle) return;
   if (state.saveTimer) clearTimeout(state.saveTimer);
-  state.saveTimer = setTimeout(saveToFile, 1500);
+  state.saveTimer = setTimeout(saveToFile, EXTERNAL_CHANGE_BUFFER_MS);
 }
 
 export function markDirty() {
@@ -390,9 +399,9 @@ async function writeBackup(force) {
 }
 async function maybeBackup() {
   if (!state.backupDirHandle) return;
-  // 新しい日付なら必ず、同日内は5分に1回まで
+  // 新しい日付なら必ず、同日内はBACKUP_INTERVAL_MSに1回まで
   const lastDay = (localStorage.getItem("compe.lastBackup") || "").slice(0, 10);
-  if (lastDay !== todayStr() || Date.now() - state.lastBackupTime > 5 * 60 * 1000) {
+  if (lastDay !== todayStr() || Date.now() - state.lastBackupTime > BACKUP_INTERVAL_MS) {
     await writeBackup(false);
   }
 }
@@ -410,7 +419,7 @@ async function rotateBackups() {
       if (m && h.kind === "file") files.push(nm);
     }
     files.sort();
-    const drop = files.slice(0, Math.max(0, files.length - 14));
+    const drop = files.slice(0, Math.max(0, files.length - BACKUP_KEEP_COUNT));
     for (const nm of drop) {
       try {
         await state.backupDirHandle.removeEntry(nm);
@@ -644,7 +653,7 @@ if (typeof document !== "undefined" && typeof window !== "undefined") {
   });
   setInterval(() => {
     if (!document.hidden) checkExternal();
-  }, 20000);
+  }, EXTERNAL_CHECK_INTERVAL_MS);
 
   window.addEventListener("load", () => {
     bootstrapFile();
