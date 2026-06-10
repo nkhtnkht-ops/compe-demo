@@ -3,26 +3,22 @@
 // グローバル変数は state. プレフィックスへ機械的に置換し、onclick属性ハンドラ用に
 // 必要関数を window へ公開する。後続ステップで各モジュールへ切り出す。
 import { state } from "./state.js";
-import {
-  pd,
-  fmt,
-  addDays,
-  todayStr,
-  parseDate,
-  fmtSlash,
-  xdate,
-  xtime,
-} from "./dateutil.js";
+import { pd, todayStr, xdate, xtime } from "./dateutil.js";
 import {
   recompute,
   actRound,
   nextFuture,
   daysFrom,
   mdOf,
-  needsContact,
   visibleRows,
   aggregateMonthly,
 } from "./domain.js";
+import { WD, parseRow, xstat, xkk, xkumi, xclean, xnum } from "./importers.js";
+import {
+  smsSurname,
+  smsFilteredRows,
+  smsAggregate,
+} from "./exporters.js";
 
 /* global XLSX, cptable */
 
@@ -712,84 +708,6 @@ async function bootstrapFile() {
 }
 // ===== Excel書き出し（現行台帳と同じ形式＝バックアップ＆再取込可能） =====
 // ===== SMS配信リスト書き出し（SMSLINK一括配信用） =====
-function smsNormPhone(s) {
-  return (s || "").replace(/[^0-9]/g, "");
-}
-function smsIsMobile(s) {
-  return /^(070|080|090)\d{8}$/.test(smsNormPhone(s));
-}
-function smsSurname(n) {
-  const s = (n || "").trim();
-  const i = s.search(/[\s　]/);
-  return i > 0 ? s.slice(0, i) : s;
-} // スペース前を姓に。会社名等はそのまま
-function smsFilteredRows() {
-  const routes = [...document.querySelectorAll(".smsRoute:checked")].map((c) => c.value);
-  const past = document.getElementById("smsPast").checked;
-  const exclC = document.getElementById("smsExclCancel").checked;
-  const exclInb = document.getElementById("smsExclInbound").checked;
-  const exclFor = document.getElementById("smsExclForeign").checked;
-  const fromD = pd((document.getElementById("smsFrom").value || "").replace(/-/g, "/"));
-  const toD = pd((document.getElementById("smsTo").value || "").replace(/-/g, "/"));
-  return state.rows.filter((r) => {
-    if (routes.length && !routes.includes(r.route)) return false;
-    if (exclC && r.kk === "キャンセル") return false;
-    if (exclInb && (r.inbound === "〇" || /インバウンド/.test(r.memo || ""))) return false;
-    if (exclFor && smsIsForeignName(r.n)) return false;
-    const pl = pd(r.play);
-    if (past && (!pl || pl > state.TODAY)) return false;
-    if (fromD && (!pl || pl < fromD)) return false;
-    if (toD && (!pl || pl > toD)) return false;
-    if (!smsIsMobile(r.mob)) return false;
-    return true;
-  });
-}
-// 外国名の判定：ローマ字/英字・ハングル・代表的な簡体字を検出（漢字名の韓国・中国は判別不可＝手動マークで対応）
-function smsIsForeignName(n) {
-  const s = n || "";
-  if (/[A-Za-zＡ-Ｚａ-ｚ]/.test(s)) return true; // ローマ字・英字（全半角）
-  if (/[ᄀ-ᇿ㄰-㆏가-힣]/.test(s)) return true; // ハングル
-  if (/[张刘陈杨赵韩龙罗郑冯邓萧苏蒋贾顾卢钱孙马严华叶吕齐]/.test(s)) return true; // 主な簡体字（日本語に無い字形）
-  return false;
-}
-function smsAggregate(list, dedupe) {
-  if (!dedupe)
-    return list.map((r) => ({
-      mob: smsNormPhone(r.mob),
-      n: r.n,
-      play: r.play,
-      course: r.course,
-      route: r.route,
-      cnt: 1,
-    }));
-  const map = new Map();
-  list.forEach((r) => {
-    const k = smsNormPhone(r.mob),
-      pl = pd(r.play);
-    if (!map.has(k))
-      map.set(k, {
-        mob: k,
-        n: r.n,
-        play: r.play,
-        course: r.course,
-        route: r.route,
-        cnt: 1,
-        _pl: pl,
-      });
-    else {
-      const e = map.get(k);
-      e.cnt++;
-      if (pl && (!e._pl || pl > e._pl)) {
-        e.n = r.n;
-        e.play = r.play;
-        e.course = r.course;
-        e.route = r.route;
-        e._pl = pl;
-      }
-    }
-  });
-  return [...map.values()];
-}
 function smsResult() {
   const list = smsFilteredRows();
   let agg = smsAggregate(list, document.getElementById("smsDedupe").checked);
@@ -1504,26 +1422,6 @@ function setImpMode() {
 }
 
 // ===== 既存Excel台帳の移行（SheetJS） =====
-function xstat(v) {
-  const s = (v == null ? "" : String(v)).replace(/['"]/g, "").trim();
-  return s === "〇" || s === "不在" || s === "不要" ? s : "";
-}
-function xkk(v) {
-  const s = (v == null ? "" : String(v)).replace(/['"]/g, "").trim();
-  return s === "〇" || s === "キャンセル" ? s : "";
-}
-function xkumi(v) {
-  const s = (v == null ? "" : String(v)).replace(/['"]/g, "").trim();
-  return s === "済" ? "済" : "";
-}
-function xclean(v) {
-  return (v == null ? "" : String(v)).replace(/['"]/g, "").trim();
-}
-function xnum(v) {
-  const n = parseInt(String(v == null ? "" : v).replace(/[^0-9]/g, ""));
-  return isNaN(n) ? 0 : n;
-}
-
 function onXlsxPicked(input) {
   const f = input.files && input.files[0];
   if (!f) {
@@ -1720,54 +1618,6 @@ function readCsvFile(f) {
 }
 
 // ===== CSV取込（実データ処理） =====
-const WD = ["日", "月", "火", "水", "木", "金", "土"];
-function cellClean(s) {
-  return (s || "")
-    .replace(/^['"]+/, "")
-    .replace(/['"]+$/, "")
-    .trim();
-}
-function normRoute(s) {
-  s = cellClean(s);
-  if (!s) return "その他";
-  if (/事務所受け|電話|TEL/i.test(s)) return "電話";
-  if (/AGWeb|AG.?Web/i.test(s)) return "AGWeb";
-  if (/GORA|ＧＯＲＡ/i.test(s)) return "GORA";
-  if (/GDO/i.test(s)) return "GDO";
-  if (/RECRUIT|じゃらん|リクルート/i.test(s)) return "RECRUIT";
-  if (/VALUE/i.test(s)) return "VALUE";
-  return s;
-}
-function cleanName(s) {
-  return cellClean(s).replace(/代表者名/g, "").trim();
-}
-
-// CSV行を rows[] スキーマのオブジェクトへ。列順: 0場名1種別2プレー日3コース4時間5氏名6カナ7組数8人数9連絡先10携帯11FAX12経路13受付日時...
-function parseRow(c) {
-  const playDt = parseDate(c[2]);
-  const recvDt = parseDate(c[13]);
-  const g = parseInt((c[7] || "").replace(/[^0-9]/g, "")) || 0;
-  const p = parseInt((c[8] || "").replace(/[^0-9]/g, "")) || 0;
-  const name = cleanName(c[5]);
-  const tm = cellClean(c[4]).match(/(\d{1,2}):(\d{2})/) || [];
-  return {
-    n: name,
-    play: fmtSlash(playDt),
-    wd: playDt ? WD[playDt.getDay()] : "",
-    course: cellClean(c[3]),
-    time: tm.length ? tm[1].padStart(2, "0") + ":" + tm[2] : "",
-    g,
-    p,
-    route: normRoute(c[12]),
-    recv: fmtSlash(recvDt),
-    d: ["", "", "", ""],
-    s: ["", "", "", ""],
-    kk: "",
-    tel: cellClean(c[9]),
-    mob: cellClean(c[10]),
-    _playDt: playDt,
-  };
-}
 
 function extract() {
   const t = document.getElementById("ta").value.trim();
