@@ -9,3 +9,8 @@ data*.json
 *.xlsm
 *.xlsx
 _test.*
+
+# 開発ツール
+node_modules/
+test-results/
+playwright-report/
