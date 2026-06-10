@@ -63,20 +63,20 @@ export function parseRow(c) {
 }
 
 // ===== 既存Excel台帳の移行用セル正規化 =====
+// xclean: Excel セル値（数値/null/文字列）→ 引用符全除去＋trim した文字列
+export function xclean(v) {
+  return (v == null ? "" : String(v)).replace(/['"]/g, "").trim();
+}
 export function xstat(v) {
-  const s = (v == null ? "" : String(v)).replace(/['"]/g, "").trim();
+  const s = xclean(v);
   return s === "〇" || s === "不在" || s === "不要" ? s : "";
 }
 export function xkk(v) {
-  const s = (v == null ? "" : String(v)).replace(/['"]/g, "").trim();
+  const s = xclean(v);
   return s === "〇" || s === "キャンセル" ? s : "";
 }
 export function xkumi(v) {
-  const s = (v == null ? "" : String(v)).replace(/['"]/g, "").trim();
-  return s === "済" ? "済" : "";
-}
-export function xclean(v) {
-  return (v == null ? "" : String(v)).replace(/['"]/g, "").trim();
+  return xclean(v) === "済" ? "済" : "";
 }
 export function xnum(v) {
   const n = parseInt(String(v == null ? "" : v).replace(/[^0-9]/g, ""));
