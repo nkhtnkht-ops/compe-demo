@@ -2,6 +2,16 @@
 // 各モジュールは `import { state } from './state.js'` で state.rows のように参照する。
 // ※ ロジックは Phase 1 では一切変更しない。元のグローバル変数を state. プレフィックスへ機械的に移しただけ。
 
+// File System Access API が使えるか（Chrome/Edge）。
+// 元 main.js のローカル const を、render/storage 両モジュールから参照できるよう
+// 共有ルートである state.js へ移した（Phase 1 の依存方向整理のため。値・評価タイミングは不変。
+// 定数の constants.js への集約は Phase 2）。
+export const FSA_SUPPORTED = !!(
+  typeof window !== "undefined" &&
+  window.showOpenFilePicker &&
+  window.showSaveFilePicker
+);
+
 export const state = {
   // ===== 基準日・ラベル =====
   TODAY: new Date(2026, 5, 3), // デモ基準日。実ファイル接続時は useRealToday() で当日へ切替
