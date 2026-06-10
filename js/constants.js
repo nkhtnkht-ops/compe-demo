@@ -21,6 +21,9 @@ export const KUMI = {
 /** 他者更新検知で自分の最終書込 mtime に加えるバッファ（ms）。OneDrive 同期遅延を考慮 */
 export const EXTERNAL_CHANGE_BUFFER_MS = 1500;
 
+/** 編集後に自動保存を発火するまでの遅延（ms）。連続編集を1回の保存にまとめる */
+export const SAVE_DEBOUNCE_MS = 1500;
+
 /** 自動バックアップの最小間隔（ms）。同日内に連続保存するのを抑制 */
 export const BACKUP_INTERVAL_MS = 5 * 60 * 1000; // 5分
 

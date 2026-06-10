@@ -9,6 +9,7 @@ import { recompute } from "./domain.js";
 import { render, toast, rebuildLabels } from "./render.js";
 import {
   EXTERNAL_CHANGE_BUFFER_MS,
+  SAVE_DEBOUNCE_MS,
   BACKUP_INTERVAL_MS,
   BACKUP_KEEP_COUNT,
   EXTERNAL_CHECK_INTERVAL_MS,
@@ -349,7 +350,7 @@ export async function saveToFile() {
 function scheduleSave() {
   if (!state.fileHandle) return;
   if (state.saveTimer) clearTimeout(state.saveTimer);
-  state.saveTimer = setTimeout(saveToFile, EXTERNAL_CHANGE_BUFFER_MS);
+  state.saveTimer = setTimeout(saveToFile, SAVE_DEBOUNCE_MS);
 }
 
 export function markDirty() {
