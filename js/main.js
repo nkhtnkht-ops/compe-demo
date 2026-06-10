@@ -3,6 +3,26 @@
 // グローバル変数は state. プレフィックスへ機械的に置換し、onclick属性ハンドラ用に
 // 必要関数を window へ公開する。後続ステップで各モジュールへ切り出す。
 import { state } from "./state.js";
+import {
+  pd,
+  fmt,
+  addDays,
+  todayStr,
+  parseDate,
+  fmtSlash,
+  xdate,
+  xtime,
+} from "./dateutil.js";
+import {
+  recompute,
+  actRound,
+  nextFuture,
+  daysFrom,
+  mdOf,
+  needsContact,
+  visibleRows,
+  aggregateMonthly,
+} from "./domain.js";
 
 /* global XLSX, cptable */
 
@@ -405,16 +425,6 @@ function markDirty() {
 // ===== 日付付き自動バックアップ（共有ドライブの台帳と同じフォルダ等に保存） =====
 function backupBaseName() {
   return (state.fileName || "台帳").replace(/\.json$/i, "");
-}
-function todayStr() {
-  const n = new Date();
-  return (
-    n.getFullYear() +
-    "-" +
-    String(n.getMonth() + 1).padStart(2, "0") +
-    "-" +
-    String(n.getDate()).padStart(2, "0")
-  );
 }
 async function writeBackup(force) {
   if (!state.backupDirHandle) return false;
@@ -894,82 +904,6 @@ window.addEventListener("beforeunload", (e) => {
     e.returnValue = "";
   }
 });
-function pd(s) {
-  const m = s && s.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
-  return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null;
-}
-// ===== 月別集計（純粋関数：DOM非依存） =====
-function aggregateMonthly(rows) {
-  const num = (v) => {
-    const n = Number(v);
-    return Number.isFinite(n) ? n : 0;
-  };
-  const byYear = {}; // year -> month(1..12) -> {compe,groups,people,cancel}
-  let unknown = 0;
-  (rows || []).forEach((r) => {
-    const dt = pd(r && r.play); // 既存 pd() を再利用（新しい日付処理は書かない）
-    if (!dt) {
-      unknown++;
-      return;
-    }
-    const y = dt.getFullYear(),
-      m = dt.getMonth() + 1;
-    byYear[y] = byYear[y] || {};
-    const cell = (byYear[y][m] = byYear[y][m] || {
-      compe: 0,
-      groups: 0,
-      people: 0,
-      cancel: 0,
-    });
-    if (r.kk === "キャンセル") {
-      cell.cancel++;
-    } else {
-      cell.compe++;
-      cell.groups += num(r.g);
-      cell.people += num(r.p);
-    }
-  });
-  const years = Object.keys(byYear)
-    .map(Number)
-    .sort((a, b) => b - a)
-    .map((year) => {
-      const mo = byYear[year];
-      const months = Object.keys(mo)
-        .map(Number)
-        .sort((a, b) => a - b)
-        .map((month) => ({
-          month,
-          compe: mo[month].compe,
-          groups: mo[month].groups,
-          people: mo[month].people,
-          cancel: mo[month].cancel,
-        }));
-      const total = months.reduce(
-        (t, m) => ({
-          compe: t.compe + m.compe,
-          groups: t.groups + m.groups,
-          people: t.people + m.people,
-          cancel: t.cancel + m.cancel,
-        }),
-        { compe: 0, groups: 0, people: 0, cancel: 0 }
-      );
-      // 前年同月の実データ（キャンセル除外集計）
-      const prevMo = byYear[year - 1] || {};
-      const prevByMonth = {};
-      let hasPrev = false;
-      Object.keys(prevMo)
-        .map(Number)
-        .forEach((month) => {
-          const c = prevMo[month];
-          if (c.compe > 0 || c.people > 0) {
-            prevByMonth[month] = { compe: c.compe, people: c.people };
-            hasPrev = true;
-          }
-        });
-      return { year, months, total, prevByMonth, hasPrev };
-    });
-  return { years, unknown };
-}
 function renderStats() {
   const host = document.getElementById("statsBody");
   if (!host) return;
@@ -1092,21 +1026,6 @@ function statDelta(diff) {
     "</span>"
   );
 }
-function fmt(d) {
-  return d
-    ? d.getFullYear() +
-        "/" +
-        String(d.getMonth() + 1).padStart(2, "0") +
-        "/" +
-        String(d.getDate()).padStart(2, "0")
-    : "";
-}
-function addDays(d, n) {
-  if (!d) return null;
-  const x = new Date(d);
-  x.setDate(x.getDate() + n);
-  return x;
-}
 // コンタクトの日数ラベル。設定変更時に表示も自動で変わる
 const CIRC = ["①", "②", "③", "④"];
 function dayLabel(i) {
@@ -1130,76 +1049,9 @@ function rebuildLabels() {
     if (el) el.textContent = state.lbl[i];
   }); // 設定のチェックボックス表示も連動
 }
-function recompute() {
-  state.rows.forEach((r) => {
-    const rc = pd(r.recv),
-      pl = pd(r.play);
-    r.d = [
-      fmt(addDays(rc, state.o1)),
-      fmt(addDays(pl, -state.o2)),
-      fmt(addDays(pl, -state.o3)),
-      fmt(addDays(pl, -state.o4)),
-    ];
-  });
-}
-function actRound(r) {
-  if (
-    (r.kumi || "") === "済" ||
-    r.kk === "キャンセル" ||
-    (state.excludeKakutei && r.kk === "〇")
-  )
-    return -1;
-  for (const i of [0, 1, 2, 3]) {
-    if (!state.todayTouch[i]) continue;
-    const dt = pd(r.d[i]);
-    if (dt && dt <= state.TODAY && (r.s[i] === "" || r.s[i] === "不在")) return i;
-  }
-  return -1;
-}
-function nextFuture(r) {
-  if (
-    (r.kumi || "") === "済" ||
-    r.kk === "キャンセル" ||
-    (state.excludeKakutei && r.kk === "〇")
-  )
-    return -1;
-  for (const i of [0, 1, 2, 3]) {
-    if (!state.todayTouch[i]) continue;
-    const dt = pd(r.d[i]);
-    if (dt && dt > state.TODAY && r.s[i] === "") return i;
-  }
-  return -1;
-}
-function isDeferred(r) {
-  return !!r.next && pd(r.next) > state.TODAY && (r.s || []).includes("不在");
-}
-function isToday(r) {
-  return actRound(r) >= 0 && !isDeferred(r);
-}
-function inTodayView(r) {
-  return isToday(r) || r._touch;
-}
-function daysFrom(s) {
-  const d = pd(s);
-  return d ? Math.round((d - state.TODAY) / 86400000) : 0;
-} // 正=未来, 負=過去
-function mdOf(s) {
-  return (s || "").replace(/^\d{4}\//, "");
-}
 function onSearch(v) {
   state.searchQ = v;
   render();
-}
-function needsContact(r, i) {
-  if (
-    (r.kumi || "") === "済" ||
-    r.kk === "キャンセル" ||
-    (state.excludeKakutei && r.kk === "〇") ||
-    isDeferred(r)
-  )
-    return false;
-  const dt = pd(r.d[i]);
-  return !!dt && dt <= state.TODAY && (r.s[i] === "" || r.s[i] === "不在");
 }
 function setContact(f) {
   state.contactFilter = f;
@@ -1215,19 +1067,6 @@ function setContact(f) {
   });
   render();
 }
-function visibleRows() {
-  const q = state.searchQ.trim();
-  const lq = q ? q.toLowerCase() : null;
-  if (lq) {
-    return state.rows.filter((r) => (r.n || "").toLowerCase().includes(lq));
-  }
-  if (state.contactFilter !== "") {
-    const idx = +state.contactFilter;
-    return state.rows.filter((r) => needsContact(r, idx));
-  }
-  return state.showAll ? state.rows : state.rows.filter(inTodayView);
-}
-
 function setS(gi, i, val, quiet) {
   const r = state.rows[gi];
   if (r.s[i] === val) return;
@@ -1680,24 +1519,6 @@ function xkumi(v) {
 function xclean(v) {
   return (v == null ? "" : String(v)).replace(/['"]/g, "").trim();
 }
-function xdate(v) {
-  if (v == null || v === "") return "";
-  if (v instanceof Date && !isNaN(v))
-    return (
-      v.getFullYear() +
-      "/" +
-      String(v.getMonth() + 1).padStart(2, "0") +
-      "/" +
-      String(v.getDate()).padStart(2, "0")
-    );
-  const m = String(v).match(/(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
-  return m ? m[1] + "/" + m[2].padStart(2, "0") + "/" + m[3].padStart(2, "0") : "";
-}
-function xtime(v) {
-  if (v == null) return "";
-  const m = String(v).match(/(\d{1,2}):(\d{2})/);
-  return m ? m[1].padStart(2, "0") + ":" + m[2] : String(v).trim();
-}
 function xnum(v) {
   const n = parseInt(String(v == null ? "" : v).replace(/[^0-9]/g, ""));
   return isNaN(n) ? 0 : n;
@@ -1916,19 +1737,6 @@ function normRoute(s) {
   if (/RECRUIT|じゃらん|リクルート/i.test(s)) return "RECRUIT";
   if (/VALUE/i.test(s)) return "VALUE";
   return s;
-}
-function parseDate(s) {
-  const m = (s || "").match(/(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
-  return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null;
-}
-function fmtSlash(d) {
-  return d
-    ? d.getFullYear() +
-        "/" +
-        String(d.getMonth() + 1).padStart(2, "0") +
-        "/" +
-        String(d.getDate()).padStart(2, "0")
-    : "";
 }
 function cleanName(s) {
   return cellClean(s).replace(/代表者名/g, "").trim();
