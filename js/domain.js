@@ -1,7 +1,21 @@
 // ドメインロジック（判定・予定日計算・可視行・月別集計）。
-// Phase 1 では純粋な移動と state. プレフィックス付与のみ。日付/重複ロジックの統合・修正は Phase 2。
 import { state } from "./state.js";
 import { pd, fmt, addDays } from "./dateutil.js";
+
+/**
+ * 追跡終了条件の述語。
+ * - 組合せ入力済（kumi==='済'）
+ * - キャンセル（kk==='キャンセル'）
+ * - 組数確定除外設定オンかつ確定〇（excludeKakutei && kk==='〇'）
+ * actRound / nextFuture / needsContact の3箇所で使用。
+ */
+export function isTrackingEnded(r) {
+  return (
+    (r.kumi || "") === "済" ||
+    r.kk === "キャンセル" ||
+    (state.excludeKakutei && r.kk === "〇")
+  );
+}
 
 export function recompute() {
   state.rows.forEach((r) => {
@@ -17,8 +31,7 @@ export function recompute() {
 }
 
 export function actRound(r) {
-  if ((r.kumi || "") === "済" || r.kk === "キャンセル" || (state.excludeKakutei && r.kk === "〇"))
-    return -1;
+  if (isTrackingEnded(r)) return -1;
   for (const i of [0, 1, 2, 3]) {
     if (!state.todayTouch[i]) continue;
     const dt = pd(r.d[i]);
@@ -28,8 +41,7 @@ export function actRound(r) {
 }
 
 export function nextFuture(r) {
-  if ((r.kumi || "") === "済" || r.kk === "キャンセル" || (state.excludeKakutei && r.kk === "〇"))
-    return -1;
+  if (isTrackingEnded(r)) return -1;
   for (const i of [0, 1, 2, 3]) {
     if (!state.todayTouch[i]) continue;
     const dt = pd(r.d[i]);
@@ -60,13 +72,7 @@ export function mdOf(s) {
 }
 
 export function needsContact(r, i) {
-  if (
-    (r.kumi || "") === "済" ||
-    r.kk === "キャンセル" ||
-    (state.excludeKakutei && r.kk === "〇") ||
-    isDeferred(r)
-  )
-    return false;
+  if (isTrackingEnded(r) || isDeferred(r)) return false;
   const dt = pd(r.d[i]);
   return !!dt && dt <= state.TODAY && (r.s[i] === "" || r.s[i] === "不在");
 }

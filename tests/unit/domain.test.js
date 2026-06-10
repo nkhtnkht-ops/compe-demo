@@ -11,6 +11,7 @@ import {
   visibleRows,
   aggregateMonthly,
   isDeferred,
+  isTrackingEnded,
 } from "../../js/domain.js";
 
 // 各テスト前に state を既定値へリセットし、基準日を固定する。
@@ -44,6 +45,26 @@ function mkRow(o = {}) {
     _touch: o._touch,
   };
 }
+
+describe("isTrackingEnded（追跡終了条件の述語）", () => {
+  it("kumi=済 は true", () => {
+    expect(isTrackingEnded(mkRow({ kumi: "済" }))).toBe(true);
+  });
+  it("kk=キャンセル は true", () => {
+    expect(isTrackingEnded(mkRow({ kk: "キャンセル" }))).toBe(true);
+  });
+  it("excludeKakutei=true かつ kk=〇 は true", () => {
+    state.excludeKakutei = true;
+    expect(isTrackingEnded(mkRow({ kk: "〇" }))).toBe(true);
+  });
+  it("excludeKakutei=false かつ kk=〇 は false（追跡継続）", () => {
+    state.excludeKakutei = false;
+    expect(isTrackingEnded(mkRow({ kk: "〇" }))).toBe(false);
+  });
+  it("何も該当しない通常行は false", () => {
+    expect(isTrackingEnded(mkRow())).toBe(false);
+  });
+});
 
 describe("recompute（①〜④予定日の再計算）", () => {
   it("受付日+o1 / プレー日-o2,o3,o4 を YYYY/MM/DD で算出する", () => {
