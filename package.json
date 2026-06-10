@@ -1,0 +1,16 @@
+{
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "lint": "eslint tests/",
+    "fmt": "prettier --write tests/"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0",
+    "eslint": "^9.18.0",
+    "prettier": "^3.4.2",
+    "vitest": "^3.0.2"
+  }
+}
